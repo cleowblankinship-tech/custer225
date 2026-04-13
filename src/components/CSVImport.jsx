@@ -1,6 +1,58 @@
 import { useState, useRef } from 'react'
 import { CATEGORIES, INCOME_CATEGORIES } from '../lib/parser'
 
+// Auto-skip these — obviously personal
+const PERSONAL_PATTERNS = [
+  'starbucks','dunkin','dutch bros','coffee','cafe','espresso',
+  'mcdonald','burger king','wendy','chick-fil','taco bell','chipotle',
+  'subway','domino','pizza','doordash','ubereats','grubhub','instacart',
+  'netflix','spotify','hulu','disney','apple.com/bill','amazon prime',
+  'movie','cinema','amc theater','fandango',
+  'bar ','brewery','tavern','liquor',
+  'gym','planet fitness','anytime fitness',
+  'salon','barber','spa',
+  'airline','delta','united','southwest','american air',
+  'hotel','marriott','hilton','airbnb.com',  // airbnb.com = their own stays, not payouts
+  'gas station','chevron','shell','exxon','bp ','mobil','sinclair',
+  'kroger','safeway','whole foods','trader joe','albertsons','sprouts',
+  'walgreens','cvs','rite aid',
+]
+
+// Smarter guesses for things that are clearly business
+const BUSINESS_HINTS = [
+  { pattern: ['airbnb','vrbo','homeaway','vacasa','payout','booking.com'],  entry_type: 'income',   category: 'Booking revenue',        tax_type: null },
+  { pattern: ['cleaning fee','clean fee'],                                   entry_type: 'income',   category: 'Cleaning fee',           tax_type: null },
+  { pattern: ['xcel','rocky mountain power','pg&e','utilities','electric','water','trash','waste','garbage','recycl','sewage'], entry_type: 'expense', category: 'Utilities', tax_type: 'expense' },
+  { pattern: ['internet','comcast','xfinity','centurylink','lumen','wifi'],  entry_type: 'expense',  category: 'Utilities',              tax_type: 'expense' },
+  { pattern: ['insurance','state farm','allstate','geico','farmers'],        entry_type: 'expense',  category: 'Insurance',              tax_type: 'expense' },
+  { pattern: ['home depot','lowes','ace hardware','menards','true value'],   entry_type: 'expense',  category: 'Maintenance & repairs',  tax_type: 'expense' },
+  { pattern: ['wayfair','furniture','mattress','ikea','ashley','rooms to go'], entry_type: 'expense', category: 'Furniture',             tax_type: 'depreciate' },
+  { pattern: ['amazon'],                                                      entry_type: 'expense',  category: 'Linens & supplies',      tax_type: 'expense' },
+  { pattern: ['target','walmart','costco','bed bath'],                        entry_type: 'expense',  category: 'Linens & supplies',      tax_type: 'expense' },
+  { pattern: ['management','hpm','vacasa fee','property mgmt'],               entry_type: 'expense',  category: 'Management fees',        tax_type: 'expense' },
+  { pattern: ['mortgage','loan pmt','loancare','pennymac','rocket mortgage'], entry_type: 'expense',  category: 'Mortgage interest',      tax_type: 'expense' },
+  { pattern: ['hoa','homeowners assoc'],                                      entry_type: 'expense',  category: 'HOA',                    tax_type: 'expense' },
+]
+
+function classifyRow(description) {
+  const lower = description.toLowerCase()
+
+  // Check personal first
+  if (PERSONAL_PATTERNS.some(p => lower.includes(p))) {
+    return { _include: false, _autoSkipped: true, entry_type: 'expense', category: 'Other', tax_type: 'expense' }
+  }
+
+  // Check business hints
+  for (const hint of BUSINESS_HINTS) {
+    if (hint.pattern.some(p => lower.includes(p))) {
+      return { _include: true, _autoSkipped: false, entry_type: hint.entry_type, category: hint.category, tax_type: hint.tax_type }
+    }
+  }
+
+  // Unknown — include but flag for review
+  return { _include: true, _autoSkipped: false, entry_type: 'expense', category: 'Other', tax_type: 'expense' }
+}
+
 // Parse a CSV line respecting quoted fields
 function parseCSVLine(line) {
   const cols = []
@@ -53,14 +105,14 @@ function parseCSV(text) {
     const amount = Math.abs(parseFloat(rawAmount))
     if (isNaN(amount) || amount <= 0) return null
 
+    const description = cols[descCol] || ''
+    const classification = classifyRow(description)
     return {
       date: formatDate(dateCol !== -1 ? cols[dateCol] : ''),
-      description: cols[descCol] || '',
+      description,
       amount,
-      category: 'Other',
-      entry_type: 'expense',
-      tax_type: 'expense',
       _review: true,
+      ...classification,
     }
   }).filter(Boolean)
 }
@@ -70,6 +122,7 @@ export default function CSVImport({ onImport, onClose }) {
   const [step, setStep] = useState('upload') // upload | review | error
   const [dragging, setDragging] = useState(false)
   const [errorMsg, setErrorMsg] = useState('')
+  const [showSkipped, setShowSkipped] = useState(false)
   const fileRef = useRef()
 
   function handleFile(e) {
@@ -113,6 +166,8 @@ export default function CSVImport({ onImport, onClose }) {
   }
 
   const includedCount = rows.filter(r => r._include !== false).length
+  const autoSkippedCount = rows.filter(r => r._autoSkipped).length
+  const visibleRows = showSkipped ? rows : rows.filter(r => !r._autoSkipped)
 
   return (
     <div style={{ padding: '0 20px 40px' }}>
@@ -171,12 +226,34 @@ export default function CSVImport({ onImport, onClose }) {
 
       {step === 'review' && (
         <>
-          <p style={{ fontSize: 13, color: 'var(--text2)', marginBottom: 16 }}>
-            Toggle off transactions to skip. Set category and type for each one before importing.
+          <p style={{ fontSize: 13, color: 'var(--text2)', marginBottom: 12 }}>
+            Set category and type, toggle off anything to skip.
           </p>
+
+          {autoSkippedCount > 0 && (
+            <button
+              onClick={() => setShowSkipped(s => !s)}
+              style={{
+                width: '100%', marginBottom: 14,
+                padding: '10px 14px', borderRadius: 'var(--radius-sm)',
+                background: 'var(--bg2)',
+                display: 'flex', justifyContent: 'space-between', alignItems: 'center',
+                fontSize: 13, color: 'var(--text2)',
+              }}
+            >
+              <span>
+                {autoSkippedCount} likely personal transaction{autoSkippedCount !== 1 ? 's' : ''} auto-hidden
+              </span>
+              <span style={{ fontWeight: 500, color: 'var(--text)' }}>
+                {showSkipped ? 'Hide' : 'Review'} ↕
+              </span>
+            </button>
+          )}
+
           <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
-            {rows.map((row, i) => (
-              <div key={i} style={{
+            {visibleRows.map((row) => {
+              const i = rows.indexOf(row)
+              return <div key={i} style={{
                 background: row._include === false ? 'var(--bg2)' : 'var(--bg)',
                 border: '0.5px solid var(--border)',
                 borderRadius: 'var(--radius-sm)',
