@@ -253,14 +253,46 @@ export default function CSVImport({ onImport, onClose }) {
           <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
             {visibleRows.map((row) => {
               const i = rows.indexOf(row)
+              const isSplit = !!row._splitActive
+              const splitPct = row._splitPercent ?? 50
+              const originalAmt = row._originalAmount ?? row.amount
+              const importAmt = isSplit ? (originalAmt * splitPct / 100) : row.amount
+
+              function activateSplit() {
+                setRows(prev => prev.map((r, idx) => idx !== i ? r : {
+                  ...r,
+                  _splitActive: true,
+                  _splitPercent: 50,
+                  _originalAmount: r.amount,
+                  amount: parseFloat((r.amount * 0.5).toFixed(2)),
+                }))
+              }
+
+              function deactivateSplit() {
+                setRows(prev => prev.map((r, idx) => idx !== i ? r : {
+                  ...r,
+                  _splitActive: false,
+                  amount: r._originalAmount ?? r.amount,
+                }))
+              }
+
+              function setSplitPct(pct) {
+                setRows(prev => prev.map((r, idx) => idx !== i ? r : {
+                  ...r,
+                  _splitPercent: pct,
+                  amount: parseFloat((originalAmt * pct / 100).toFixed(2)),
+                }))
+              }
+
               return <div key={i} style={{
                 background: row._include === false ? 'var(--bg2)' : 'var(--bg)',
-                border: '0.5px solid var(--border)',
+                border: `0.5px solid ${isSplit ? 'var(--accent)' : 'var(--border)'}`,
                 borderRadius: 'var(--radius-sm)',
                 padding: '12px 14px',
                 opacity: row._include === false ? 0.45 : 1,
                 transition: 'opacity 0.15s',
               }}>
+                {/* Top row: description + toggle */}
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 8 }}>
                   <div style={{ flex: 1, minWidth: 0, paddingRight: 10 }}>
                     <p style={{ fontSize: 13, fontWeight: 500, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
@@ -268,52 +300,143 @@ export default function CSVImport({ onImport, onClose }) {
                     </p>
                     <p style={{ fontSize: 11, color: 'var(--text3)', marginTop: 2 }}>{row.date}</p>
                   </div>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: 10, flexShrink: 0 }}>
-                    <p style={{ fontSize: 15, fontWeight: 500 }}>${row.amount.toFixed(2)}</p>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexShrink: 0 }}>
+                    {/* Editable amount */}
+                    <div style={{ position: 'relative' }}>
+                      <span style={{ position: 'absolute', left: 8, top: '50%', transform: 'translateY(-50%)', fontSize: 13, color: 'var(--text2)', pointerEvents: 'none' }}>$</span>
+                      <input
+                        type="number"
+                        value={row.amount}
+                        onChange={e => {
+                          const v = parseFloat(e.target.value) || 0
+                          setRows(prev => prev.map((r, idx) => idx !== i ? r : {
+                            ...r,
+                            amount: v,
+                            _originalAmount: isSplit ? r._originalAmount : v,
+                          }))
+                        }}
+                        style={{
+                          width: 80, padding: '5px 8px 5px 18px',
+                          fontSize: 13, fontWeight: 500,
+                          borderRadius: 6, border: '1px solid var(--border-mid)',
+                        }}
+                      />
+                    </div>
                     <button
                       onClick={() => updateRow(i, '_include', row._include === false ? true : false)}
-                      style={{
-                        fontSize: 20,
-                        color: row._include === false ? 'var(--text3)' : 'var(--text)',
-                        lineHeight: 1,
-                      }}
+                      style={{ fontSize: 20, color: row._include === false ? 'var(--text3)' : 'var(--text)', lineHeight: 1 }}
                     >
                       {row._include === false ? '○' : '●'}
                     </button>
                   </div>
                 </div>
+
                 {row._include !== false && (
-                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8 }}>
-                    <select
-                      value={row.category}
-                      onChange={e => updateRow(i, 'category', e.target.value)}
-                      style={{ fontSize: 12, padding: '6px 10px' }}
-                    >
-                      <optgroup label="Expenses">
-                        {CATEGORIES.map(c => <option key={c}>{c}</option>)}
-                      </optgroup>
-                      <optgroup label="Income">
-                        {INCOME_CATEGORIES.map(c => <option key={c}>{c}</option>)}
-                      </optgroup>
-                    </select>
-                    <select
-                      value={row.entry_type === 'income' ? 'income' : row.tax_type}
-                      onChange={e => {
-                        if (e.target.value === 'income') {
-                          updateRow(i, 'entry_type', 'income')
-                          updateRow(i, 'tax_type', null)
-                        } else {
-                          updateRow(i, 'entry_type', 'expense')
-                          updateRow(i, 'tax_type', e.target.value)
-                        }
-                      }}
-                      style={{ fontSize: 12, padding: '6px 10px' }}
-                    >
-                      <option value="expense">Direct expense</option>
-                      <option value="depreciate">Depreciable</option>
-                      <option value="income">Income</option>
-                    </select>
-                  </div>
+                  <>
+                    {/* Category + type selects */}
+                    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8, marginBottom: 8 }}>
+                      <select
+                        value={row.category}
+                        onChange={e => updateRow(i, 'category', e.target.value)}
+                        style={{ fontSize: 12, padding: '6px 10px' }}
+                      >
+                        <optgroup label="Expenses">
+                          {CATEGORIES.map(c => <option key={c}>{c}</option>)}
+                        </optgroup>
+                        <optgroup label="Income">
+                          {INCOME_CATEGORIES.map(c => <option key={c}>{c}</option>)}
+                        </optgroup>
+                      </select>
+                      <select
+                        value={row.entry_type === 'income' ? 'income' : row.tax_type}
+                        onChange={e => {
+                          if (e.target.value === 'income') {
+                            updateRow(i, 'entry_type', 'income')
+                            updateRow(i, 'tax_type', null)
+                          } else {
+                            updateRow(i, 'entry_type', 'expense')
+                            updateRow(i, 'tax_type', e.target.value)
+                          }
+                        }}
+                        style={{ fontSize: 12, padding: '6px 10px' }}
+                      >
+                        <option value="expense">Direct expense</option>
+                        <option value="depreciate">Depreciable</option>
+                        <option value="income">Income</option>
+                      </select>
+                    </div>
+
+                    {/* Split section */}
+                    {!isSplit ? (
+                      <button
+                        onClick={activateSplit}
+                        style={{
+                          fontSize: 12, color: 'var(--text3)',
+                          display: 'flex', alignItems: 'center', gap: 4,
+                          padding: '3px 0',
+                        }}
+                      >
+                        ✂ Split with apartment / personal
+                      </button>
+                    ) : (
+                      <div style={{
+                        borderTop: '0.5px solid var(--border)',
+                        paddingTop: 10,
+                        marginTop: 2,
+                      }}>
+                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 8 }}>
+                          <p style={{ fontSize: 11, fontWeight: 500, color: 'var(--accent)', letterSpacing: '0.05em', textTransform: 'uppercase' }}>
+                            Split
+                          </p>
+                          <button onClick={deactivateSplit} style={{ fontSize: 11, color: 'var(--text3)' }}>
+                            Remove split ×
+                          </button>
+                        </div>
+
+                        {/* Quick % presets */}
+                        <div style={{ display: 'flex', gap: 6, marginBottom: 10, flexWrap: 'wrap', alignItems: 'center' }}>
+                          {[25, 50, 75].map(pct => (
+                            <button
+                              key={pct}
+                              onClick={() => setSplitPct(pct)}
+                              style={{
+                                padding: '5px 12px', borderRadius: 20, fontSize: 12,
+                                background: splitPct === pct ? 'var(--accent)' : 'var(--bg2)',
+                                color: splitPct === pct ? 'white' : 'var(--text2)',
+                                fontWeight: splitPct === pct ? 500 : 400,
+                              }}
+                            >
+                              {pct}% mine
+                            </button>
+                          ))}
+                          <div style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
+                            <input
+                              type="number" min="1" max="100"
+                              value={splitPct}
+                              onChange={e => setSplitPct(Math.min(100, Math.max(1, parseInt(e.target.value) || 1)))}
+                              style={{ width: 52, padding: '5px 8px', fontSize: 12, borderRadius: 6 }}
+                            />
+                            <span style={{ fontSize: 12, color: 'var(--text3)' }}>%</span>
+                          </div>
+                        </div>
+
+                        {/* Split summary */}
+                        <div style={{
+                          background: 'var(--accent-light)',
+                          borderRadius: 6, padding: '8px 12px',
+                          display: 'flex', justifyContent: 'space-between',
+                          fontSize: 12,
+                        }}>
+                          <span style={{ color: 'var(--accent)', fontWeight: 500 }}>
+                            Importing: ${importAmt.toFixed(2)} ({splitPct}%)
+                          </span>
+                          <span style={{ color: 'var(--text3)' }}>
+                            Skipping: ${(originalAmt - importAmt).toFixed(2)}
+                          </span>
+                        </div>
+                      </div>
+                    )}
+                  </>
                 )}
               </div>
             })}
