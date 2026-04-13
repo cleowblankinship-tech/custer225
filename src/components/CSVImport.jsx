@@ -6,10 +6,20 @@ const TAX_LABELS = { depreciate: 'Depreciable', expense: 'Direct expense' }
 export default function CSVImport({ onImport, onClose }) {
   const [rows, setRows] = useState([])
   const [step, setStep] = useState('upload') // upload | review
+  const [dragging, setDragging] = useState(false)
   const fileRef = useRef()
 
   function handleFile(e) {
-    const file = e.target.files[0]
+    processFile(e.target.files[0])
+  }
+
+  function handleDrop(e) {
+    e.preventDefault()
+    setDragging(false)
+    processFile(e.dataTransfer.files[0])
+  }
+
+  function processFile(file) {
     if (!file) return
     const reader = new FileReader()
     reader.onload = (ev) => {
@@ -72,15 +82,23 @@ export default function CSVImport({ onImport, onClose }) {
       {step === 'upload' && (
         <div
           onClick={() => fileRef.current.click()}
+          onDragOver={e => { e.preventDefault(); setDragging(true) }}
+          onDragEnter={e => { e.preventDefault(); setDragging(true) }}
+          onDragLeave={() => setDragging(false)}
+          onDrop={handleDrop}
           style={{
-            border: '1.5px dashed var(--border-mid)',
+            border: `1.5px dashed ${dragging ? 'var(--accent)' : 'var(--border-mid)'}`,
             borderRadius: 'var(--radius)',
             padding: '40px 20px',
             textAlign: 'center',
-            cursor: 'pointer'
+            cursor: 'pointer',
+            background: dragging ? 'var(--accent-light)' : 'transparent',
+            transition: 'all 0.15s',
           }}
         >
-          <p style={{ fontSize: 15, fontWeight: 500, marginBottom: 6 }}>Drop your Chase CSV here</p>
+          <p style={{ fontSize: 15, fontWeight: 500, marginBottom: 6 }}>
+            {dragging ? 'Drop it!' : 'Drop your Chase CSV here'}
+          </p>
           <p style={{ fontSize: 13, color: 'var(--text2)' }}>or tap to browse</p>
           <input ref={fileRef} type="file" accept=".csv" onChange={handleFile} style={{ display: 'none' }} />
         </div>

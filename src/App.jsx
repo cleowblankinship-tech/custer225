@@ -57,8 +57,14 @@ export default function App() {
       recurring_day: parsed.recurring_day || null,
     }
     if (useDB) {
-      const saved = await addExpense(entry)
-      setExpenses(prev => [saved, ...prev])
+      try {
+        const saved = await addExpense(entry)
+        setExpenses(prev => [saved, ...prev])
+      } catch (err) {
+        console.error('Supabase save failed:', err.message)
+        alert(`Could not save to database: ${err.message}`)
+        return
+      }
     } else {
       setExpenses(prev => [{ ...entry, id: 'local-' + Date.now() }, ...prev])
     }
