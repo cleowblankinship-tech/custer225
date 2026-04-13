@@ -316,7 +316,7 @@ export default function CSVImport({ onImport, onClose }) {
                   </div>
                 )}
               </div>
-            ))}
+            })}
           </div>
 
           <div style={{ position: 'sticky', bottom: 0, paddingTop: 12, background: 'var(--bg)' }}>
