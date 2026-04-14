@@ -1,21 +1,33 @@
 import { useState, useEffect } from 'react'
 import { INITIAL_ITEMS, computeSpinUpStats } from '../lib/spinupData'
+import { getSetupItems } from '../lib/supabase'
 
 const STORAGE_KEY = '225-spinup-v1'
 
 export default function SetupCard({ onNavigate }) {
   const [stats, setStats] = useState(null)
 
-  // Re-reads localStorage every time the Home page mounts (i.e. each time
-  // the user navigates back from the Setup tab), so data is always fresh.
+  // Try Supabase first (so card is accurate on any device), fall back to
+  // localStorage (fast local cache written by SpinUp on every change).
   useEffect(() => {
-    try {
-      const s = localStorage.getItem(STORAGE_KEY)
-      const items = s ? JSON.parse(s) : INITIAL_ITEMS
-      setStats(computeSpinUpStats(items))
-    } catch {
-      setStats(computeSpinUpStats(INITIAL_ITEMS))
+    async function load() {
+      try {
+        const dbItems = await getSetupItems()
+        if (dbItems && dbItems.length > 0) {
+          setStats(computeSpinUpStats(dbItems))
+          return
+        }
+      } catch {}
+      // Fall back to localStorage
+      try {
+        const s = localStorage.getItem(STORAGE_KEY)
+        const items = s ? JSON.parse(s) : INITIAL_ITEMS
+        setStats(computeSpinUpStats(items))
+      } catch {
+        setStats(computeSpinUpStats(INITIAL_ITEMS))
+      }
     }
+    load()
   }, [])
 
   if (!stats) return null

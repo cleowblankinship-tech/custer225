@@ -1,5 +1,6 @@
-import { useState, useEffect, useMemo } from 'react'
+import { useState, useEffect, useMemo, useRef } from 'react'
 import { CATEGORIES, SHORT_CAT_NAMES, INITIAL_ITEMS, isItemDone } from '../lib/spinupData'
+import { getSetupItems, saveSetupItems } from '../lib/supabase'
 
 const STORAGE_KEY = '225-spinup-v1'
 
@@ -192,12 +193,30 @@ export default function SpinUp() {
   const [collapsed, setCollapsed] = useState({})
   const [addInput, setAddInput] = useState('')
   const [showAdd, setShowAdd] = useState(false)
+  const [dbLoading, setDbLoading] = useState(true)
 
-  // Persist to localStorage
+  // On mount: load from Supabase (authoritative), fall back to localStorage
+  const initialLoadDone = useRef(false)
   useEffect(() => {
-    try {
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(items))
-    } catch {}
+    getSetupItems()
+      .then(dbItems => {
+        if (dbItems && dbItems.length > 0) {
+          setItems(dbItems)
+          try { localStorage.setItem(STORAGE_KEY, JSON.stringify(dbItems)) } catch {}
+        }
+      })
+      .catch(() => {})
+      .finally(() => {
+        setDbLoading(false)
+        initialLoadDone.current = true
+      })
+  }, [])
+
+  // Persist to localStorage + Supabase on every change (skip the initial load)
+  useEffect(() => {
+    if (!initialLoadDone.current) return
+    try { localStorage.setItem(STORAGE_KEY, JSON.stringify(items)) } catch {}
+    saveSetupItems(items).catch(() => {})
   }, [items])
 
   // ── Actions ──────────────────────────────────────────────────────────────
@@ -316,6 +335,14 @@ export default function SpinUp() {
   ]
 
   // ── Render ────────────────────────────────────────────────────────────────
+
+  if (dbLoading) {
+    return (
+      <p style={{ textAlign: 'center', color: 'var(--text3)', fontSize: 14, padding: 40 }}>
+        Loading…
+      </p>
+    )
+  }
 
   return (
     <div style={{ paddingBottom: 32 }}>
