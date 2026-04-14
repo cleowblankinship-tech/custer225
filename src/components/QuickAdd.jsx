@@ -1,4 +1,4 @@
-import { useState, useRef } from 'react'
+import { useState } from 'react'
 import { parseNaturalLanguage, CATEGORIES, INCOME_CATEGORIES } from '../lib/parser'
 
 const TAX_COLORS = { depreciate: 'var(--blue)', expense: 'var(--green)' }
@@ -19,9 +19,7 @@ function ordinal(n) {
 export default function QuickAdd({ onAdd }) {
   const [input, setInput] = useState('')
   const [parsed, setParsed] = useState(null)
-  const [listening, setListening] = useState(false)
   const [confirming, setConfirming] = useState(false)
-  const recognitionRef = useRef(null)
 
   function handleInput(val) {
     setInput(val)
@@ -62,27 +60,6 @@ export default function QuickAdd({ onAdd }) {
     })
   }
 
-  function startListening() {
-    const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition
-    if (!SpeechRecognition) { alert('Voice input not supported on this browser.'); return }
-    const rec = new SpeechRecognition()
-    rec.lang = 'en-US'
-    rec.interimResults = false
-    rec.onresult = (e) => {
-      const transcript = e.results[0][0].transcript
-      setInput(transcript)
-      setListening(false)
-      const result = parseNaturalLanguage(transcript)
-      setParsed(result)
-      setConfirming(true)
-    }
-    rec.onerror = () => setListening(false)
-    rec.onend = () => setListening(false)
-    rec.start()
-    recognitionRef.current = rec
-    setListening(true)
-  }
-
   const isIncome = parsed?.entry_type === 'income'
 
   return (
@@ -97,20 +74,6 @@ export default function QuickAdd({ onAdd }) {
               placeholder="spatula amazon $14"
             />
           </div>
-          <button
-            onClick={startListening}
-            style={{
-              width: 44, height: 44, borderRadius: '50%',
-              background: listening ? 'var(--accent)' : 'var(--bg2)',
-              color: listening ? 'white' : 'var(--text2)',
-              fontSize: 18, flexShrink: 0,
-              display: 'flex', alignItems: 'center', justifyContent: 'center',
-              transition: 'all 0.2s'
-            }}
-            title="Voice input"
-          >
-            {listening ? '◼' : '🎤'}
-          </button>
           <button
             onClick={handleParse}
             disabled={!input.trim()}

@@ -115,8 +115,8 @@ export default function App() {
         )}
       </div>
 
-      {/* Content */}
-      <div style={{ flex: 1, paddingTop: 20 }}>
+      {/* Content — bottom padding reserves space for the fixed nav */}
+      <div style={{ flex: 1, paddingTop: 20, paddingBottom: 'calc(64px + env(safe-area-inset-bottom))' }}>
         {loading && (
           <p style={{ textAlign: 'center', color: 'var(--text3)', fontSize: 14, padding: 40 }}>Loading...</p>
         )}
@@ -176,8 +176,9 @@ export default function App() {
         )}
       </div>
 
-      {/* Bottom nav */}
+      {/* Bottom nav — fixed so it's always visible regardless of scroll */}
       <div style={{
+        position: 'fixed', bottom: 0, left: 0, right: 0, zIndex: 100,
         display: 'flex', borderTop: '0.5px solid var(--border)',
         background: 'var(--bg)', paddingBottom: 'env(safe-area-inset-bottom)',
       }}>
