@@ -4,6 +4,7 @@ import PLReport from './components/PLReport'
 import QuickAdd from './components/QuickAdd'
 import ExpenseList from './components/ExpenseList'
 import CSVImport from './components/CSVImport'
+import SpinUp from './components/SpinUp'
 import { getExpenses, addExpense, deleteExpense } from './lib/supabase'
 
 const SEED_EXPENSES = [
@@ -20,7 +21,7 @@ const SEED_EXPENSES = [
 
 export default function App() {
   const [expenses, setExpenses] = useState(SEED_EXPENSES)
-  const [view, setView] = useState('home') // home | list | import | pl
+  const [view, setView] = useState('home') // home | list | spinup | import | pl
   const [listFilter, setListFilter] = useState('all')
   const [listMonth, setListMonth] = useState(null)
   const [loading, setLoading] = useState(false)
@@ -85,10 +86,11 @@ export default function App() {
   const navItems = [
     { key: 'home',   label: 'Home',    icon: '⌂' },
     { key: 'list',   label: 'Ledger',  icon: '≡' },
+    { key: 'spinup', label: 'Setup',   icon: '✓' },
     { key: 'import', label: 'Import',  icon: '↑' },
   ]
 
-  const viewTitle = { home: 'Overview', list: 'Ledger', import: 'Import', pl: 'P&L Report' }
+  const viewTitle = { home: 'Overview', list: 'Ledger', spinup: 'Spin-Up', import: 'Import', pl: 'P&L Report' }
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', minHeight: '100dvh' }}>
@@ -156,6 +158,8 @@ export default function App() {
             key={`${listFilter}-${listMonth}`}
           />
         )}
+
+        {!loading && view === 'spinup' && <SpinUp />}
 
         {!loading && view === 'import' && (
           <CSVImport onImport={handleImport} onClose={() => setView('home')} />
