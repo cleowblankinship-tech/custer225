@@ -332,7 +332,7 @@ export default function SpinUp() {
 
       {/* ── Progress Banner ── */}
       <div style={{
-        margin: '0 16px 16px',
+        margin: '0 16px 20px',
         background: 'var(--text)',
         color: 'var(--bg)',
         borderRadius: 'var(--radius)',
@@ -385,18 +385,22 @@ export default function SpinUp() {
       {/* ── Type filter pills ── */}
       <div style={{
         display: 'flex',
-        gap: 6,
-        padding: '0 16px 12px',
+        gap: 7,
+        padding: '0 16px 9px',
         overflowX: 'auto',
         scrollbarWidth: 'none',
       }}>
         {typeFilters.map(f => (
           <button
             key={f.key}
-            onClick={() => setFilterType(f.key)}
+            onClick={() => {
+              setFilterType(f.key)
+              // Category chips don't apply to tasks — clear any active category
+              if (f.key === 'tasks') setFilterCat(null)
+            }}
             style={{
               flexShrink: 0,
-              padding: '6px 12px',
+              padding: '7px 15px',
               borderRadius: 20,
               fontSize: 13,
               fontWeight: filterType === f.key ? 500 : 400,
@@ -410,57 +414,58 @@ export default function SpinUp() {
         ))}
       </div>
 
-      {/* ── Category chips ── */}
-      <div style={{
-        display: 'flex',
-        gap: 6,
-        padding: '0 16px 16px',
-        overflowX: 'auto',
-        scrollbarWidth: 'none',
-      }}>
-        {/* All chip */}
-        <button
-          onClick={() => setFilterCat(null)}
-          style={{
-            flexShrink: 0,
-            padding: '5px 11px',
-            borderRadius: 20,
-            fontSize: 12,
-            fontWeight: !filterCat ? 500 : 400,
-            background: !filterCat ? 'var(--text)' : 'var(--bg2)',
-            color: !filterCat ? 'var(--bg)' : 'var(--text)',
-            whiteSpace: 'nowrap',
-          }}
-        >
-          All categories
-        </button>
+      {/* ── Category chips — hidden in Tasks mode ── */}
+      {filterType !== 'tasks' && (
+        <div style={{
+          display: 'flex',
+          gap: 7,
+          padding: '0 16px 20px',
+          overflowX: 'auto',
+          scrollbarWidth: 'none',
+        }}>
+          <button
+            onClick={() => setFilterCat(null)}
+            style={{
+              flexShrink: 0,
+              padding: '5px 12px',
+              borderRadius: 20,
+              fontSize: 12,
+              fontWeight: !filterCat ? 500 : 400,
+              background: !filterCat ? 'var(--text)' : 'var(--bg2)',
+              color: !filterCat ? 'var(--bg)' : 'var(--text2)',
+              whiteSpace: 'nowrap',
+            }}
+          >
+            All
+          </button>
 
-        {CATEGORIES.map(cat => {
-          const s = catStats[cat]
-          const pct = s.total > 0 ? Math.round((s.done / s.total) * 100) : 0
-          const allDone = pct === 100 && s.total > 0
-          const isActive = filterCat === cat
-          const label = SHORT_CAT_NAMES[cat] + (pct > 0 ? ` ${pct}%` : '')
-          return (
-            <button
-              key={cat}
-              onClick={() => setFilterCat(cat === filterCat ? null : cat)}
-              style={{
-                flexShrink: 0,
-                padding: '5px 11px',
-                borderRadius: 20,
-                fontSize: 12,
-                fontWeight: isActive ? 500 : 400,
-                background: isActive ? 'var(--text)' : 'var(--bg2)',
-                color: isActive ? 'var(--bg)' : (allDone ? 'var(--green)' : 'var(--text)'),
-                whiteSpace: 'nowrap',
-              }}
-            >
-              {label}
-            </button>
-          )
-        })}
-      </div>
+          {CATEGORIES.map(cat => {
+            const s = catStats[cat]
+            const pct = s.total > 0 ? Math.round((s.done / s.total) * 100) : 0
+            const allDone = pct === 100 && s.total > 0
+            const isActive = filterCat === cat
+            const label = SHORT_CAT_NAMES[cat] + (pct > 0 ? ` ${pct}%` : '')
+            return (
+              <button
+                key={cat}
+                onClick={() => setFilterCat(cat === filterCat ? null : cat)}
+                style={{
+                  flexShrink: 0,
+                  padding: '5px 12px',
+                  borderRadius: 20,
+                  fontSize: 12,
+                  fontWeight: isActive ? 500 : 400,
+                  background: isActive ? 'var(--text)' : 'var(--bg2)',
+                  color: isActive ? 'var(--bg)' : (allDone ? 'var(--green)' : 'var(--text2)'),
+                  whiteSpace: 'nowrap',
+                }}
+              >
+                {label}
+              </button>
+            )
+          })}
+        </div>
+      )}
 
       {/* ── Before photos section ── */}
       {showPhotoSection && (
@@ -510,8 +515,33 @@ export default function SpinUp() {
 
       {/* ── Category sections ── */}
       {grouped.length === 0 ? (
-        <div style={{ textAlign: 'center', padding: '40px 20px', color: 'var(--text3)', fontSize: 14 }}>
-          No items match this filter.
+        <div style={{
+          display: 'flex',
+          flexDirection: 'column',
+          alignItems: 'center',
+          padding: '52px 32px 32px',
+          gap: 6,
+        }}>
+          <p style={{ fontSize: 15, fontWeight: 500, color: 'var(--text2)', textAlign: 'center' }}>
+            {filterType === 'remaining' && !filterCat
+              ? 'All done!'
+              : filterType === 'tasks'
+              ? 'All tasks complete'
+              : filterType === 'done' && !filterCat
+              ? 'Nothing completed yet'
+              : filterCat
+              ? `No ${filterType === 'all' ? 'items' : filterType} in ${filterCat}`
+              : 'No items match'}
+          </p>
+          <p style={{ fontSize: 13, color: 'var(--text3)', textAlign: 'center' }}>
+            {filterType === 'remaining' && !filterCat
+              ? 'Every item is checked off.'
+              : filterType === 'tasks'
+              ? 'Every launch task is complete.'
+              : filterType === 'done' && !filterCat
+              ? 'Start checking items off to see them here.'
+              : 'Try a different filter.'}
+          </p>
         </div>
       ) : (
         grouped.map(({ cat, items: catItems, allItems }) => {
