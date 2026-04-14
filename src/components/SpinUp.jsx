@@ -1,5 +1,5 @@
 import { useState, useEffect, useMemo } from 'react'
-import { CATEGORIES, SHORT_CAT_NAMES, INITIAL_ITEMS } from '../lib/spinupData'
+import { CATEGORIES, SHORT_CAT_NAMES, INITIAL_ITEMS, isItemDone } from '../lib/spinupData'
 
 const STORAGE_KEY = '225-spinup-v1'
 
@@ -11,10 +11,6 @@ const SUBTYPE_LABELS = {
   setup: 'Setup task',
   staging: 'Staging task',
   appliance: 'Appliance',
-}
-
-function isItemDone(item) {
-  return item.qty !== null ? item.qtyDone >= item.qty : item.done
 }
 
 // ── ItemRow ─────────────────────────────────────────────────────────────────

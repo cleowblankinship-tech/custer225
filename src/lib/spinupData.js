@@ -24,6 +24,37 @@ export const SHORT_CAT_NAMES = {
   'Launch Tasks': 'Tasks',
 }
 
+// ── Shared helpers ────────────────────────────────────────────────────────────
+
+export function isItemDone(item) {
+  return item.qty !== null ? item.qtyDone >= item.qty : item.done
+}
+
+export function computeSpinUpStats(items) {
+  const total = items.length
+  const done = items.filter(isItemDone).length
+  const remaining = total - done
+  const pct = total > 0 ? Math.round((done / total) * 100) : 0
+  const tasks = items.filter(it => it.type === 'task')
+  const purchases = items.filter(it => it.type === 'purchase')
+  const photoTasks = items.filter(
+    it => it.type === 'task' && it.priority === 'high' && !isItemDone(it)
+  )
+  return {
+    total,
+    done,
+    remaining,
+    pct,
+    tasksTotal: tasks.length,
+    tasksDone: tasks.filter(isItemDone).length,
+    purchasesTotal: purchases.length,
+    purchasesDone: purchases.filter(isItemDone).length,
+    photoTasksRemaining: photoTasks.length,
+  }
+}
+
+// ── Seed data ─────────────────────────────────────────────────────────────────
+
 let _id = 0
 function item(title, category, type, subtype, qty, priority, optional = false) {
   _id++

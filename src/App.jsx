@@ -5,6 +5,7 @@ import QuickAdd from './components/QuickAdd'
 import ExpenseList from './components/ExpenseList'
 import CSVImport from './components/CSVImport'
 import SpinUp from './components/SpinUp'
+import SetupCard from './components/SetupCard'
 import { getExpenses, addExpense, deleteExpense } from './lib/supabase'
 
 const SEED_EXPENSES = [
@@ -125,7 +126,7 @@ export default function App() {
             <PLSummary expenses={expenses} onNavigate={navigateToList} />
 
             {/* P&L link */}
-            <div style={{ padding: '0 20px 20px' }}>
+            <div style={{ padding: '0 20px 8px' }}>
               <button
                 onClick={() => setView('pl')}
                 style={{
@@ -138,6 +139,11 @@ export default function App() {
                 <span>View full P&amp;L report</span>
                 <span style={{ color: 'var(--text3)' }}>→</span>
               </button>
+            </div>
+
+            {/* Setup progress card */}
+            <div style={{ padding: '0 20px 20px' }}>
+              <SetupCard onNavigate={() => setView('spinup')} />
             </div>
 
             <div style={{ padding: '0 20px 16px' }}>
