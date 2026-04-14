@@ -7,6 +7,7 @@ import CSVImport from './components/CSVImport'
 import SpinUp from './components/SpinUp'
 import SetupCard from './components/SetupCard'
 import { getExpenses, addExpense, deleteExpense } from './lib/supabase'
+import IntroSplash from './components/IntroSplash'
 
 const SEED_EXPENSES = [
   { id: 's1', date: '2026-04-07', description: 'American Furniture Warehouse — couch', category: 'Furniture', entry_type: 'expense', tax_type: 'depreciate', amount: 2162.04 },
@@ -22,6 +23,7 @@ const SEED_EXPENSES = [
 
 export default function App() {
   const [expenses, setExpenses] = useState(SEED_EXPENSES)
+  const [showIntro, setShowIntro] = useState(true) // true on every cold load
   const [view, setView] = useState('home') // home | list | spinup | import | pl
   const [listFilter, setListFilter] = useState('all')
   const [listMonth, setListMonth] = useState(null)
@@ -95,6 +97,9 @@ export default function App() {
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', minHeight: '100dvh' }}>
+
+      {/* Intro splash — fixed overlay, only on cold load */}
+      {showIntro && <IntroSplash onComplete={() => setShowIntro(false)} />}
 
       {/* Header */}
       <div style={{
