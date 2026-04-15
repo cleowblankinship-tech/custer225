@@ -103,31 +103,29 @@ export default function App() {
 
       {/* Header */}
       <div style={{
-        padding: view === 'home' ? '48px 20px 14px' : '52px 20px 20px',
+        padding: view === 'home' ? '36px 20px 14px' : '48px 20px 18px',
         borderBottom: '0.5px solid var(--border)',
-        display: 'flex', alignItems: 'flex-end', justifyContent: 'space-between',
+        display: 'flex', alignItems: 'center', justifyContent: 'space-between',
       }}>
-        <div>
-          {view === 'home' ? (
-            <>
-              <img
-                src="/logo.png"
-                alt="225 Custer"
-                style={{ height: 80, width: 'auto', display: 'block', marginBottom: 8 }}
-              />
-              <p style={{ fontSize: 22, fontWeight: 500 }}>Overview</p>
-            </>
-          ) : (
-            <>
-              <p style={{ fontSize: 11, color: 'var(--text2)', letterSpacing: '0.1em', textTransform: 'uppercase', marginBottom: 2 }}>
-                225 Custer
-              </p>
-              <p style={{ fontSize: 22, fontWeight: 500 }}>{viewTitle[view]}</p>
-            </>
-          )}
-        </div>
+        {view === 'home' ? (
+          <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+            <img
+              src="/logo.png"
+              alt="225 Custer"
+              style={{ height: 48, width: 'auto', display: 'block', flexShrink: 0 }}
+            />
+            <p style={{ fontSize: 22, fontWeight: 500 }}>Overview</p>
+          </div>
+        ) : (
+          <div>
+            <p style={{ fontSize: 11, color: 'var(--text2)', letterSpacing: '0.1em', textTransform: 'uppercase', marginBottom: 2 }}>
+              225 Custer
+            </p>
+            <p style={{ fontSize: 22, fontWeight: 500 }}>{viewTitle[view]}</p>
+          </div>
+        )}
         {view === 'pl' && (
-          <button onClick={() => setView('home')} style={{ fontSize: 13, color: 'var(--text2)', paddingBottom: 4 }}>
+          <button onClick={() => setView('home')} style={{ fontSize: 13, color: 'var(--text2)' }}>
             ← Back
           </button>
         )}
