@@ -38,7 +38,12 @@ export default function QuickAdd({ onAdd }) {
   }
 
   function handleConfirm() {
-    if (!parsed || !parsed.amount || !parsed.description) return
+    const isTaskType = parsed?.entry_type === 'task' || parsed?.entry_type === 'reminder'
+    if (isTaskType) {
+      if (!parsed.title) return
+    } else {
+      if (!parsed || !parsed.amount || !parsed.description) return
+    }
     onAdd(parsed)
     setInput('')
     setParsed(null)
@@ -50,16 +55,7 @@ export default function QuickAdd({ onAdd }) {
     setConfirming(false)
   }
 
-  function toggleEntryType() {
-    const next = parsed.entry_type === 'income' ? 'expense' : 'income'
-    setParsed({
-      ...parsed,
-      entry_type: next,
-      category: next === 'income' ? INCOME_CATEGORIES[0] : CATEGORIES[0],
-      tax_type: next === 'income' ? null : 'expense',
-    })
-  }
-
+  const isTask = parsed?.entry_type === 'task' || parsed?.entry_type === 'reminder'
   const isIncome = parsed?.entry_type === 'income'
 
   return (
@@ -71,7 +67,7 @@ export default function QuickAdd({ onAdd }) {
               value={input}
               onChange={e => handleInput(e.target.value)}
               onKeyDown={handleKeyDown}
-              placeholder="spatula amazon $14"
+              placeholder="spatula $14  ·  fix hinge  ·  trash tomorrow"
             />
           </div>
           <button
@@ -94,214 +90,288 @@ export default function QuickAdd({ onAdd }) {
           borderRadius: 'var(--radius)',
           padding: 16
         }}>
-          {/* Income / Expense toggle */}
-          <div style={{
-            display: 'flex',
-            background: 'var(--bg2)',
-            borderRadius: 'var(--radius-sm)',
-            padding: 3,
-            marginBottom: 14,
-            gap: 3,
-          }}>
-            {['expense', 'income'].map(t => (
-              <button
-                key={t}
-                onClick={() => setParsed({
-                  ...parsed,
-                  entry_type: t,
-                  category: t === 'income' ? INCOME_CATEGORIES[0] : CATEGORIES[0],
-                  tax_type: t === 'income' ? null : 'expense',
-                })}
-                style={{
-                  flex: 1, padding: '8px 0', borderRadius: 6, fontSize: 13, fontWeight: 500,
-                  background: parsed.entry_type === t ? 'var(--bg)' : 'transparent',
-                  color: parsed.entry_type === t
-                    ? (t === 'income' ? 'var(--accent)' : 'var(--text)')
-                    : 'var(--text3)',
-                  boxShadow: parsed.entry_type === t ? '0 1px 3px rgba(0,0,0,0.08)' : 'none',
-                  transition: 'all 0.15s',
-                }}
-              >
-                {t === 'income' ? '+ Income' : '− Expense'}
-              </button>
-            ))}
-          </div>
 
-          <p style={{ fontSize: 12, color: 'var(--text2)', marginBottom: 12 }}>Confirm entry</p>
-
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
-            <Field label="Description">
-              <input value={parsed.description} onChange={e => setParsed({...parsed, description: e.target.value})} />
-            </Field>
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10 }}>
-              <Field label="Amount">
-                <input
-                  type="number"
-                  value={parsed.amount || ''}
-                  onChange={e => setParsed({...parsed, amount: parseFloat(e.target.value)})}
-                  placeholder="0.00"
-                  style={{ borderColor: !parsed.amount ? 'var(--red)' : undefined }}
-                />
-              </Field>
-              <Field label="Date">
-                <input
-                  type="date"
-                  value={parsed.date}
-                  onChange={e => setParsed({...parsed, date: e.target.value})}
-                />
-              </Field>
-            </div>
-
-            {isIncome ? (
-              <Field label="Category">
-                <select value={parsed.category} onChange={e => setParsed({...parsed, category: e.target.value})}>
-                  {INCOME_CATEGORIES.map(c => <option key={c}>{c}</option>)}
-                </select>
-              </Field>
-            ) : (
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10 }}>
-                <Field label="Category">
-                  <select value={parsed.category} onChange={e => setParsed({...parsed, category: e.target.value})}>
-                    {CATEGORIES.map(c => <option key={c}>{c}</option>)}
-                  </select>
-                </Field>
-                <Field label="Tax treatment">
-                  <select
-                    value={parsed.tax_type}
-                    onChange={e => setParsed({...parsed, tax_type: e.target.value})}
-                    style={{ color: TAX_COLORS[parsed.tax_type] }}
+          {/* ── Task / Reminder confirm ────────────────────────────────── */}
+          {isTask ? (
+            <>
+              {/* Task / Reminder type toggle */}
+              <div style={{
+                display: 'flex', background: 'var(--bg2)',
+                borderRadius: 'var(--radius-sm)', padding: 3,
+                marginBottom: 14, gap: 3,
+              }}>
+                {['task', 'reminder'].map(t => (
+                  <button
+                    key={t}
+                    onClick={() => setParsed({ ...parsed, entry_type: t })}
+                    style={{
+                      flex: 1, padding: '8px 0', borderRadius: 6, fontSize: 13, fontWeight: 500,
+                      background: parsed.entry_type === t ? 'var(--bg)' : 'transparent',
+                      color: parsed.entry_type === t ? 'var(--text)' : 'var(--text3)',
+                      boxShadow: parsed.entry_type === t ? '0 1px 3px rgba(0,0,0,0.08)' : 'none',
+                      transition: 'all 0.15s',
+                    }}
                   >
-                    <option value="expense">Direct expense</option>
-                    <option value="depreciate">Depreciable</option>
-                  </select>
+                    {t === 'task' ? '✓ Task' : '○ Reminder'}
+                  </button>
+                ))}
+              </div>
+
+              <p style={{ fontSize: 12, color: 'var(--text2)', marginBottom: 12 }}>Confirm {parsed.entry_type}</p>
+
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+                <Field label="Title">
+                  <input
+                    value={parsed.title || ''}
+                    onChange={e => setParsed({ ...parsed, title: e.target.value })}
+                    style={{ borderColor: !parsed.title ? 'var(--red)' : undefined }}
+                  />
+                </Field>
+                <Field label="Due date (optional)">
+                  <input
+                    type="date"
+                    value={parsed.due_date || ''}
+                    onChange={e => setParsed({ ...parsed, due_date: e.target.value || null })}
+                  />
                 </Field>
               </div>
-            )}
 
-            {/* Recurring toggle */}
+              <div style={{ display: 'flex', gap: 8, marginTop: 14 }}>
+                <button
+                  onClick={handleCancel}
+                  style={{
+                    flex: 1, height: 44, borderRadius: 'var(--radius-sm)',
+                    background: 'var(--bg2)', color: 'var(--text2)', fontWeight: 500
+                  }}
+                >
+                  Cancel
+                </button>
+                <button
+                  onClick={handleConfirm}
+                  disabled={!parsed.title}
+                  style={{
+                    flex: 2, height: 44, borderRadius: 'var(--radius-sm)',
+                    background: 'var(--text)', color: 'var(--bg)', fontWeight: 500
+                  }}
+                >
+                  Save {parsed.entry_type}
+                </button>
+              </div>
+            </>
+          ) : (
+
+          /* ── Expense / Income confirm ──────────────────────────────── */
+          <>
+            {/* Income / Expense toggle */}
             <div style={{
-              borderTop: '0.5px solid var(--border)',
-              paddingTop: 12,
               display: 'flex',
-              flexDirection: 'column',
-              gap: 10,
+              background: 'var(--bg2)',
+              borderRadius: 'var(--radius-sm)',
+              padding: 3,
+              marginBottom: 14,
+              gap: 3,
             }}>
-              <button
-                onClick={() => setParsed({...parsed, recurring: !parsed.recurring})}
-                style={{
-                  display: 'flex', alignItems: 'center', justifyContent: 'space-between',
-                  width: '100%', padding: '2px 0',
-                }}
-              >
-                <span style={{ fontSize: 14, color: 'var(--text)', fontWeight: 500 }}>Recurring</span>
-                <span style={{
-                  width: 42, height: 24, borderRadius: 12,
-                  background: parsed.recurring ? 'var(--text)' : 'var(--bg2)',
-                  display: 'flex', alignItems: 'center', padding: '0 3px',
-                  transition: 'background 0.2s', flexShrink: 0,
-                }}>
-                  <span style={{
-                    width: 18, height: 18, borderRadius: '50%', background: 'white',
-                    boxShadow: '0 1px 3px rgba(0,0,0,0.2)',
-                    transform: parsed.recurring ? 'translateX(18px)' : 'translateX(0)',
-                    transition: 'transform 0.2s', display: 'block',
-                  }} />
-                </span>
-              </button>
+              {['expense', 'income'].map(t => (
+                <button
+                  key={t}
+                  onClick={() => setParsed({
+                    ...parsed,
+                    entry_type: t,
+                    category: t === 'income' ? INCOME_CATEGORIES[0] : CATEGORIES[0],
+                    tax_type: t === 'income' ? null : 'expense',
+                  })}
+                  style={{
+                    flex: 1, padding: '8px 0', borderRadius: 6, fontSize: 13, fontWeight: 500,
+                    background: parsed.entry_type === t ? 'var(--bg)' : 'transparent',
+                    color: parsed.entry_type === t
+                      ? (t === 'income' ? 'var(--accent)' : 'var(--text)')
+                      : 'var(--text3)',
+                    boxShadow: parsed.entry_type === t ? '0 1px 3px rgba(0,0,0,0.08)' : 'none',
+                    transition: 'all 0.15s',
+                  }}
+                >
+                  {t === 'income' ? '+ Income' : '− Expense'}
+                </button>
+              ))}
+            </div>
 
-              {parsed.recurring && (
-                <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
-                  <Field label="Frequency">
-                    <select
-                      value={parsed.recurring_frequency}
-                      onChange={e => setParsed({...parsed, recurring_frequency: e.target.value})}
-                    >
-                      {FREQ_OPTIONS.map(f => (
-                        <option key={f.value} value={f.value}>{f.label}</option>
-                      ))}
+            <p style={{ fontSize: 12, color: 'var(--text2)', marginBottom: 12 }}>Confirm entry</p>
+
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+              <Field label="Description">
+                <input value={parsed.description} onChange={e => setParsed({...parsed, description: e.target.value})} />
+              </Field>
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10 }}>
+                <Field label="Amount">
+                  <input
+                    type="number"
+                    value={parsed.amount || ''}
+                    onChange={e => setParsed({...parsed, amount: parseFloat(e.target.value)})}
+                    placeholder="0.00"
+                    style={{ borderColor: !parsed.amount ? 'var(--red)' : undefined }}
+                  />
+                </Field>
+                <Field label="Date">
+                  <input
+                    type="date"
+                    value={parsed.date}
+                    onChange={e => setParsed({...parsed, date: e.target.value})}
+                  />
+                </Field>
+              </div>
+
+              {isIncome ? (
+                <Field label="Category">
+                  <select value={parsed.category} onChange={e => setParsed({...parsed, category: e.target.value})}>
+                    {INCOME_CATEGORIES.map(c => <option key={c}>{c}</option>)}
+                  </select>
+                </Field>
+              ) : (
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10 }}>
+                  <Field label="Category">
+                    <select value={parsed.category} onChange={e => setParsed({...parsed, category: e.target.value})}>
+                      {CATEGORIES.map(c => <option key={c}>{c}</option>)}
                     </select>
                   </Field>
-
-                  {(parsed.recurring_frequency === 'monthly' || parsed.recurring_frequency === 'quarterly') && (
-                    <Field label={parsed.recurring_frequency === 'quarterly' ? 'Day of month (each quarter)' : 'Day of month'}>
-                      <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
-                        {[1,5,10,15,20,25,28].map(d => (
-                          <button
-                            key={d}
-                            onClick={() => setParsed({...parsed, recurring_day: d})}
-                            style={{
-                              padding: '6px 12px', borderRadius: 20, fontSize: 13,
-                              background: parsed.recurring_day === d ? 'var(--text)' : 'var(--bg2)',
-                              color: parsed.recurring_day === d ? 'var(--bg)' : 'var(--text2)',
-                              fontWeight: parsed.recurring_day === d ? 500 : 400,
-                              transition: 'all 0.15s',
-                            }}
-                          >
-                            {ordinal(d)}
-                          </button>
-                        ))}
-                        <input
-                          type="number" min="1" max="31"
-                          value={parsed.recurring_day}
-                          onChange={e => {
-                            const v = Math.min(31, Math.max(1, parseInt(e.target.value) || 1))
-                            setParsed({...parsed, recurring_day: v})
-                          }}
-                          style={{ width: 72, padding: '6px 10px', fontSize: 13 }}
-                          placeholder="Day"
-                        />
-                      </div>
-                    </Field>
-                  )}
-
-                  {parsed.recurring_frequency === 'weekly' && (
-                    <Field label="Day of week">
-                      <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
-                        {['Mon','Tue','Wed','Thu','Fri','Sat','Sun'].map((d, i) => (
-                          <button
-                            key={d}
-                            onClick={() => setParsed({...parsed, recurring_day: i + 1})}
-                            style={{
-                              padding: '6px 10px', borderRadius: 20, fontSize: 13,
-                              background: parsed.recurring_day === i + 1 ? 'var(--text)' : 'var(--bg2)',
-                              color: parsed.recurring_day === i + 1 ? 'var(--bg)' : 'var(--text2)',
-                              fontWeight: parsed.recurring_day === i + 1 ? 500 : 400,
-                              transition: 'all 0.15s',
-                            }}
-                          >
-                            {d}
-                          </button>
-                        ))}
-                      </div>
-                    </Field>
-                  )}
+                  <Field label="Tax treatment">
+                    <select
+                      value={parsed.tax_type}
+                      onChange={e => setParsed({...parsed, tax_type: e.target.value})}
+                      style={{ color: TAX_COLORS[parsed.tax_type] }}
+                    >
+                      <option value="expense">Direct expense</option>
+                      <option value="depreciate">Depreciable</option>
+                    </select>
+                  </Field>
                 </div>
               )}
-            </div>
-          </div>
 
-          <div style={{ display: 'flex', gap: 8, marginTop: 14 }}>
-            <button
-              onClick={handleCancel}
-              style={{
-                flex: 1, height: 44, borderRadius: 'var(--radius-sm)',
-                background: 'var(--bg2)', color: 'var(--text2)', fontWeight: 500
-              }}
-            >
-              Cancel
-            </button>
-            <button
-              onClick={handleConfirm}
-              disabled={!parsed.amount || !parsed.description}
-              style={{
-                flex: 2, height: 44, borderRadius: 'var(--radius-sm)',
-                background: isIncome ? 'var(--accent)' : 'var(--text)',
-                color: 'var(--bg)', fontWeight: 500
-              }}
-            >
-              Save {isIncome ? 'income' : 'expense'}
-            </button>
-          </div>
+              {/* Recurring toggle */}
+              <div style={{
+                borderTop: '0.5px solid var(--border)',
+                paddingTop: 12,
+                display: 'flex',
+                flexDirection: 'column',
+                gap: 10,
+              }}>
+                <button
+                  onClick={() => setParsed({...parsed, recurring: !parsed.recurring})}
+                  style={{
+                    display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+                    width: '100%', padding: '2px 0',
+                  }}
+                >
+                  <span style={{ fontSize: 14, color: 'var(--text)', fontWeight: 500 }}>Recurring</span>
+                  <span style={{
+                    width: 42, height: 24, borderRadius: 12,
+                    background: parsed.recurring ? 'var(--text)' : 'var(--bg2)',
+                    display: 'flex', alignItems: 'center', padding: '0 3px',
+                    transition: 'background 0.2s', flexShrink: 0,
+                  }}>
+                    <span style={{
+                      width: 18, height: 18, borderRadius: '50%', background: 'white',
+                      boxShadow: '0 1px 3px rgba(0,0,0,0.2)',
+                      transform: parsed.recurring ? 'translateX(18px)' : 'translateX(0)',
+                      transition: 'transform 0.2s', display: 'block',
+                    }} />
+                  </span>
+                </button>
+
+                {parsed.recurring && (
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+                    <Field label="Frequency">
+                      <select
+                        value={parsed.recurring_frequency}
+                        onChange={e => setParsed({...parsed, recurring_frequency: e.target.value})}
+                      >
+                        {FREQ_OPTIONS.map(f => (
+                          <option key={f.value} value={f.value}>{f.label}</option>
+                        ))}
+                      </select>
+                    </Field>
+
+                    {(parsed.recurring_frequency === 'monthly' || parsed.recurring_frequency === 'quarterly') && (
+                      <Field label={parsed.recurring_frequency === 'quarterly' ? 'Day of month (each quarter)' : 'Day of month'}>
+                        <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
+                          {[1,5,10,15,20,25,28].map(d => (
+                            <button
+                              key={d}
+                              onClick={() => setParsed({...parsed, recurring_day: d})}
+                              style={{
+                                padding: '6px 12px', borderRadius: 20, fontSize: 13,
+                                background: parsed.recurring_day === d ? 'var(--text)' : 'var(--bg2)',
+                                color: parsed.recurring_day === d ? 'var(--bg)' : 'var(--text2)',
+                                fontWeight: parsed.recurring_day === d ? 500 : 400,
+                                transition: 'all 0.15s',
+                              }}
+                            >
+                              {ordinal(d)}
+                            </button>
+                          ))}
+                          <input
+                            type="number" min="1" max="31"
+                            value={parsed.recurring_day}
+                            onChange={e => {
+                              const v = Math.min(31, Math.max(1, parseInt(e.target.value) || 1))
+                              setParsed({...parsed, recurring_day: v})
+                            }}
+                            style={{ width: 72, padding: '6px 10px', fontSize: 13 }}
+                            placeholder="Day"
+                          />
+                        </div>
+                      </Field>
+                    )}
+
+                    {parsed.recurring_frequency === 'weekly' && (
+                      <Field label="Day of week">
+                        <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
+                          {['Mon','Tue','Wed','Thu','Fri','Sat','Sun'].map((d, i) => (
+                            <button
+                              key={d}
+                              onClick={() => setParsed({...parsed, recurring_day: i + 1})}
+                              style={{
+                                padding: '6px 10px', borderRadius: 20, fontSize: 13,
+                                background: parsed.recurring_day === i + 1 ? 'var(--text)' : 'var(--bg2)',
+                                color: parsed.recurring_day === i + 1 ? 'var(--bg)' : 'var(--text2)',
+                                fontWeight: parsed.recurring_day === i + 1 ? 500 : 400,
+                                transition: 'all 0.15s',
+                              }}
+                            >
+                              {d}
+                            </button>
+                          ))}
+                        </div>
+                      </Field>
+                    )}
+                  </div>
+                )}
+              </div>
+            </div>
+
+            <div style={{ display: 'flex', gap: 8, marginTop: 14 }}>
+              <button
+                onClick={handleCancel}
+                style={{
+                  flex: 1, height: 44, borderRadius: 'var(--radius-sm)',
+                  background: 'var(--bg2)', color: 'var(--text2)', fontWeight: 500
+                }}
+              >
+                Cancel
+              </button>
+              <button
+                onClick={handleConfirm}
+                disabled={!parsed.amount || !parsed.description}
+                style={{
+                  flex: 2, height: 44, borderRadius: 'var(--radius-sm)',
+                  background: isIncome ? 'var(--accent)' : 'var(--text)',
+                  color: 'var(--bg)', fontWeight: 500
+                }}
+              >
+                Save {isIncome ? 'income' : 'expense'}
+              </button>
+            </div>
+          </>
+          )}
         </div>
       )}
     </div>

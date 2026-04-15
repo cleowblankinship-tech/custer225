@@ -30,6 +30,20 @@ import { createClient } from '@supabase/supabase-js'
 // ALTER TABLE setup_state ENABLE ROW LEVEL SECURITY;
 // CREATE POLICY "Allow all" ON setup_state FOR ALL USING (true) WITH CHECK (true);
 // INSERT INTO setup_state (id, items) VALUES (1, '[]'::jsonb) ON CONFLICT (id) DO NOTHING;
+//
+// ── Table: tasks ──────────────────────────────────────────────────────────────
+// Stores quick-add tasks and reminders.
+//
+// CREATE TABLE tasks (
+//   id uuid DEFAULT gen_random_uuid() PRIMARY KEY,
+//   created_at timestamptz DEFAULT now(),
+//   title text NOT NULL,
+//   entry_type text NOT NULL DEFAULT 'task' CHECK (entry_type IN ('task', 'reminder')),
+//   due_date date,
+//   completed boolean NOT NULL DEFAULT false
+// );
+// ALTER TABLE tasks ENABLE ROW LEVEL SECURITY;
+// CREATE POLICY "Allow all" ON tasks FOR ALL USING (true) WITH CHECK (true);
 
 const supabaseUrl = import.meta.env.VITE_SUPABASE_URL
 const supabaseKey = import.meta.env.VITE_SUPABASE_ANON_KEY
@@ -37,6 +51,8 @@ const supabaseKey = import.meta.env.VITE_SUPABASE_ANON_KEY
 export const supabase = (supabaseUrl && supabaseKey)
   ? createClient(supabaseUrl, supabaseKey)
   : null
+
+// ── Expenses ──────────────────────────────────────────────────────────────────
 
 export async function getExpenses() {
   const { data, error } = await supabase
@@ -84,4 +100,45 @@ export async function saveSetupItems(items) {
     .from('setup_state')
     .upsert({ id: 1, items, updated_at: new Date().toISOString() })
   if (error) throw error
+}
+
+// ── Tasks & reminders ─────────────────────────────────────────────────────────
+
+export async function getTasks() {
+  if (!supabase) return []
+  const { data, error } = await supabase
+    .from('tasks')
+    .select('*')
+    .order('created_at', { ascending: false })
+  if (error) throw error
+  return data ?? []
+}
+
+export async function addTask(task) {
+  const { data, error } = await supabase
+    .from('tasks')
+    .insert([task])
+    .select()
+    .single()
+  if (error) throw error
+  return data
+}
+
+export async function deleteTask(id) {
+  const { error } = await supabase
+    .from('tasks')
+    .delete()
+    .eq('id', id)
+  if (error) throw error
+}
+
+export async function toggleTask(id, completed) {
+  const { data, error } = await supabase
+    .from('tasks')
+    .update({ completed })
+    .eq('id', id)
+    .select()
+    .single()
+  if (error) throw error
+  return data
 }

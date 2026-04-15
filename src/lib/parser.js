@@ -1,5 +1,13 @@
-// Parses natural language like "spatula amazon $14 supplies"
-// into a structured expense object
+// Parses natural language into structured entries.
+//
+// Financial entries (expense / income):  requires a $ amount
+//   "spatula amazon $14"  →  expense
+//   "airbnb payout $1200" →  income
+//
+// Task / reminder entries:  no $ sign detected
+//   "replace air filter"        →  task (no date)
+//   "trash tomorrow"            →  reminder (due tomorrow)
+//   "fix cabinet hinge weekend" →  task (due Saturday)
 
 export const CATEGORIES = [
   'Furniture', 'Appliances', 'Linens & supplies', 'Cleaning',
@@ -32,6 +40,77 @@ const TAX_KEYWORDS = {
 
 const INCOME_KEYWORDS = ['booking','reservation','airbnb','vrbo','guest','payout','rental income','cleaning fee']
 
+// Time-related words that signal a reminder (vs plain task)
+const REMINDER_TRIGGER_WORDS = [
+  'today','tomorrow','this weekend','weekend','this week','next week',
+  'monday','tuesday','wednesday','thursday','friday','saturday','sunday',
+]
+
+// Ordered list used for both detection and stripping from the title
+const DATE_PHRASES = [
+  'this weekend','next week','this week',
+  'tomorrow','today',
+  'on monday','on tuesday','on wednesday','on thursday','on friday','on saturday','on sunday',
+  'monday','tuesday','wednesday','thursday','friday','saturday','sunday',
+]
+
+// ── Helpers ───────────────────────────────────────────────────────────────────
+
+/** Returns true only when the input contains an explicit dollar amount */
+function hasAmount(text) {
+  return /\$[\d,]+/.test(text) || /\b\d+(?:\.\d{1,2})?\s*dollars?\b/i.test(text)
+}
+
+/** Resolve relative date words → YYYY-MM-DD, or null if none found */
+function parseRelativeDate(text) {
+  const lower = text.toLowerCase()
+  const today = new Date()
+
+  if (lower.includes('today')) {
+    return today.toISOString().split('T')[0]
+  }
+  if (lower.includes('tomorrow')) {
+    const d = new Date(today); d.setDate(d.getDate() + 1)
+    return d.toISOString().split('T')[0]
+  }
+  if (lower.includes('this weekend') || lower.includes('weekend')) {
+    const d = new Date(today)
+    const daysToSat = ((6 - d.getDay()) + 7) % 7 || 7
+    d.setDate(d.getDate() + daysToSat)
+    return d.toISOString().split('T')[0]
+  }
+  if (lower.includes('next week')) {
+    const d = new Date(today); d.setDate(d.getDate() + 7)
+    return d.toISOString().split('T')[0]
+  }
+  if (lower.includes('this week')) {
+    const d = new Date(today); d.setDate(d.getDate() + 3)
+    return d.toISOString().split('T')[0]
+  }
+
+  // Named weekdays — find next occurrence
+  const weekdays = ['sunday','monday','tuesday','wednesday','thursday','friday','saturday']
+  for (let i = 0; i < weekdays.length; i++) {
+    if (lower.includes(weekdays[i])) {
+      const d = new Date(today)
+      const diff = ((i - d.getDay()) + 7) % 7 || 7
+      d.setDate(d.getDate() + diff)
+      return d.toISOString().split('T')[0]
+    }
+  }
+
+  return null
+}
+
+/** Strip date/time phrases from the title for cleaner display */
+function cleanTaskTitle(text) {
+  let result = text
+  for (const phrase of DATE_PHRASES) {
+    result = result.replace(new RegExp('\\b' + phrase.replace(/\s+/g, '\\s+') + '\\b', 'gi'), '')
+  }
+  return result.replace(/\s+/g, ' ').trim()
+}
+
 function guessCategory(text) {
   const lower = text.toLowerCase()
   for (const [cat, keywords] of Object.entries(CATEGORY_KEYWORDS)) {
@@ -61,10 +140,30 @@ function guessIncomeCategory(text) {
   return 'Other income'
 }
 
+// ── Main export ───────────────────────────────────────────────────────────────
+
 export function parseNaturalLanguage(input) {
   const text = input.trim()
 
-  // Extract amount — look for $XX or XX dollars
+  // ── Task / reminder path ──────────────────────────────────────────────────
+  if (!hasAmount(text)) {
+    const lower = text.toLowerCase()
+    const isReminder = REMINDER_TRIGGER_WORDS.some(w => lower.includes(w))
+    const dueDate = parseRelativeDate(text)
+    const title = cleanTaskTitle(text) || text
+
+    return {
+      entry_type: isReminder ? 'reminder' : 'task',
+      title,
+      due_date: dueDate,
+      completed: false,
+      _parsed: true,
+    }
+  }
+
+  // ── Financial path (existing behavior) ───────────────────────────────────
+
+  // Extract amount — $XX or XX dollars
   const amountMatch = text.match(/\$?([\d,]+(?:\.\d{1,2})?)\s*(?:dollars?)?/i)
   const amount = amountMatch ? parseFloat(amountMatch[1].replace(',', '')) : null
 
@@ -75,7 +174,6 @@ export function parseNaturalLanguage(input) {
   const category = entryType === 'income' ? guessIncomeCategory(withoutAmount) : guessCategory(withoutAmount)
   const taxType = entryType === 'income' ? null : guessTaxType(withoutAmount, category)
 
-  // Today's date as default
   const today = new Date().toISOString().split('T')[0]
 
   return {

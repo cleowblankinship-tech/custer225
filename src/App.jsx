@@ -6,7 +6,7 @@ import ExpenseList from './components/ExpenseList'
 import CSVImport from './components/CSVImport'
 import SpinUp from './components/SpinUp'
 import SetupCard from './components/SetupCard'
-import { getExpenses, addExpense, deleteExpense } from './lib/supabase'
+import { getExpenses, addExpense, deleteExpense, getTasks, addTask, deleteTask, toggleTask } from './lib/supabase'
 import IntroSplash from './components/IntroSplash'
 
 const SEED_EXPENSES = [
@@ -21,8 +21,11 @@ const SEED_EXPENSES = [
   { id: 's9', date: '2026-04-06', description: 'Apex Waste Solutions', category: 'Utilities', entry_type: 'expense', tax_type: 'expense', amount: 124.01 },
 ]
 
+const TASKS_LS_KEY = 'custer225_tasks'
+
 export default function App() {
   const [expenses, setExpenses] = useState(SEED_EXPENSES)
+  const [tasks, setTasks] = useState([])
   const [showIntro, setShowIntro] = useState(true) // true on every cold load
   const [view, setView] = useState('home') // home | list | spinup | import | pl
   const [listFilter, setListFilter] = useState('all')
@@ -36,7 +39,7 @@ export default function App() {
     setView('list')
   }
 
-  // Try to load from Supabase if env vars are present
+  // Load expenses from Supabase if env vars are present
   useEffect(() => {
     const hasSupabase = import.meta.env.VITE_SUPABASE_URL && import.meta.env.VITE_SUPABASE_ANON_KEY
     if (!hasSupabase) return
@@ -48,7 +51,28 @@ export default function App() {
       .finally(() => setLoading(false))
   }, [])
 
-  async function handleAdd(parsed) {
+  // Load tasks: localStorage first (instant), then Supabase sync
+  useEffect(() => {
+    try {
+      const local = localStorage.getItem(TASKS_LS_KEY)
+      if (local) setTasks(JSON.parse(local))
+    } catch {}
+    const hasSupabase = import.meta.env.VITE_SUPABASE_URL && import.meta.env.VITE_SUPABASE_ANON_KEY
+    if (hasSupabase) {
+      getTasks()
+        .then(data => { if (data.length > 0) setTasks(data) })
+        .catch(console.error)
+    }
+  }, [])
+
+  // Persist tasks to localStorage whenever they change
+  useEffect(() => {
+    try { localStorage.setItem(TASKS_LS_KEY, JSON.stringify(tasks)) } catch {}
+  }, [tasks])
+
+  // ── Expense / income handlers ─────────────────────────────────────────────
+
+  async function handleAddExpense(parsed) {
     const entry = {
       date: parsed.date,
       description: parsed.description,
@@ -82,9 +106,66 @@ export default function App() {
 
   async function handleImport(rows) {
     for (const row of rows) {
-      await handleAdd(row)
+      await handleAddExpense(row)
     }
   }
+
+  // ── Task / reminder handlers ──────────────────────────────────────────────
+
+  async function handleAddTask(parsed) {
+    const entry = {
+      title: parsed.title,
+      entry_type: parsed.entry_type, // 'task' | 'reminder'
+      due_date: parsed.due_date || null,
+      completed: false,
+    }
+    if (useDB) {
+      try {
+        const saved = await addTask(entry)
+        setTasks(prev => [saved, ...prev])
+      } catch (err) {
+        console.error('Task save failed:', err.message)
+        // Fall back to local even if DB fails
+        setTasks(prev => [{ ...entry, id: 'local-task-' + Date.now() }, ...prev])
+      }
+    } else {
+      setTasks(prev => [{ ...entry, id: 'local-task-' + Date.now() }, ...prev])
+    }
+    setView('home')
+  }
+
+  async function handleDeleteTask(id) {
+    if (useDB) await deleteTask(id).catch(console.error)
+    setTasks(prev => prev.filter(t => t.id !== id))
+  }
+
+  async function handleToggleTask(id) {
+    const task = tasks.find(t => t.id === id)
+    if (!task) return
+    const newCompleted = !task.completed
+    // Optimistic update
+    setTasks(prev => prev.map(t => t.id === id ? { ...t, completed: newCompleted } : t))
+    if (useDB) {
+      try {
+        const updated = await toggleTask(id, newCompleted)
+        setTasks(prev => prev.map(t => t.id === id ? updated : t))
+      } catch (err) {
+        console.error('Toggle failed:', err.message)
+        // Already updated optimistically — leave as-is
+      }
+    }
+  }
+
+  // ── Unified entry point from QuickAdd ─────────────────────────────────────
+
+  async function handleAdd(parsed) {
+    if (parsed.entry_type === 'task' || parsed.entry_type === 'reminder') {
+      return handleAddTask(parsed)
+    }
+    return handleAddExpense(parsed)
+  }
+
+  // ── Nav ───────────────────────────────────────────────────────────────────
 
   const navItems = [
     { key: 'home',   label: 'Home',    icon: '⌂' },
@@ -178,6 +259,9 @@ export default function App() {
             initialFilter={listFilter}
             initialMonth={listMonth}
             key={`${listFilter}-${listMonth}`}
+            tasks={tasks}
+            onDeleteTask={handleDeleteTask}
+            onToggleTask={handleToggleTask}
           />
         )}
 
