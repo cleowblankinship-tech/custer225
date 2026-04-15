@@ -17,26 +17,38 @@
 
 // ── Rule definitions ──────────────────────────────────────────────────────────
 
+// Rules support a `titles` array for variation — one is picked randomly each
+// time the rule fires. A plain `title` string also works for user-created rules.
+
 export const RECURRING_RULES = [
   {
-    id:            'trash-weekly',
-    title:         'Trash goes out tonight.',
+    id:           'trash-weekly',
+    titles: [
+      "Trash goes out tonight. Don't let it linger.",
+      "Trash night. Take it out before you forget.",
+      "The trash needs to go out tonight.",
+      "Tonight is trash night.",
+    ],
     type:          'trash',
     cadence_type:  'weekly',
-    cadence_config: { weekday: 3 },   // Wednesday — reminder fires the night before Thursday pickup
+    cadence_config: { weekday: 3 },   // Wednesday — night before Thursday pickup
     active:        true,
     start_date:    null,
     end_date:      null,
     notes:         null,
   },
   {
-    id:            'recycling-biweekly',
-    title:         'Recycling goes out tonight.',
+    id:           'recycling-biweekly',
+    titles: [
+      "Recycling goes out tonight.",
+      "Recycling night. Blue bin to the curb.",
+      "Don't forget — recycling tonight.",
+    ],
     type:          'recycling',
     cadence_type:  'biweekly',
     cadence_config: {
-      weekday:     3,             // Wednesday — night before Thursday pickup
-      anchor_date: '2026-04-15', // a known recycling Wednesday — adjust to match your schedule
+      weekday:     3,
+      anchor_date: '2026-04-15',
     },
     active:        true,
     start_date:    null,
@@ -149,6 +161,17 @@ export function deleteUserRule(id) {
  * @param {Array}  [extraRules] Optional user-defined rules to merge in
  * @returns {Array}             Zero or more update item objects
  */
+/** Pick a random item from an array. */
+function pickRandom(arr) {
+  return arr[Math.floor(Math.random() * arr.length)]
+}
+
+/** Resolve a rule's display title — supports both `titles[]` and plain `title`. */
+function resolveTitle(rule) {
+  if (Array.isArray(rule.titles) && rule.titles.length > 0) return pickRandom(rule.titles)
+  return rule.title ?? ''
+}
+
 export function getRecurringRemindersForDate(dateStr, extraRules = []) {
   const allRules = [...RECURRING_RULES, ...extraRules]
   return allRules
@@ -157,7 +180,7 @@ export function getRecurringRemindersForDate(dateStr, extraRules = []) {
       id:       `recurring-${rule.id}`,
       type:     'reminder',
       priority: 'normal',
-      title:    rule.title,
+      title:    resolveTitle(rule),
       detail:   rule.notes ?? null,
       source:   'recurring',
       ruleId:   rule.id,

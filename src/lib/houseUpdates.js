@@ -60,25 +60,25 @@ export function getHouseMood(updates) {
 
 const CALM_MESSAGES = {
   morning: [
-    "Quiet start to the day.",
-    "Nothing pressing this morning.",
-    "A calm morning here.",
-    "All looks good to start.",
-    "Nothing needs attention right now.",
+    "All is quiet this morning.",
+    "Nothing pressing. For now.",
+    "Everything is holding steady.",
+    "No issues to start the day.",
+    "The house is calm.",
   ],
   afternoon: [
-    "Everything's holding steady.",
-    "All is in order this afternoon.",
+    "Everything is in order.",
     "Nothing urgent right now.",
-    "The house is in good shape.",
-    "All clear this afternoon.",
+    "All is steady.",
+    "No action needed today.",
+    "Holding steady.",
   ],
   evening: [
-    "Nothing left hanging today.",
-    "The house is settled for the evening.",
-    "All is steady this evening.",
-    "Everything looks in order.",
-    "A quiet evening at home.",
+    "All is quiet tonight.",
+    "Nothing left unattended.",
+    "The house is settled.",
+    "Everything is in order.",
+    "A quiet evening.",
   ],
 }
 

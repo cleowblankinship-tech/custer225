@@ -24,32 +24,88 @@ const FREEZE_LIGHT_F = 36   // light freeze → normal priority
 const WIND_HIGH_MPH  = 40   // damaging wind → high priority
 const WIND_BREEZY_MPH = 25  // breezy → normal priority
 
-// ── Casual weather blurb ──────────────────────────────────────────────────────
+// ── Weather observation blurb ─────────────────────────────────────────────────
 //
-// Short, friendly sentence shown in the speech bubble when conditions are normal.
-// Phrasing varies so it doesn't feel like a readout.
+// A short observation shown in the speech bubble. Reads like a comment,
+// not a data readout. Uses qualitative temp labels instead of raw numbers.
+
+function pickRandom(arr) {
+  return arr[Math.floor(Math.random() * arr.length)]
+}
+
+/** Qualitative temperature label. */
+function tempLabel(t) {
+  if (t < 32) return 'freezing'
+  if (t < 45) return 'cold'
+  if (t < 58) return 'cool'
+  if (t < 72) return 'mild'
+  if (t < 85) return 'warm'
+  return 'hot'
+}
+
+/** Time-of-day word for phrasing variety. */
+function timeWord() {
+  const h = new Date().getHours()
+  if (h < 12) return 'morning'
+  if (h < 17) return 'afternoon'
+  return 'evening'
+}
 
 const BLURB_TEMPLATES = {
-  clear:          [`Sunny and {t}° at the property.`, `It's {t}° and clear outside.`, `Clear skies and {t}° right now.`],
-  'mostly clear': [`Mostly clear and {t}° outside.`, `It's {t}° with just a few clouds.`, `Mostly sunny at {t}°.`],
-  'partly cloudy':[`Partly cloudy and {t}° at the property.`, `It's {t}° and partly cloudy out there.`, `{t}° with some clouds rolling through.`],
-  cloudy:         [`Overcast and {t}° outside.`, `It's {t}° and cloudy at the property.`, `Cloudy skies, {t}° right now.`],
-  drizzly:        [`A bit drizzly — {t}° out there.`, `Light drizzle and {t}° outside.`],
-  rainy:          [`Rainy and {t}° at the property.`, `It's {t}° with rain coming down.`],
-  snowy:          [`It's snowing outside — {t}°.`, `Snow coming down, {t}° at the property.`],
-  hazy:           [`Hazy and {t}° this morning.`, `It's {t}° with some haze outside.`],
+  clear: [
+    'Clear and {label} outside.',
+    'Clear skies. {Label} {time}.',
+    '{Label} and clear right now.',
+    'Sunny and {label} at the property.',
+  ],
+  'mostly clear': [
+    'Mostly clear. {Label} {time}.',
+    'A few clouds, otherwise clear.',
+    '{Label} with clear skies holding.',
+  ],
+  'partly cloudy': [
+    'Partly cloudy and {label} outside.',
+    '{Label} with some clouds today.',
+    'Mixed skies. {Label} right now.',
+  ],
+  cloudy: [
+    'Overcast and {label} outside.',
+    '{Label} and grey today.',
+    'Cloudy skies. {Label} out there.',
+    'Overcast. {Label} {time}.',
+  ],
+  drizzly: [
+    'Light drizzle outside. {Label}.',
+    'Damp and {label} right now.',
+    'A bit of drizzle. {Label} out there.',
+  ],
+  rainy: [
+    'Rain outside. {Label} {time}.',
+    'Wet and {label} at the property.',
+    'Raining. {Label} conditions outside.',
+  ],
+  snowy: [
+    'Snow outside. {Label} tonight.',
+    'Winter conditions. {Label} right now.',
+    'It is snowing. {Label} out there.',
+  ],
+  hazy: [
+    'Hazy and {label} outside.',
+    'Low visibility. {Label} {time}.',
+    'Some haze. {Label} right now.',
+  ],
 }
 
 function weatherConditionKey(id) {
-  if (id === 800)                   return 'clear'
-  if (id === 801)                   return 'mostly clear'
-  if (id === 802)                   return 'partly cloudy'
-  if (id >= 803 && id < 900)        return 'cloudy'
-  if (id >= 300 && id < 400)        return 'drizzly'
-  if (id >= 500 && id < 600)        return 'rainy'
-  if (id >= 600 && id < 700)        return 'snowy'
-  if (id >= 700 && id < 800)        return 'hazy'
-  return null // storms etc. are already alerts — no casual blurb
+  if (id === 800)            return 'clear'
+  if (id === 801)            return 'mostly clear'
+  if (id === 802)            return 'partly cloudy'
+  if (id >= 803 && id < 900) return 'cloudy'
+  if (id >= 300 && id < 400) return 'drizzly'
+  if (id >= 500 && id < 600) return 'rainy'
+  if (id >= 600 && id < 700) return 'snowy'
+  if (id >= 700 && id < 800) return 'hazy'
+  return null
 }
 
 function buildWeatherBlurb(w) {
@@ -58,9 +114,16 @@ function buildWeatherBlurb(w) {
   const key  = weatherConditionKey(id)
   if (!key) return null
 
-  const pool     = BLURB_TEMPLATES[key] ?? [`It's {t}° outside.`]
-  const template = pool[Math.floor(Math.random() * pool.length)]
-  return template.replace('{t}', temp)
+  const pool     = BLURB_TEMPLATES[key] ?? ['{Label} outside.']
+  const template = pickRandom(pool)
+  const label    = tempLabel(temp)
+  const Label    = label.charAt(0).toUpperCase() + label.slice(1)
+  const time     = timeWord()
+
+  return template
+    .replace('{label}', label)
+    .replace('{Label}', Label)
+    .replace('{time}',  time)
 }
 
 // ── Fetcher ───────────────────────────────────────────────────────────────────
@@ -93,10 +156,20 @@ export async function fetchWeather() {
         id:       'owm-freeze',
         type:     'alert',
         priority: isHard ? 'high' : 'normal',
-        title:    `Low of ${low}°F tonight`,
+        title:    isHard
+          ? pickRandom([
+              'Hard freeze tonight. Sprinklers need attention.',
+              'Freeze warning. Pipes would prefer preparation.',
+              `Below ${low}°F tonight. Worth preparing for.`,
+            ])
+          : pickRandom([
+              `Light freeze possible. ${low}°F tonight.`,
+              'Cold enough to matter tonight.',
+              `${low}°F low tonight. Worth a look outside.`,
+            ]),
         detail:   isHard
-          ? 'Hard freeze expected. Drain sprinkler lines and bring in porch plants before dark.'
-          : 'Light freeze possible tonight. Consider covering sensitive plants.',
+          ? 'Drain the sprinkler lines and bring in porch plants before dark.'
+          : 'Cover sensitive plants if you have them.',
       })
     }
 
@@ -107,10 +180,20 @@ export async function fetchWeather() {
         id:       'owm-wind',
         type:     'alert',
         priority: isHigh ? 'high' : 'normal',
-        title:    `${isHigh ? 'High winds' : 'Breezy'} — ${windMph} mph`,
+        title:    isHigh
+          ? pickRandom([
+              'High winds incoming. Secure anything loose outside.',
+              `${windMph} mph winds. Check the patio.`,
+              'Damaging wind possible. Handle the outdoor furniture.',
+            ])
+          : pickRandom([
+              `Breezy today. ${windMph} mph.`,
+              'Wind picking up. Nothing serious yet.',
+              'A little breezy outside. Patio items may shift.',
+            ]),
         detail:   isHigh
           ? 'Secure patio furniture and check the fence gate before it gets worse.'
-          : 'Patio items may shift. Quick check recommended.',
+          : 'Patio items may shift. A quick check is enough.',
       })
     }
 
@@ -121,8 +204,12 @@ export async function fetchWeather() {
         id:       'owm-storm',
         type:     'alert',
         priority: 'high',
-        title:    'Thunderstorm in the area',
-        detail:   'Close windows, bring in patio items, and avoid running irrigation.',
+        title:    pickRandom([
+          'Thunderstorm in the area.',
+          'Storm nearby. Close the windows.',
+          'Thunderstorm. Bring the patio furniture in.',
+        ]),
+        detail:   'Close windows, secure outdoor items, and avoid running irrigation.',
       })
     }
 
@@ -132,8 +219,12 @@ export async function fetchWeather() {
         id:       'owm-rain',
         type:     'alert',
         priority: 'normal',
-        title:    'Heavy rain today',
-        detail:   'Check gutters and make sure the side gate is latched.',
+        title:    pickRandom([
+          'Heavy rain today.',
+          'Rain coming down. Gutters worth checking.',
+          'Wet outside. Make sure the gate is latched.',
+        ]),
+        detail:   'Check the gutters and make sure the side gate is latched.',
       })
     }
 
