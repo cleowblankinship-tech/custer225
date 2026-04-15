@@ -12,6 +12,7 @@ import HouseToday from './components/HouseToday'
 import SpeechBubble from './components/SpeechBubble'
 import { getActiveUpdates, getHouseMood, getCalmMessage } from './lib/houseUpdates'
 import { fetchWeatherConditions } from './lib/weather'
+import { getRecurringRemindersForDate } from './lib/recurringRules'
 
 // ── Mood → bubble visual config ───────────────────────────────────────────────
 //
@@ -103,8 +104,11 @@ export default function App() {
       detail: null,
     }))
 
+  // ── Recurring house routines (trash, recycling, etc.) ────────────────────
+  const recurringReminders = getRecurringRemindersForDate(todayStr)
+
   // ── Merge all update sources + derive mood ────────────────────────────────
-  const activeUpdates  = getActiveUpdates([...weatherConditions, ...taskReminders])
+  const activeUpdates  = getActiveUpdates([...weatherConditions, ...taskReminders, ...recurringReminders])
   const topUpdate      = activeUpdates[0] ?? null
   const mood           = getHouseMood(activeUpdates)
   const moodStyle      = MOOD_BUBBLE[mood]
