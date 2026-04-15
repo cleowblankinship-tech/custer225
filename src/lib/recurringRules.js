@@ -23,7 +23,7 @@ export const RECURRING_RULES = [
     title:         'Trash goes out tonight.',
     type:          'trash',
     cadence_type:  'weekly',
-    cadence_config: { weekday: 4 },   // every Thursday
+    cadence_config: { weekday: 3 },   // Wednesday — reminder fires the night before Thursday pickup
     active:        true,
     start_date:    null,
     end_date:      null,
@@ -35,9 +35,9 @@ export const RECURRING_RULES = [
     type:          'recycling',
     cadence_type:  'biweekly',
     cadence_config: {
-      weekday:     4,             // Thursday
-      anchor_date: '2026-04-16', // a known recycling Thursday — adjust to match
-    },                            // your actual collection schedule
+      weekday:     3,             // Wednesday — night before Thursday pickup
+      anchor_date: '2026-04-15', // a known recycling Wednesday — adjust to match your schedule
+    },
     active:        true,
     start_date:    null,
     end_date:      null,
