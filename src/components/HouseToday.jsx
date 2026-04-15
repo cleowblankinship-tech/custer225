@@ -133,13 +133,6 @@ export default function HouseToday({ updates, onClose }) {
             })
           )}
 
-          {/* Phase 2 placeholder footer */}
-          <p style={{
-            fontSize: 12, color: 'var(--text3)', textAlign: 'center',
-            marginTop: hasAny ? 8 : 0, lineHeight: 1.5,
-          }}>
-            Weather alerts and smart reminders coming in a future update.
-          </p>
         </div>
       </div>
     </>

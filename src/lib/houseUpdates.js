@@ -30,29 +30,7 @@ export const SECTION_ORDER = ['alert', 'reminder', 'maintenance', 'update']
 //   title     — short message shown in the speech bubble
 //   detail    — longer description shown in the House Today panel
 
-const MOCK_UPDATES = [
-  {
-    id: 'hw1',
-    type: 'alert',
-    priority: 'high',
-    title: 'Freeze tonight — drain sprinklers',
-    detail: 'Low of 28°F expected. Drain the sprinkler lines and bring in porch plants before dark.',
-  },
-  {
-    id: 'hw2',
-    type: 'reminder',
-    priority: 'normal',
-    title: 'Trash goes out tonight',
-    detail: 'Bins need to be at the curb by 7 AM tomorrow morning.',
-  },
-  {
-    id: 'hw3',
-    type: 'maintenance',
-    priority: 'normal',
-    title: 'Replace air filter this month',
-    detail: 'HVAC filter is due. Size 16×25×1, MERV-8 or higher recommended.',
-  },
-]
+const MOCK_UPDATES = []
 
 // ── Mood system ───────────────────────────────────────────────────────────────
 //
