@@ -26,27 +26,27 @@ import { fetchWeatherConditions } from './lib/weather'
 // top and left edges (the only two sides that are visible above the bubble).
 const MOOD_BUBBLE = {
   urgent: {
-    // Warmer, denser — serious without being alarming
-    bg:           'var(--accent-light)',
-    border:       '0.5px solid var(--accent)',
-    borderLeft:   '3px solid var(--accent)',
-    borderRadius: '9px 10px 10px 9px',        // top-l, top-r, bot-r, bot-l
-    padding:      '9px 11px 9px 12px',         // tighter = more serious
-    boxShadow:    '0 1px 6px rgba(0,0,0,0.07)',
-    tailBorder:   '1px solid var(--accent)',
-    tailFill:     'var(--accent-light)',
+    // Warmer tint, denser padding, strong left accent — clearly serious
+    bg:           '#FEF4EC',                   // warm off-white, distinct from bg2
+    border:       '1px solid #E8C49A',         // warm amber border, matches tint
+    borderLeft:   '3.5px solid var(--accent)', // strong left accent
+    borderRadius: '8px 12px 11px 9px',         // noticeably irregular
+    padding:      '9px 11px 9px 12px',         // compact
+    boxShadow:    '0 2px 8px rgba(0,0,0,0.08)',
+    tailBorder:   '1px solid #E8C49A',
+    tailFill:     '#FEF4EC',
     textColor:    'var(--text)',
     textWeight:   600,
     moreColor:    'var(--accent)',
   },
   attention: {
-    // Neutral, clear — something to note
+    // Neutral, slightly defined — something worth noting
     bg:           'var(--bg2)',
     border:       '0.5px solid var(--border-mid)',
-    borderLeft:   '2px solid var(--border-mid)',
-    borderRadius: '10px 9px 10px 9px',
+    borderLeft:   '2.5px solid var(--border-mid)',
+    borderRadius: '11px 9px 12px 10px',        // visibly irregular
     padding:      '10px 12px 10px 14px',
-    boxShadow:    '0 1px 4px rgba(0,0,0,0.05)',
+    boxShadow:    '0 1px 5px rgba(0,0,0,0.05)',
     tailBorder:   '0.5px solid var(--border-mid)',
     tailFill:     'var(--bg2)',
     textColor:    'var(--text)',
@@ -54,12 +54,12 @@ const MOOD_BUBBLE = {
     moreColor:    'var(--text3)',
   },
   calm: {
-    // Light, spacious — nothing pressing today
+    // Light, airy, unhurried
     bg:           'var(--bg2)',
     border:       '0.5px solid var(--border)',
     borderLeft:   '0.5px solid var(--border)',
-    borderRadius: '11px 10px 11px 10px',      // slightly rounder = more relaxed
-    padding:      '12px 14px 12px 16px',       // more air = unhurried
+    borderRadius: '13px 10px 14px 11px',       // rounder and more irregular = relaxed
+    padding:      '12px 14px 12px 16px',       // generous air
     boxShadow:    'none',
     tailBorder:   '0.5px solid var(--border)',
     tailFill:     'var(--bg2)',

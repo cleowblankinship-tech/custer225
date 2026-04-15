@@ -40,17 +40,20 @@ export default function SpeechBubble({ moodStyle, mood, message, extraCount, onO
     }}>
 
       {/* ── Tail — rotated diamond ─────────────────────────────────────── */}
+      {/* 18×18 square rotated 45°: tip appears at (x=24, y≈-10)        */}
+      {/* left:15 → center x = 15+9 = 24 = house icon centre            */}
+      {/* top:-8  → tip y ≈ -8 - (9*√2 - 9) ≈ -11px above bubble        */}
       <div style={{
         position:    'absolute',
-        top:         -6,
-        left:        18,
-        width:       12,
-        height:      12,
+        top:         -8,
+        left:        15,
+        width:       18,
+        height:      18,
         background:  moodStyle.tailFill,
         borderTop:   moodStyle.tailBorder,
         borderLeft:  moodStyle.tailBorder,
         transform:   'rotate(45deg)',
-        borderRadius: '2px 0 0 0',  // just the tip, keeps it organic
+        borderRadius: '3px 0 0 0',  // softened tip
         zIndex:      2,
       }} />
 
