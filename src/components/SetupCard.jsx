@@ -39,9 +39,10 @@ export default function SetupCard({ onNavigate }) {
       onClick={onNavigate}
       style={{
         width: '100%',
-        padding: '13px 16px',
+        padding: '16px 18px',
         borderRadius: 'var(--radius-sm)',
         background: 'var(--bg2)',
+        border: '0.5px solid var(--border)',
         display: 'flex',
         alignItems: 'center',
         gap: 12,
@@ -56,30 +57,30 @@ export default function SetupCard({ onNavigate }) {
           display: 'flex',
           justifyContent: 'space-between',
           alignItems: 'baseline',
-          marginBottom: 6,
+          marginBottom: 8,
         }}>
-          <span style={{ fontSize: 14, fontWeight: 500, color: 'var(--text)' }}>
+          <span style={{ fontSize: 13, fontWeight: 500, color: 'var(--text2)', letterSpacing: '0.01em' }}>
             Launch readiness
           </span>
-          <span style={{ fontSize: 14, fontWeight: 600, color: 'var(--text)' }}>
+          <span style={{ fontSize: 16, fontWeight: 600, color: 'var(--text)', letterSpacing: '-0.01em' }}>
             {stats.pct}%
           </span>
         </div>
 
-        {/* Progress bar */}
+        {/* Progress bar — taller for visual weight */}
         <div style={{
-          height: 3,
-          borderRadius: 2,
+          height: 5,
+          borderRadius: 3,
           background: 'var(--border)',
           overflow: 'hidden',
-          marginBottom: 6,
+          marginBottom: 8,
         }}>
           <div style={{
             height: '100%',
             width: stats.pct + '%',
             background: barColor,
-            borderRadius: 2,
-            transition: 'width 0.3s ease',
+            borderRadius: 3,
+            transition: 'width 0.4s ease',
           }} />
         </div>
 
@@ -90,7 +91,7 @@ export default function SetupCard({ onNavigate }) {
           </span>
           {stats.photoTasksRemaining > 0 && (
             <span style={{ fontSize: 11, color: 'var(--accent)', fontWeight: 500 }}>
-              📷 {stats.photoTasksRemaining}
+              {stats.photoTasksRemaining} photos needed
             </span>
           )}
         </div>

@@ -1,8 +1,21 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { parseNaturalLanguage, CATEGORIES, INCOME_CATEGORIES } from '../lib/parser'
 import { nextWeekdayDate } from '../lib/recurringRules'
 
 const WEEKDAYS = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat']
+
+const PLACEHOLDER_EXAMPLES = [
+  'trash tomorrow',
+  'replace air filter',
+  'ikea chair $120',
+  'water plants every monday',
+  'cleaning supplies $38',
+  'fix cabinet hinge',
+  'airbnb payout $850',
+  'recycling tonight',
+  'check smoke detectors',
+  'blinds $90',
+]
 
 const TAX_COLORS = { depreciate: 'var(--blue)', expense: 'var(--green)' }
 
@@ -23,6 +36,13 @@ export default function QuickAdd({ onAdd }) {
   const [input, setInput] = useState('')
   const [parsed, setParsed] = useState(null)
   const [confirming, setConfirming] = useState(false)
+  const [phIdx, setPhIdx] = useState(0)
+
+  // Rotate placeholder text every 3.5 s — gives a sense of what's possible
+  useEffect(() => {
+    const id = setInterval(() => setPhIdx(i => (i + 1) % PLACEHOLDER_EXAMPLES.length), 3500)
+    return () => clearInterval(id)
+  }, [])
 
   function handleInput(val) {
     setInput(val)
@@ -90,7 +110,7 @@ export default function QuickAdd({ onAdd }) {
               value={input}
               onChange={e => handleInput(e.target.value)}
               onKeyDown={handleKeyDown}
-              placeholder="spatula $14  ·  fix hinge  ·  trash tomorrow"
+              placeholder={PLACEHOLDER_EXAMPLES[phIdx]}
             />
           </div>
           <button
