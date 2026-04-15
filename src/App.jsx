@@ -308,34 +308,31 @@ export default function App() {
 
       {/* Header */}
       {view === 'home' ? (
-        <div style={{ padding: '36px 20px 14px', borderBottom: '0.5px solid var(--border)' }}>
+        <div style={{ padding: '44px 20px 16px', borderBottom: '0.5px solid var(--border)' }}>
 
-          {/* Row 1: tappable house icon + title */}
-          <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-            <button
-              onClick={() => setHousePanelOpen(true)}
-              onPointerDown={() => setIconPressed(true)}
-              onPointerUp={() => setIconPressed(false)}
-              onPointerLeave={() => setIconPressed(false)}
-              aria-label="Open House Today"
-              style={{
-                padding: 0, display: 'block', flexShrink: 0, lineHeight: 0,
-                transform: iconPressed ? 'scale(0.93)' : 'scale(1)',
-                transition: iconPressed
-                  ? 'transform 80ms ease-in'
-                  : 'transform 220ms cubic-bezier(0.34, 1.56, 0.64, 1)',
-              }}
-            >
-              <img
-                src="/logo.png"
-                alt="225 Custer"
-                style={{ height: 48, width: 'auto', display: 'block' }}
-              />
-            </button>
-            <p style={{ fontSize: 22, fontWeight: 500 }}>Overview</p>
-          </div>
+          {/* House icon — primary identity, taps to open House Today */}
+          <button
+            onClick={() => setHousePanelOpen(true)}
+            onPointerDown={() => setIconPressed(true)}
+            onPointerUp={() => setIconPressed(false)}
+            onPointerLeave={() => setIconPressed(false)}
+            aria-label="Open House Today"
+            style={{
+              padding: 0, display: 'block', lineHeight: 0,
+              transform: iconPressed ? 'scale(0.93)' : 'scale(1)',
+              transition: iconPressed
+                ? 'transform 80ms ease-in'
+                : 'transform 220ms cubic-bezier(0.34, 1.56, 0.64, 1)',
+            }}
+          >
+            <img
+              src="/logo.png"
+              alt="225 Custer"
+              style={{ height: 52, width: 'auto', display: 'block' }}
+            />
+          </button>
 
-          {/* Row 2: speech bubble — always shown, mood-aware, animated on mount */}
+          {/* Speech bubble — primary headline, directly below the house */}
           <SpeechBubble
             moodStyle={moodStyle}
             mood={mood}
