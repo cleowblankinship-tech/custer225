@@ -9,8 +9,44 @@ import SetupCard from './components/SetupCard'
 import { getExpenses, addExpense, deleteExpense, getTasks, addTask, deleteTask, toggleTask } from './lib/supabase'
 import IntroSplash from './components/IntroSplash'
 import HouseToday from './components/HouseToday'
-import { getActiveUpdates } from './lib/houseUpdates'
+import { getActiveUpdates, getHouseMood, getCalmMessage } from './lib/houseUpdates'
 import { fetchWeatherConditions } from './lib/weather'
+
+// ── Mood → bubble visual config ───────────────────────────────────────────────
+// All values use existing CSS variables so dark-mode and theme changes
+// propagate automatically. Changes are intentionally subtle.
+const MOOD_BUBBLE = {
+  urgent: {
+    bg:           'var(--accent-light)',
+    border:       '0.5px solid var(--accent)',
+    borderLeft:   '2.5px solid var(--accent)',
+    tailBorder:   'var(--accent)',
+    tailFill:     'var(--accent-light)',
+    textColor:    'var(--text)',
+    textWeight:   600,
+    moreColor:    'var(--accent)',
+  },
+  attention: {
+    bg:           'var(--bg2)',
+    border:       '0.5px solid var(--border-mid)',
+    borderLeft:   '2px solid var(--border-mid)',
+    tailBorder:   'var(--border-mid)',
+    tailFill:     'var(--bg2)',
+    textColor:    'var(--text)',
+    textWeight:   500,
+    moreColor:    'var(--text3)',
+  },
+  calm: {
+    bg:           'var(--bg2)',
+    border:       '0.5px solid var(--border)',
+    borderLeft:   '0.5px solid var(--border)',
+    tailBorder:   'var(--border)',
+    tailFill:     'var(--bg2)',
+    textColor:    'var(--text2)',
+    textWeight:   400,
+    moreColor:    'var(--text3)',
+  },
+}
 
 const SEED_EXPENSES = [
   { id: 's1', date: '2026-04-07', description: 'American Furniture Warehouse — couch', category: 'Furniture', entry_type: 'expense', tax_type: 'depreciate', amount: 2162.04 },
@@ -45,9 +81,12 @@ export default function App() {
       detail: null,
     }))
 
-  // ── Merge all update sources ──────────────────────────────────────────────
-  const activeUpdates = getActiveUpdates([...weatherConditions, ...taskReminders])
-  const topUpdate = activeUpdates[0] ?? null
+  // ── Merge all update sources + derive mood ────────────────────────────────
+  const activeUpdates  = getActiveUpdates([...weatherConditions, ...taskReminders])
+  const topUpdate      = activeUpdates[0] ?? null
+  const mood           = getHouseMood(activeUpdates)
+  const moodStyle      = MOOD_BUBBLE[mood]
+  const bubbleMessage  = topUpdate ? topUpdate.title : getCalmMessage()
   const [view, setView] = useState('home') // home | list | spinup | import | pl
   const [listFilter, setListFilter] = useState('all')
   const [listMonth, setListMonth] = useState(null)
@@ -235,52 +274,56 @@ export default function App() {
             <p style={{ fontSize: 22, fontWeight: 500 }}>Overview</p>
           </div>
 
-          {/* Row 2: speech bubble (only when there are active updates) */}
-          {topUpdate && (
-            <div style={{ position: 'relative', marginTop: 10 }}>
-              {/* Tail — upward-pointing triangle anchored near the house icon */}
-              <div style={{
-                position: 'absolute', top: -6, left: 18,
-                width: 0, height: 0,
-                borderLeft: '5px solid transparent',
-                borderRight: '5px solid transparent',
-                borderBottom: '6px solid var(--border-mid)',
-              }} />
-              <div style={{
-                position: 'absolute', top: -5, left: 18,
-                width: 0, height: 0,
-                borderLeft: '5px solid transparent',
-                borderRight: '5px solid transparent',
-                borderBottom: '6px solid var(--bg2)',
-              }} />
+          {/* Row 2: speech bubble — always shown, mood-aware */}
+          <div style={{ position: 'relative', marginTop: 8 }}>
 
-              {/* Bubble card */}
-              <button
-                onClick={() => setHousePanelOpen(true)}
-                style={{
-                  width: '100%', textAlign: 'left',
-                  background: 'var(--bg2)',
-                  border: '0.5px solid var(--border-mid)',
-                  borderLeft: topUpdate.priority === 'high'
-                    ? '2px solid var(--accent)'
-                    : '0.5px solid var(--border-mid)',
-                  borderRadius: 9,
-                  padding: '10px 12px 10px 14px',
-                  display: 'flex', alignItems: 'center', gap: 10,
-                }}
-              >
-                <span style={{ fontSize: 13, fontWeight: 500, color: 'var(--text)', flex: 1, lineHeight: 1.35 }}>
-                  {topUpdate.title}
+            {/* Tail — outer layer (border colour) */}
+            <div style={{
+              position: 'absolute', top: -8, left: 18, zIndex: 1,
+              width: 0, height: 0,
+              borderLeft: '6px solid transparent',
+              borderRight: '6px solid transparent',
+              borderBottom: `8px solid ${moodStyle.tailBorder}`,
+            }} />
+            {/* Tail — inner layer (fill colour, covers border) */}
+            <div style={{
+              position: 'absolute', top: -6, left: 18, zIndex: 2,
+              width: 0, height: 0,
+              borderLeft: '6px solid transparent',
+              borderRight: '6px solid transparent',
+              borderBottom: `8px solid ${moodStyle.tailFill}`,
+            }} />
+
+            {/* Bubble card */}
+            <button
+              onClick={() => setHousePanelOpen(true)}
+              style={{
+                position: 'relative', zIndex: 3,
+                width: '100%', textAlign: 'left',
+                background:   moodStyle.bg,
+                border:       moodStyle.border,
+                borderLeft:   moodStyle.borderLeft,
+                borderRadius: 9,
+                padding: '10px 12px 10px 14px',
+                display: 'flex', alignItems: 'center', gap: 10,
+                transition: 'opacity 0.15s',
+              }}
+            >
+              <span style={{
+                fontSize: 13, fontWeight: moodStyle.textWeight,
+                color: moodStyle.textColor,
+                flex: 1, lineHeight: 1.35,
+              }}>
+                {bubbleMessage}
+              </span>
+              {activeUpdates.length > 1 && (
+                <span style={{ fontSize: 11, color: moodStyle.moreColor, whiteSpace: 'nowrap', flexShrink: 0 }}>
+                  +{activeUpdates.length - 1} more
                 </span>
-                {activeUpdates.length > 1 && (
-                  <span style={{ fontSize: 11, color: 'var(--text3)', whiteSpace: 'nowrap', flexShrink: 0 }}>
-                    +{activeUpdates.length - 1} more
-                  </span>
-                )}
-                <span style={{ fontSize: 13, color: 'var(--text3)', flexShrink: 0 }}>→</span>
-              </button>
-            </div>
-          )}
+              )}
+              <span style={{ fontSize: 13, color: 'var(--text3)', flexShrink: 0 }}>→</span>
+            </button>
+          </div>
         </div>
       ) : (
         <div style={{

@@ -54,6 +54,50 @@ const MOCK_UPDATES = [
   },
 ]
 
+// ── Mood system ───────────────────────────────────────────────────────────────
+//
+// Three moods, determined from the active updates array:
+//
+//   urgent    — any high-priority alert (weather, safety)
+//   attention — any reminder, maintenance, or task due today
+//   calm      — nothing active
+
+/**
+ * Derive house mood from the current update list.
+ * @param {Array} updates — from getActiveUpdates()
+ * @returns {'urgent'|'attention'|'calm'}
+ */
+export function getHouseMood(updates) {
+  if (updates.some(u => u.type === 'alert' && u.priority === 'high')) return 'urgent'
+  if (updates.length > 0) return 'attention'
+  return 'calm'
+}
+
+// ── Calm-state messaging ──────────────────────────────────────────────────────
+//
+// Shown in the speech bubble when there are no active updates.
+// Rotates daily by day-of-year so the message feels fresh without being random.
+
+const CALM_MESSAGES = [
+  "Quiet day at home.",
+  "Everything looks good.",
+  "Nothing urgent right now.",
+  "All clear today.",
+  "Looking good from here.",
+  "Smooth sailing today.",
+  "No issues to report.",
+]
+
+/**
+ * Returns a calm-state message that rotates once per day.
+ * @returns {string}
+ */
+export function getCalmMessage() {
+  const start   = new Date(new Date().getFullYear(), 0, 0).getTime()
+  const dayOfYear = Math.floor((Date.now() - start) / 86400000)
+  return CALM_MESSAGES[dayOfYear % CALM_MESSAGES.length]
+}
+
 // ── API ───────────────────────────────────────────────────────────────────────
 
 /**
