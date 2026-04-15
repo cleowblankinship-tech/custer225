@@ -56,10 +56,12 @@ const MOCK_UPDATES = [
 
 // ── API ───────────────────────────────────────────────────────────────────────
 
-/** Returns all active updates, sorted high-priority first. */
-export function getActiveUpdates() {
-  // Phase 2: filter by date, fetch from weather API, merge with task reminders, etc.
-  return sortByPriority(MOCK_UPDATES)
+/**
+ * Returns all active updates merged and sorted high-priority first.
+ * @param {Array} extraItems — live items from weather/tasks to merge with base updates
+ */
+export function getActiveUpdates(extraItems = []) {
+  return sortByPriority([...extraItems, ...MOCK_UPDATES])
 }
 
 /** Sort an update array — high priority first, then as-is. */

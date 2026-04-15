@@ -10,9 +10,7 @@ import { getExpenses, addExpense, deleteExpense, getTasks, addTask, deleteTask, 
 import IntroSplash from './components/IntroSplash'
 import HouseToday from './components/HouseToday'
 import { getActiveUpdates } from './lib/houseUpdates'
-
-const activeUpdates = getActiveUpdates()
-const topUpdate = activeUpdates[0] ?? null
+import { fetchWeatherConditions } from './lib/weather'
 
 const SEED_EXPENSES = [
   { id: 's1', date: '2026-04-07', description: 'American Furniture Warehouse — couch', category: 'Furniture', entry_type: 'expense', tax_type: 'depreciate', amount: 2162.04 },
@@ -31,8 +29,25 @@ const TASKS_LS_KEY = 'custer225_tasks'
 export default function App() {
   const [expenses, setExpenses] = useState(SEED_EXPENSES)
   const [tasks, setTasks] = useState([])
+  const [weatherConditions, setWeatherConditions] = useState([])
   const [showIntro, setShowIntro] = useState(true) // true on every cold load
   const [housePanelOpen, setHousePanelOpen] = useState(false)
+
+  // ── Derive today's reminders from the tasks system ────────────────────────
+  const todayStr = new Date().toISOString().split('T')[0]
+  const taskReminders = tasks
+    .filter(t => !t.completed && t.entry_type === 'reminder' && t.due_date === todayStr)
+    .map(t => ({
+      id: `task-${t.id}`,
+      type: 'reminder',
+      priority: 'normal',
+      title: t.title,
+      detail: null,
+    }))
+
+  // ── Merge all update sources ──────────────────────────────────────────────
+  const activeUpdates = getActiveUpdates([...weatherConditions, ...taskReminders])
+  const topUpdate = activeUpdates[0] ?? null
   const [view, setView] = useState('home') // home | list | spinup | import | pl
   const [listFilter, setListFilter] = useState('all')
   const [listMonth, setListMonth] = useState(null)
@@ -44,6 +59,18 @@ export default function App() {
     setListMonth(month)
     setView('list')
   }
+
+  // Fetch weather conditions on mount, refresh every 30 min
+  // Activates automatically once VITE_OWM_KEY + VITE_PROPERTY_LAT/LON are set
+  useEffect(() => {
+    async function refresh() {
+      const conditions = await fetchWeatherConditions()
+      setWeatherConditions(conditions)
+    }
+    refresh()
+    const id = setInterval(refresh, 30 * 60 * 1000)
+    return () => clearInterval(id)
+  }, [])
 
   // Load expenses from Supabase if env vars are present
   useEffect(() => {
