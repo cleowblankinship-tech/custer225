@@ -103,17 +103,28 @@ export default function App() {
 
       {/* Header */}
       <div style={{
-        padding: '52px 20px 20px',
+        padding: view === 'home' ? '48px 20px 14px' : '52px 20px 20px',
         borderBottom: '0.5px solid var(--border)',
         display: 'flex', alignItems: 'flex-end', justifyContent: 'space-between',
       }}>
         <div>
-          {view !== 'home' && (
-            <p style={{ fontSize: 11, color: 'var(--text2)', letterSpacing: '0.1em', textTransform: 'uppercase', marginBottom: 2 }}>
-              225 Custer
-            </p>
+          {view === 'home' ? (
+            <>
+              <img
+                src="/logo.png"
+                alt="225 Custer"
+                style={{ height: 80, width: 'auto', display: 'block', marginBottom: 8 }}
+              />
+              <p style={{ fontSize: 22, fontWeight: 500 }}>Overview</p>
+            </>
+          ) : (
+            <>
+              <p style={{ fontSize: 11, color: 'var(--text2)', letterSpacing: '0.1em', textTransform: 'uppercase', marginBottom: 2 }}>
+                225 Custer
+              </p>
+              <p style={{ fontSize: 22, fontWeight: 500 }}>{viewTitle[view]}</p>
+            </>
           )}
-          <p style={{ fontSize: 22, fontWeight: 500 }}>{viewTitle[view]}</p>
         </div>
         {view === 'pl' && (
           <button onClick={() => setView('home')} style={{ fontSize: 13, color: 'var(--text2)', paddingBottom: 4 }}>
@@ -130,15 +141,6 @@ export default function App() {
 
         {!loading && view === 'home' && (
           <>
-            {/* Home screen logo */}
-            <div style={{ display: 'flex', justifyContent: 'center', padding: '0 20px 16px' }}>
-              <img
-                src="/logo.png"
-                alt="225 Custer"
-                style={{ height: 72, width: 'auto', display: 'block' }}
-              />
-            </div>
-
             <PLSummary expenses={expenses} onNavigate={navigateToList} />
 
             {/* P&L link */}
