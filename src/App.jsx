@@ -108,9 +108,11 @@ export default function App() {
         display: 'flex', alignItems: 'flex-end', justifyContent: 'space-between',
       }}>
         <div>
-          <p style={{ fontSize: 11, color: 'var(--text2)', letterSpacing: '0.1em', textTransform: 'uppercase', marginBottom: 2 }}>
-            225 Custer
-          </p>
+          {view !== 'home' && (
+            <p style={{ fontSize: 11, color: 'var(--text2)', letterSpacing: '0.1em', textTransform: 'uppercase', marginBottom: 2 }}>
+              225 Custer
+            </p>
+          )}
           <p style={{ fontSize: 22, fontWeight: 500 }}>{viewTitle[view]}</p>
         </div>
         {view === 'pl' && (
@@ -128,6 +130,15 @@ export default function App() {
 
         {!loading && view === 'home' && (
           <>
+            {/* Home screen logo */}
+            <div style={{ display: 'flex', justifyContent: 'center', padding: '0 20px 16px' }}>
+              <img
+                src="/logo.png"
+                alt="225 Custer"
+                style={{ height: 72, width: 'auto', display: 'block' }}
+              />
+            </div>
+
             <PLSummary expenses={expenses} onNavigate={navigateToList} />
 
             {/* P&L link */}
