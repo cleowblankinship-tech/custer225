@@ -89,7 +89,6 @@ export default function App() {
   const [tasks, setTasks] = useState([])
   const [weatherConditions, setWeatherConditions] = useState([])
   const [weatherBlurb, setWeatherBlurb] = useState(null)
-  const [weatherContext, setWeatherContext] = useState(null)
   const [showIntro, setShowIntro] = useState(true) // true on every cold load
   const [housePanelOpen, setHousePanelOpen] = useState(false)
   const [iconPressed, setIconPressed] = useState(false)
@@ -137,10 +136,9 @@ export default function App() {
   // Activates automatically once VITE_OWM_KEY + VITE_PROPERTY_LAT/LON are set
   useEffect(() => {
     async function refresh() {
-      const { alerts, blurb, context } = await fetchWeather()
+      const { alerts, blurb } = await fetchWeather()
       setWeatherConditions(alerts)
       setWeatherBlurb(blurb)
-      setWeatherContext(context)
     }
     refresh()
     const id = setInterval(refresh, 30 * 60 * 1000)
@@ -310,9 +308,9 @@ export default function App() {
 
       {/* Header */}
       {view === 'home' ? (
-        <div style={{ padding: '52px 20px 18px', borderBottom: '0.5px solid var(--border)' }}>
+        <div style={{ padding: '36px 20px 14px', borderBottom: '0.5px solid var(--border)' }}>
 
-          {/* Row 1: tappable house icon + de-emphasised label */}
+          {/* Row 1: tappable house icon + title */}
           <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
             <button
               onClick={() => setHousePanelOpen(true)}
@@ -334,13 +332,10 @@ export default function App() {
                 style={{ height: 48, width: 'auto', display: 'block' }}
               />
             </button>
-            {/* Label is intentionally secondary — the speech bubble is the headline */}
-            <p style={{ fontSize: 14, fontWeight: 400, color: 'var(--text3)', letterSpacing: '0.01em' }}>
-              Overview
-            </p>
+            <p style={{ fontSize: 22, fontWeight: 500 }}>Overview</p>
           </div>
 
-          {/* Row 2: speech bubble — primary focal element */}
+          {/* Row 2: speech bubble — always shown, mood-aware, animated on mount */}
           <SpeechBubble
             moodStyle={moodStyle}
             mood={mood}
@@ -349,17 +344,6 @@ export default function App() {
             onOpen={() => setHousePanelOpen(true)}
             weatherBlurb={bubbleWeatherSubtitle}
           />
-
-          {/* Row 3: ambient context line — day + weather, low contrast */}
-          <p style={{
-            fontSize: 11,
-            color: 'var(--text3)',
-            marginTop: 10,
-            letterSpacing: '0.02em',
-          }}>
-            {new Date().toLocaleDateString('en-US', { weekday: 'long' })}
-            {weatherContext ? ` · ${weatherContext}` : ''}
-          </p>
         </div>
       ) : (
         <div style={{
@@ -382,7 +366,7 @@ export default function App() {
       )}
 
       {/* Content — bottom padding reserves space for the fixed nav */}
-      <div style={{ flex: 1, paddingTop: 24, paddingBottom: 'calc(64px + env(safe-area-inset-bottom))' }}>
+      <div style={{ flex: 1, paddingTop: 20, paddingBottom: 'calc(64px + env(safe-area-inset-bottom))' }}>
         {loading && (
           <p style={{ textAlign: 'center', color: 'var(--text3)', fontSize: 14, padding: 40 }}>Loading...</p>
         )}
@@ -407,13 +391,13 @@ export default function App() {
               </button>
             </div>
 
-            {/* Setup progress card — given extra breath, it's a meaningful indicator */}
-            <div style={{ padding: '4px 20px 28px' }}>
+            {/* Setup progress card */}
+            <div style={{ padding: '0 20px 20px' }}>
               <SetupCard onNavigate={() => setView('spinup')} />
             </div>
 
-            <div style={{ padding: '0 20px 12px' }}>
-              <p style={{ fontSize: 11, fontWeight: 500, color: 'var(--text3)', letterSpacing: '0.08em', textTransform: 'uppercase', marginBottom: 12 }}>
+            <div style={{ padding: '0 20px 16px' }}>
+              <p style={{ fontSize: 11, fontWeight: 500, color: 'var(--text2)', letterSpacing: '0.07em', textTransform: 'uppercase', marginBottom: 12 }}>
                 Quick add
               </p>
             </div>

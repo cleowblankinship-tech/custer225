@@ -41,7 +41,7 @@ export default function PLSummary({ expenses, onNavigate }) {
 
   return (
     <div style={{ padding: '0 20px 20px' }}>
-      <p style={{ fontSize: 10, fontWeight: 500, color: 'var(--text3)', letterSpacing: '0.1em', textTransform: 'uppercase', marginBottom: 14 }}>
+      <p style={{ fontSize: 11, fontWeight: 500, color: 'var(--text2)', letterSpacing: '0.07em', textTransform: 'uppercase', marginBottom: 12 }}>
         {now.getFullYear()} overview
       </p>
 
@@ -151,7 +151,7 @@ function StatCard({ label, value, sub, color, bg, onClick }) {
       style={{
         background: bg || 'var(--bg2)',
         borderRadius: 'var(--radius-sm)',
-        padding: '16px 16px',
+        padding: '14px 16px',
         textAlign: 'left',
         width: '100%',
         transition: 'opacity 0.15s',
@@ -160,9 +160,9 @@ function StatCard({ label, value, sub, color, bg, onClick }) {
       onMouseUp={e => { e.currentTarget.style.opacity = '1' }}
       onMouseLeave={e => { e.currentTarget.style.opacity = '1' }}
     >
-      <p style={{ fontSize: 10, color: color || 'var(--text2)', fontWeight: 600, marginBottom: 6, letterSpacing: '0.06em', textTransform: 'uppercase' }}>{label}</p>
-      <p style={{ fontSize: 22, fontWeight: 500, color: color || 'var(--text)', lineHeight: 1, letterSpacing: '-0.01em' }}>{value}</p>
-      {sub && <p style={{ fontSize: 11, color: color || 'var(--text3)', marginTop: 5 }}>{sub}</p>}
+      <p style={{ fontSize: 11, color: color || 'var(--text2)', fontWeight: 500, marginBottom: 4 }}>{label}</p>
+      <p style={{ fontSize: 22, fontWeight: 500, color: color || 'var(--text)', lineHeight: 1 }}>{value}</p>
+      {sub && <p style={{ fontSize: 11, color: color || 'var(--text3)', marginTop: 4 }}>{sub}</p>}
     </button>
   )
 }

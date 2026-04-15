@@ -230,31 +230,13 @@ export async function fetchWeather() {
 
     // ── Casual blurb — skip if a storm alert is active (redundant) ────────
     const hasStormAlert = alerts.some(a => a.id === 'owm-storm')
-    const blurb   = hasStormAlert ? null : buildWeatherBlurb(w)
+    const blurb = hasStormAlert ? null : buildWeatherBlurb(w)
 
-    // ── Short ambient context: "Clear · Mild" — used in the context line ──
-    const context = buildWeatherContext(w)
-
-    return { alerts, blurb, context }
+    return { alerts, blurb }
   } catch (err) {
     console.warn('[weather] fetch failed silently:', err.message)
     return { alerts: [], blurb: null }
   }
-}
-
-/** Very short condition + temp label: "Clear · Mild" or "Partly cloudy · Cool". */
-function buildWeatherContext(w) {
-  const temp = Math.round(w.main.temp)
-  const id   = w.weather?.[0]?.id ?? 800
-  const key  = weatherConditionKey(id)
-  const condLabels = {
-    clear: 'Clear', 'mostly clear': 'Mostly clear', 'partly cloudy': 'Partly cloudy',
-    cloudy: 'Overcast', drizzly: 'Drizzle', rainy: 'Rain', snowy: 'Snow', hazy: 'Hazy',
-  }
-  const cond  = condLabels[key] ?? ''
-  const label = tempLabel(temp)
-  const Label = label.charAt(0).toUpperCase() + label.slice(1)
-  return cond ? `${cond} · ${Label}` : Label
 }
 
 // Keep legacy export name working during any cached imports
