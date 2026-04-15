@@ -8,6 +8,11 @@ import SpinUp from './components/SpinUp'
 import SetupCard from './components/SetupCard'
 import { getExpenses, addExpense, deleteExpense, getTasks, addTask, deleteTask, toggleTask } from './lib/supabase'
 import IntroSplash from './components/IntroSplash'
+import HouseToday from './components/HouseToday'
+import { getActiveUpdates } from './lib/houseUpdates'
+
+const activeUpdates = getActiveUpdates()
+const topUpdate = activeUpdates[0] ?? null
 
 const SEED_EXPENSES = [
   { id: 's1', date: '2026-04-07', description: 'American Furniture Warehouse — couch', category: 'Furniture', entry_type: 'expense', tax_type: 'depreciate', amount: 2162.04 },
@@ -27,6 +32,7 @@ export default function App() {
   const [expenses, setExpenses] = useState(SEED_EXPENSES)
   const [tasks, setTasks] = useState([])
   const [showIntro, setShowIntro] = useState(true) // true on every cold load
+  const [housePanelOpen, setHousePanelOpen] = useState(false)
   const [view, setView] = useState('home') // home | list | spinup | import | pl
   const [listFilter, setListFilter] = useState('all')
   const [listMonth, setListMonth] = useState(null)
@@ -183,34 +189,91 @@ export default function App() {
       {showIntro && <IntroSplash onComplete={() => setShowIntro(false)} />}
 
       {/* Header */}
-      <div style={{
-        padding: view === 'home' ? '36px 20px 14px' : '48px 20px 18px',
-        borderBottom: '0.5px solid var(--border)',
-        display: 'flex', alignItems: 'center', justifyContent: 'space-between',
-      }}>
-        {view === 'home' ? (
+      {view === 'home' ? (
+        <div style={{ padding: '36px 20px 14px', borderBottom: '0.5px solid var(--border)' }}>
+
+          {/* Row 1: tappable house icon + title */}
           <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-            <img
-              src="/logo.png"
-              alt="225 Custer"
-              style={{ height: 48, width: 'auto', display: 'block', flexShrink: 0 }}
-            />
+            <button
+              onClick={() => setHousePanelOpen(true)}
+              aria-label="Open House Today"
+              style={{ padding: 0, display: 'block', flexShrink: 0, lineHeight: 0 }}
+            >
+              <img
+                src="/logo.png"
+                alt="225 Custer"
+                style={{ height: 48, width: 'auto', display: 'block' }}
+              />
+            </button>
             <p style={{ fontSize: 22, fontWeight: 500 }}>Overview</p>
           </div>
-        ) : (
+
+          {/* Row 2: speech bubble (only when there are active updates) */}
+          {topUpdate && (
+            <div style={{ position: 'relative', marginTop: 10 }}>
+              {/* Tail — upward-pointing triangle anchored near the house icon */}
+              <div style={{
+                position: 'absolute', top: -6, left: 18,
+                width: 0, height: 0,
+                borderLeft: '5px solid transparent',
+                borderRight: '5px solid transparent',
+                borderBottom: '6px solid var(--border-mid)',
+              }} />
+              <div style={{
+                position: 'absolute', top: -5, left: 18,
+                width: 0, height: 0,
+                borderLeft: '5px solid transparent',
+                borderRight: '5px solid transparent',
+                borderBottom: '6px solid var(--bg2)',
+              }} />
+
+              {/* Bubble card */}
+              <button
+                onClick={() => setHousePanelOpen(true)}
+                style={{
+                  width: '100%', textAlign: 'left',
+                  background: 'var(--bg2)',
+                  border: '0.5px solid var(--border-mid)',
+                  borderLeft: topUpdate.priority === 'high'
+                    ? '2px solid var(--accent)'
+                    : '0.5px solid var(--border-mid)',
+                  borderRadius: 9,
+                  padding: '10px 12px 10px 14px',
+                  display: 'flex', alignItems: 'center', gap: 10,
+                }}
+              >
+                <span style={{ fontSize: 13, fontWeight: 500, color: 'var(--text)', flex: 1, lineHeight: 1.35 }}>
+                  {topUpdate.title}
+                </span>
+                {activeUpdates.length > 1 && (
+                  <span style={{ fontSize: 11, color: 'var(--text3)', whiteSpace: 'nowrap', flexShrink: 0 }}>
+                    +{activeUpdates.length - 1} more
+                  </span>
+                )}
+                <span style={{ fontSize: 13, color: 'var(--text3)', flexShrink: 0 }}>→</span>
+              </button>
+            </div>
+          )}
+        </div>
+      ) : (
+        <div style={{
+          padding: '48px 20px 18px',
+          borderBottom: '0.5px solid var(--border)',
+          display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+        }}>
           <div>
             <p style={{ fontSize: 11, color: 'var(--text2)', letterSpacing: '0.1em', textTransform: 'uppercase', marginBottom: 2 }}>
               225 Custer
             </p>
             <p style={{ fontSize: 22, fontWeight: 500 }}>{viewTitle[view]}</p>
           </div>
-        )}
-        {view === 'pl' && (
-          <button onClick={() => setView('home')} style={{ fontSize: 13, color: 'var(--text2)' }}>
-            ← Back
-          </button>
-        )}
-      </div>
+          {view === 'pl' && (
+            <button onClick={() => setView('home')} style={{ fontSize: 13, color: 'var(--text2)' }}>
+              ← Back
+            </button>
+          )}
+        </div>
+      )}
 
       {/* Content — bottom padding reserves space for the fixed nav */}
       <div style={{ flex: 1, paddingTop: 20, paddingBottom: 'calc(64px + env(safe-area-inset-bottom))' }}>
@@ -275,6 +338,14 @@ export default function App() {
           <PLReport expenses={expenses} />
         )}
       </div>
+
+      {/* House Today panel — fixed overlay, slides up from bottom */}
+      {housePanelOpen && (
+        <HouseToday
+          updates={activeUpdates}
+          onClose={() => setHousePanelOpen(false)}
+        />
+      )}
 
       {/* Bottom nav — fixed so it's always visible regardless of scroll */}
       <div style={{
