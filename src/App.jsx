@@ -11,7 +11,7 @@ import IntroSplash from './components/IntroSplash'
 import HouseToday from './components/HouseToday'
 import SpeechBubble from './components/SpeechBubble'
 import { getActiveUpdates, getHouseMood, getCalmMessage } from './lib/houseUpdates'
-import { fetchWeatherConditions } from './lib/weather'
+import { fetchWeather } from './lib/weather'
 import { getRecurringRemindersForDate, getUserRules, saveUserRule } from './lib/recurringRules'
 
 // ── Mood → bubble visual config ───────────────────────────────────────────────
@@ -88,6 +88,7 @@ export default function App() {
   const [expenses, setExpenses] = useState(SEED_EXPENSES)
   const [tasks, setTasks] = useState([])
   const [weatherConditions, setWeatherConditions] = useState([])
+  const [weatherBlurb, setWeatherBlurb] = useState(null)
   const [showIntro, setShowIntro] = useState(true) // true on every cold load
   const [housePanelOpen, setHousePanelOpen] = useState(false)
   const [iconPressed, setIconPressed] = useState(false)
@@ -113,7 +114,11 @@ export default function App() {
   const topUpdate      = activeUpdates[0] ?? null
   const mood           = getHouseMood(activeUpdates)
   const moodStyle      = MOOD_BUBBLE[mood]
-  const bubbleMessage  = topUpdate ? topUpdate.title : getCalmMessage()
+  // Bubble message priority:
+  //   1. Top active update (alert / reminder / recurring)
+  //   2. Weather blurb — casual current conditions ("Sunny and 72° outside.")
+  //   3. Generic calm message as final fallback
+  const bubbleMessage  = topUpdate ? topUpdate.title : (weatherBlurb ?? getCalmMessage())
   const [view, setView] = useState('home') // home | list | spinup | import | pl
   const [listFilter, setListFilter] = useState('all')
   const [listMonth, setListMonth] = useState(null)
@@ -126,12 +131,13 @@ export default function App() {
     setView('list')
   }
 
-  // Fetch weather conditions on mount, refresh every 30 min
+  // Fetch weather on mount, refresh every 30 min
   // Activates automatically once VITE_OWM_KEY + VITE_PROPERTY_LAT/LON are set
   useEffect(() => {
     async function refresh() {
-      const conditions = await fetchWeatherConditions()
-      setWeatherConditions(conditions)
+      const { alerts, blurb } = await fetchWeather()
+      setWeatherConditions(alerts)
+      setWeatherBlurb(blurb)
     }
     refresh()
     const id = setInterval(refresh, 30 * 60 * 1000)
