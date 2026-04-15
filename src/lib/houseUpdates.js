@@ -54,26 +54,71 @@ export function getHouseMood(updates) {
 // ── Calm-state messaging ──────────────────────────────────────────────────────
 //
 // Shown in the speech bubble when there are no active updates.
-// Rotates daily by day-of-year so the message feels fresh without being random.
+// Messages are time-of-day aware (morning / afternoon / evening), randomly
+// selected, and cached in sessionStorage so they stay stable for the session
+// while feeling fresh on the next visit.
 
-const CALM_MESSAGES = [
-  "Quiet day at home.",
-  "Everything looks good.",
-  "Nothing urgent right now.",
-  "All clear today.",
-  "Looking good from here.",
-  "Smooth sailing today.",
-  "No issues to report.",
-]
+const CALM_MESSAGES = {
+  morning: [
+    "Quiet start to the day.",
+    "Nothing pressing this morning.",
+    "A calm morning here.",
+    "All looks good to start.",
+    "Nothing needs attention right now.",
+  ],
+  afternoon: [
+    "Everything's holding steady.",
+    "All is in order this afternoon.",
+    "Nothing urgent right now.",
+    "The house is in good shape.",
+    "All clear this afternoon.",
+  ],
+  evening: [
+    "Nothing left hanging today.",
+    "The house is settled for the evening.",
+    "All is steady this evening.",
+    "Everything looks in order.",
+    "A quiet evening at home.",
+  ],
+}
+
+function getTimeOfDay() {
+  const h = new Date().getHours()
+  return h < 12 ? 'morning' : h < 17 ? 'afternoon' : 'evening'
+}
 
 /**
- * Returns a calm-state message that rotates once per day.
+ * Returns a calm-state message.
+ * - Time-of-day aware (morning / afternoon / evening pools)
+ * - Randomly selected, never repeating the previous message
+ * - Cached in sessionStorage — stable for the current browser session
  * @returns {string}
  */
 export function getCalmMessage() {
-  const start   = new Date(new Date().getFullYear(), 0, 0).getTime()
-  const dayOfYear = Math.floor((Date.now() - start) / 86400000)
-  return CALM_MESSAGES[dayOfYear % CALM_MESSAGES.length]
+  const period    = getTimeOfDay()
+  const pool      = CALM_MESSAGES[period]
+  const cacheKey  = `custer225_calm_${period}`
+  const lastKey   = 'custer225_calm_last'
+
+  // Return the cached pick for this period if it exists and is still valid
+  try {
+    const cached = sessionStorage.getItem(cacheKey)
+    if (cached && pool.includes(cached)) return cached
+  } catch {}
+
+  // Avoid repeating the last message shown (across any period)
+  let prev = null
+  try { prev = sessionStorage.getItem(lastKey) } catch {}
+  const candidates = pool.filter(m => m !== prev)
+  const source = candidates.length > 0 ? candidates : pool
+  const pick   = source[Math.floor(Math.random() * source.length)]
+
+  try {
+    sessionStorage.setItem(cacheKey, pick)
+    sessionStorage.setItem(lastKey, pick)
+  } catch {}
+
+  return pick
 }
 
 // ── API ───────────────────────────────────────────────────────────────────────

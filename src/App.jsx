@@ -89,11 +89,12 @@ export default function App() {
   const [weatherConditions, setWeatherConditions] = useState([])
   const [showIntro, setShowIntro] = useState(true) // true on every cold load
   const [housePanelOpen, setHousePanelOpen] = useState(false)
+  const [iconPressed, setIconPressed] = useState(false)
 
   // ── Derive today's reminders from the tasks system ────────────────────────
   const todayStr = new Date().toISOString().split('T')[0]
   const taskReminders = tasks
-    .filter(t => !t.completed && t.entry_type === 'reminder' && t.due_date === todayStr)
+    .filter(t => !t.completed && t.entry_type === 'reminder' && t.due_date && t.due_date <= todayStr)
     .map(t => ({
       id: `task-${t.id}`,
       type: 'reminder',
@@ -283,8 +284,17 @@ export default function App() {
           <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
             <button
               onClick={() => setHousePanelOpen(true)}
+              onPointerDown={() => setIconPressed(true)}
+              onPointerUp={() => setIconPressed(false)}
+              onPointerLeave={() => setIconPressed(false)}
               aria-label="Open House Today"
-              style={{ padding: 0, display: 'block', flexShrink: 0, lineHeight: 0 }}
+              style={{
+                padding: 0, display: 'block', flexShrink: 0, lineHeight: 0,
+                transform: iconPressed ? 'scale(0.93)' : 'scale(1)',
+                transition: iconPressed
+                  ? 'transform 80ms ease-in'
+                  : 'transform 220ms cubic-bezier(0.34, 1.56, 0.64, 1)',
+              }}
             >
               <img
                 src="/logo.png"
