@@ -1,5 +1,8 @@
 import { useState } from 'react'
 import { parseNaturalLanguage, CATEGORIES, INCOME_CATEGORIES } from '../lib/parser'
+import { nextWeekdayDate } from '../lib/recurringRules'
+
+const WEEKDAYS = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat']
 
 const TAX_COLORS = { depreciate: 'var(--blue)', expense: 'var(--green)' }
 
@@ -41,10 +44,30 @@ export default function QuickAdd({ onAdd }) {
     const isTaskType = parsed?.entry_type === 'task' || parsed?.entry_type === 'reminder'
     if (isTaskType) {
       if (!parsed.title) return
+
+      if (parsed.recurring) {
+        // Validate a weekday is selected
+        if (parsed.cadence_weekday == null) return
+        const weekday     = parsed.cadence_weekday
+        const cadenceType = parsed.cadence_type || 'weekly'
+        const config      = cadenceType === 'biweekly'
+          ? { weekday, anchor_date: nextWeekdayDate(weekday) }
+          : { weekday }
+        onAdd({
+          entry_type:    'recurring_rule',
+          title:         parsed.title,
+          type:          'general',
+          cadence_type:  cadenceType,
+          cadence_config: config,
+          active:        true,
+        })
+      } else {
+        onAdd(parsed)
+      }
     } else {
       if (!parsed || !parsed.amount || !parsed.description) return
+      onAdd(parsed)
     }
-    onAdd(parsed)
     setInput('')
     setParsed(null)
     setConfirming(false)
@@ -127,13 +150,102 @@ export default function QuickAdd({ onAdd }) {
                     style={{ borderColor: !parsed.title ? 'var(--red)' : undefined }}
                   />
                 </Field>
-                <Field label="Due date (optional)">
-                  <input
-                    type="date"
-                    value={parsed.due_date || ''}
-                    onChange={e => setParsed({ ...parsed, due_date: e.target.value || null })}
-                  />
-                </Field>
+
+                {/* Only show due date when not recurring — a rule has no single due date */}
+                {!parsed.recurring && (
+                  <Field label="Due date (optional)">
+                    <input
+                      type="date"
+                      value={parsed.due_date || ''}
+                      onChange={e => setParsed({ ...parsed, due_date: e.target.value || null })}
+                    />
+                  </Field>
+                )}
+              </div>
+
+              {/* ── Repeat section ──────────────────────────────────────────── */}
+              <div style={{ borderTop: '0.5px solid var(--border)', marginTop: 14, paddingTop: 12 }}>
+
+                {/* Repeat toggle row */}
+                <button
+                  onClick={() => setParsed({
+                    ...parsed,
+                    recurring:       !parsed.recurring,
+                    cadence_type:    parsed.cadence_type    || 'weekly',
+                    cadence_weekday: parsed.cadence_weekday ?? null,
+                  })}
+                  style={{
+                    display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+                    width: '100%', padding: '2px 0',
+                  }}
+                >
+                  <span style={{ fontSize: 14, color: 'var(--text)', fontWeight: 500 }}>Repeat</span>
+                  <span style={{
+                    width: 42, height: 24, borderRadius: 12,
+                    background: parsed.recurring ? 'var(--text)' : 'var(--bg2)',
+                    display: 'flex', alignItems: 'center', padding: '0 3px',
+                    transition: 'background 0.2s', flexShrink: 0,
+                  }}>
+                    <span style={{
+                      width: 18, height: 18, borderRadius: '50%', background: 'white',
+                      boxShadow: '0 1px 3px rgba(0,0,0,0.2)',
+                      transform: parsed.recurring ? 'translateX(18px)' : 'translateX(0)',
+                      transition: 'transform 0.2s', display: 'block',
+                    }} />
+                  </span>
+                </button>
+
+                {parsed.recurring && (
+                  <div style={{ marginTop: 12, display: 'flex', flexDirection: 'column', gap: 10 }}>
+
+                    {/* weekly / every other week */}
+                    <Field label="Cadence">
+                      <div style={{ display: 'flex', background: 'var(--bg2)', borderRadius: 'var(--radius-sm)', padding: 3, gap: 3 }}>
+                        {[
+                          { value: 'weekly',   label: 'Every week' },
+                          { value: 'biweekly', label: 'Every other week' },
+                        ].map(opt => (
+                          <button
+                            key={opt.value}
+                            onClick={() => setParsed({ ...parsed, cadence_type: opt.value })}
+                            style={{
+                              flex: 1, padding: '8px 4px', borderRadius: 6, fontSize: 13, fontWeight: 500,
+                              background: (parsed.cadence_type || 'weekly') === opt.value ? 'var(--bg)' : 'transparent',
+                              color:      (parsed.cadence_type || 'weekly') === opt.value ? 'var(--text)' : 'var(--text3)',
+                              boxShadow:  (parsed.cadence_type || 'weekly') === opt.value ? '0 1px 3px rgba(0,0,0,0.08)' : 'none',
+                              transition: 'all 0.15s',
+                            }}
+                          >
+                            {opt.label}
+                          </button>
+                        ))}
+                      </div>
+                    </Field>
+
+                    {/* Weekday picker */}
+                    <Field label={parsed.cadence_weekday == null ? 'Day of week — pick one' : 'Day of week'}>
+                      <div style={{ display: 'flex', gap: 5, flexWrap: 'wrap' }}>
+                        {WEEKDAYS.map((label, i) => (
+                          <button
+                            key={label}
+                            onClick={() => setParsed({ ...parsed, cadence_weekday: i })}
+                            style={{
+                              padding: '6px 10px', borderRadius: 20, fontSize: 13,
+                              background: parsed.cadence_weekday === i ? 'var(--text)' : 'var(--bg2)',
+                              color:      parsed.cadence_weekday === i ? 'var(--bg)' : 'var(--text2)',
+                              fontWeight: parsed.cadence_weekday === i ? 500 : 400,
+                              outline:    parsed.cadence_weekday == null ? '1px dashed var(--border-mid)' : 'none',
+                              transition: 'all 0.15s',
+                            }}
+                          >
+                            {label}
+                          </button>
+                        ))}
+                      </div>
+                    </Field>
+
+                  </div>
+                )}
               </div>
 
               <div style={{ display: 'flex', gap: 8, marginTop: 14 }}>
@@ -148,13 +260,13 @@ export default function QuickAdd({ onAdd }) {
                 </button>
                 <button
                   onClick={handleConfirm}
-                  disabled={!parsed.title}
+                  disabled={parsed.recurring ? (!parsed.title || parsed.cadence_weekday == null) : !parsed.title}
                   style={{
                     flex: 2, height: 44, borderRadius: 'var(--radius-sm)',
                     background: 'var(--text)', color: 'var(--bg)', fontWeight: 500
                   }}
                 >
-                  Save {parsed.entry_type}
+                  {parsed.recurring ? 'Save recurring reminder' : `Save ${parsed.entry_type}`}
                 </button>
               </div>
             </>

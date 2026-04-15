@@ -96,18 +96,62 @@ function ruleFiresOn(rule, dateStr) {
   return false
 }
 
+// ── User-defined rule persistence (localStorage) ──────────────────────────────
+//
+// Built-in rules (RECURRING_RULES above) are always present.
+// User-created rules are stored in localStorage and merged at runtime.
+
+const USER_RULES_KEY = 'custer225_recurring_rules'
+
+/** Load user-defined recurring rules from localStorage. */
+export function getUserRules() {
+  try {
+    const raw = localStorage.getItem(USER_RULES_KEY)
+    return raw ? JSON.parse(raw) : []
+  } catch {
+    return []
+  }
+}
+
+/**
+ * Persist a new (or updated) user rule.
+ * Replaces an existing rule with the same id, otherwise appends.
+ * @param {Object} rule
+ * @returns {Array} the full updated user rules array
+ */
+export function saveUserRule(rule) {
+  const rules = getUserRules()
+  const idx   = rules.findIndex(r => r.id === rule.id)
+  if (idx >= 0) rules[idx] = rule
+  else          rules.push(rule)
+  try { localStorage.setItem(USER_RULES_KEY, JSON.stringify(rules)) } catch {}
+  return rules
+}
+
+/**
+ * Delete a user rule by id.
+ * @param {string} id
+ * @returns {Array} the full updated user rules array
+ */
+export function deleteUserRule(id) {
+  const rules = getUserRules().filter(r => r.id !== id)
+  try { localStorage.setItem(USER_RULES_KEY, JSON.stringify(rules)) } catch {}
+  return rules
+}
+
 // ── Public API ────────────────────────────────────────────────────────────────
 
 /**
- * Evaluate all (or the supplied) rules against a date and return update items
- * that are compatible with getActiveUpdates() in houseUpdates.js.
+ * Evaluate rules against a date and return House Today update items.
+ * Merges built-in RECURRING_RULES with any user-defined rules.
  *
- * @param {string} dateStr   YYYY-MM-DD — the date to evaluate (usually today)
- * @param {Array}  rules     Defaults to the exported RECURRING_RULES
- * @returns {Array}          Zero or more update item objects
+ * @param {string} dateStr      YYYY-MM-DD — the date to evaluate (usually today)
+ * @param {Array}  [extraRules] Optional user-defined rules to merge in
+ * @returns {Array}             Zero or more update item objects
  */
-export function getRecurringRemindersForDate(dateStr, rules = RECURRING_RULES) {
-  return rules
+export function getRecurringRemindersForDate(dateStr, extraRules = []) {
+  const allRules = [...RECURRING_RULES, ...extraRules]
+  return allRules
     .filter(rule => ruleFiresOn(rule, dateStr))
     .map(rule => ({
       id:       `recurring-${rule.id}`,
@@ -115,7 +159,22 @@ export function getRecurringRemindersForDate(dateStr, rules = RECURRING_RULES) {
       priority: 'normal',
       title:    rule.title,
       detail:   rule.notes ?? null,
-      source:   'recurring',      // distinguishes these from manual task reminders
+      source:   'recurring',
       ruleId:   rule.id,
     }))
+}
+
+// ── Helpers ───────────────────────────────────────────────────────────────────
+
+/**
+ * Find the next date (YYYY-MM-DD) on or after today that falls on `weekday`.
+ * Used to auto-set the anchor date when saving a biweekly rule.
+ * @param {number} weekday  0=Sun … 6=Sat
+ * @returns {string}
+ */
+export function nextWeekdayDate(weekday) {
+  const d    = new Date()
+  const diff = (weekday - d.getDay() + 7) % 7
+  d.setDate(d.getDate() + diff)
+  return d.toISOString().split('T')[0]
 }

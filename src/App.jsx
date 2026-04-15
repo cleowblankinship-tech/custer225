@@ -12,7 +12,7 @@ import HouseToday from './components/HouseToday'
 import SpeechBubble from './components/SpeechBubble'
 import { getActiveUpdates, getHouseMood, getCalmMessage } from './lib/houseUpdates'
 import { fetchWeatherConditions } from './lib/weather'
-import { getRecurringRemindersForDate } from './lib/recurringRules'
+import { getRecurringRemindersForDate, getUserRules, saveUserRule } from './lib/recurringRules'
 
 // ── Mood → bubble visual config ───────────────────────────────────────────────
 //
@@ -91,6 +91,7 @@ export default function App() {
   const [showIntro, setShowIntro] = useState(true) // true on every cold load
   const [housePanelOpen, setHousePanelOpen] = useState(false)
   const [iconPressed, setIconPressed] = useState(false)
+  const [userRules, setUserRules] = useState(() => getUserRules())
 
   // ── Derive today's reminders from the tasks system ────────────────────────
   const todayStr = new Date().toISOString().split('T')[0]
@@ -104,8 +105,8 @@ export default function App() {
       detail: null,
     }))
 
-  // ── Recurring house routines (trash, recycling, etc.) ────────────────────
-  const recurringReminders = getRecurringRemindersForDate(todayStr)
+  // ── Recurring house routines (built-in + user-defined) ───────────────────
+  const recurringReminders = getRecurringRemindersForDate(todayStr, userRules)
 
   // ── Merge all update sources + derive mood ────────────────────────────────
   const activeUpdates  = getActiveUpdates([...weatherConditions, ...taskReminders, ...recurringReminders])
@@ -254,12 +255,30 @@ export default function App() {
     }
   }
 
+  // ── Recurring rule handler ────────────────────────────────────────────────
+
+  function handleAddRecurringRule(parsed) {
+    const rule = {
+      id:            'user-' + Date.now(),
+      title:         parsed.title,
+      type:          parsed.type || 'general',
+      cadence_type:  parsed.cadence_type,
+      cadence_config: parsed.cadence_config,
+      active:        true,
+      start_date:    null,
+      end_date:      null,
+      notes:         null,
+    }
+    const updated = saveUserRule(rule)
+    setUserRules(updated)
+    setView('home')
+  }
+
   // ── Unified entry point from QuickAdd ─────────────────────────────────────
 
   async function handleAdd(parsed) {
-    if (parsed.entry_type === 'task' || parsed.entry_type === 'reminder') {
-      return handleAddTask(parsed)
-    }
+    if (parsed.entry_type === 'recurring_rule') return handleAddRecurringRule(parsed)
+    if (parsed.entry_type === 'task' || parsed.entry_type === 'reminder') return handleAddTask(parsed)
     return handleAddExpense(parsed)
   }
 
