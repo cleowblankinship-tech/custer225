@@ -19,7 +19,7 @@ import { useState, useEffect } from 'react'
 //     bubble left edge): left = 18 → tip x = 18 + 6 = 24 ✓
 //   - top: -6 → tip y ≈ -6 - 2.5 = -8.5px above the bubble ✓
 
-export default function SpeechBubble({ moodStyle, mood, message, extraCount, onOpen }) {
+export default function SpeechBubble({ moodStyle, mood, message, extraCount, onOpen, weatherBlurb }) {
   const [visible, setVisible] = useState(false)
 
   // Tiny delay lets the initial CSS value commit before the transition fires,
@@ -76,14 +76,31 @@ export default function SpeechBubble({ moodStyle, mood, message, extraCount, onO
           gap:          10,
         }}
       >
-        <span style={{
-          fontSize:   13,
-          fontWeight: moodStyle.textWeight,
-          color:      moodStyle.textColor,
-          flex:       1,
-          lineHeight: 1.35,
-        }}>
-          {message}
+        {/* Main content — message + optional weather subtitle */}
+        <span style={{ flex: 1, minWidth: 0 }}>
+          <span style={{
+            display:    'block',
+            fontSize:   13,
+            fontWeight: moodStyle.textWeight,
+            color:      moodStyle.textColor,
+            lineHeight: 1.35,
+          }}>
+            {message}
+          </span>
+
+          {/* Weather blurb — shows as a subtle second line whenever weather
+              data is available, regardless of mood or active reminders       */}
+          {weatherBlurb && (
+            <span style={{
+              display:    'block',
+              fontSize:   11,
+              color:      'var(--text3)',
+              marginTop:  3,
+              lineHeight: 1.3,
+            }}>
+              {weatherBlurb}
+            </span>
+          )}
         </span>
 
         {extraCount > 0 && (

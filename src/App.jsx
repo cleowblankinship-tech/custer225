@@ -114,11 +114,12 @@ export default function App() {
   const topUpdate      = activeUpdates[0] ?? null
   const mood           = getHouseMood(activeUpdates)
   const moodStyle      = MOOD_BUBBLE[mood]
-  // Bubble message priority:
-  //   1. Top active update (alert / reminder / recurring)
-  //   2. Weather blurb — casual current conditions ("Sunny and 72° outside.")
-  //   3. Generic calm message as final fallback
-  const bubbleMessage  = topUpdate ? topUpdate.title : (weatherBlurb ?? getCalmMessage())
+  // Bubble message:
+  //   updates present  → show top update title; weather blurb appears as subtitle
+  //   nothing active   → weather blurb is the main message; no subtitle needed
+  //   no weather data  → fall back to generic calm message
+  const bubbleMessage          = topUpdate ? topUpdate.title : (weatherBlurb ?? getCalmMessage())
+  const bubbleWeatherSubtitle  = (weatherBlurb && topUpdate) ? weatherBlurb : null
   const [view, setView] = useState('home') // home | list | spinup | import | pl
   const [listFilter, setListFilter] = useState('all')
   const [listMonth, setListMonth] = useState(null)
@@ -341,6 +342,7 @@ export default function App() {
             message={bubbleMessage}
             extraCount={activeUpdates.length > 1 ? activeUpdates.length - 1 : 0}
             onOpen={() => setHousePanelOpen(true)}
+            weatherBlurb={bubbleWeatherSubtitle}
           />
         </div>
       ) : (
