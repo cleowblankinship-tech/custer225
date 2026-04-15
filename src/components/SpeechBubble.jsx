@@ -1,0 +1,101 @@
+import { useState, useEffect } from 'react'
+
+// ── SpeechBubble ──────────────────────────────────────────────────────────────
+//
+// The house's voice on the home screen. Mounts fresh each time the home view
+// is entered, which re-triggers the fade + slide animation automatically.
+//
+// Tail:
+//   A rotated square with border only on the two visible sides (top + left).
+//   This produces a softer, more organic shape than the classic CSS triangle,
+//   which is too sharp for this aesthetic. The bubble sits on top of the
+//   lower half of the diamond via z-index, hiding those edges cleanly.
+//
+//   Positioning math (12×12 square, rotated 45°):
+//   - CSS top/left places the square's top-left corner
+//   - After rotation the original top-left corner (the tip) appears at
+//     roughly (left + W, top - W) where W = side/√2 ≈ 8.5px
+//   - To centre the tip over the house icon (icon centre = 24px from
+//     bubble left edge): left = 18 → tip x = 18 + 6 = 24 ✓
+//   - top: -6 → tip y ≈ -6 - 2.5 = -8.5px above the bubble ✓
+
+export default function SpeechBubble({ moodStyle, mood, message, extraCount, onOpen }) {
+  const [visible, setVisible] = useState(false)
+
+  // Tiny delay lets the initial CSS value commit before the transition fires,
+  // guaranteeing the animation plays on every mount (= every home visit).
+  useEffect(() => {
+    const id = setTimeout(() => setVisible(true), 10)
+    return () => clearTimeout(id)
+  }, [])
+
+  return (
+    // Wrapper animates both tail + bubble as a single unit
+    <div style={{
+      position: 'relative',
+      marginTop: 8,
+      opacity:   visible ? 1 : 0,
+      transform: visible ? 'translateY(0) scale(1)' : 'translateY(10px) scale(0.98)',
+      transition: 'opacity 260ms ease, transform 260ms ease',
+    }}>
+
+      {/* ── Tail — rotated diamond ─────────────────────────────────────── */}
+      <div style={{
+        position:    'absolute',
+        top:         -6,
+        left:        18,
+        width:       12,
+        height:      12,
+        background:  moodStyle.tailFill,
+        borderTop:   moodStyle.tailBorder,
+        borderLeft:  moodStyle.tailBorder,
+        transform:   'rotate(45deg)',
+        borderRadius: '2px 0 0 0',  // just the tip, keeps it organic
+        zIndex:      2,
+      }} />
+
+      {/* ── Bubble ─────────────────────────────────────────────────────── */}
+      <button
+        onClick={onOpen}
+        style={{
+          position:     'relative',
+          zIndex:       3,
+          width:        '100%',
+          textAlign:    'left',
+          background:   moodStyle.bg,
+          border:       moodStyle.border,
+          borderLeft:   moodStyle.borderLeft,
+          borderRadius: moodStyle.borderRadius,
+          padding:      moodStyle.padding,
+          boxShadow:    moodStyle.boxShadow,
+          display:      'flex',
+          alignItems:   'center',
+          gap:          10,
+        }}
+      >
+        <span style={{
+          fontSize:   13,
+          fontWeight: moodStyle.textWeight,
+          color:      moodStyle.textColor,
+          flex:       1,
+          lineHeight: 1.35,
+        }}>
+          {message}
+        </span>
+
+        {extraCount > 0 && (
+          <span style={{
+            fontSize:    11,
+            color:       moodStyle.moreColor,
+            whiteSpace:  'nowrap',
+            flexShrink:  0,
+          }}>
+            +{extraCount} more
+          </span>
+        )}
+
+        <span style={{ fontSize: 13, color: 'var(--text3)', flexShrink: 0 }}>→</span>
+      </button>
+    </div>
+  )
+}

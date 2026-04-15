@@ -9,38 +9,59 @@ import SetupCard from './components/SetupCard'
 import { getExpenses, addExpense, deleteExpense, getTasks, addTask, deleteTask, toggleTask } from './lib/supabase'
 import IntroSplash from './components/IntroSplash'
 import HouseToday from './components/HouseToday'
+import SpeechBubble from './components/SpeechBubble'
 import { getActiveUpdates, getHouseMood, getCalmMessage } from './lib/houseUpdates'
 import { fetchWeatherConditions } from './lib/weather'
 
 // ── Mood → bubble visual config ───────────────────────────────────────────────
-// All values use existing CSS variables so dark-mode and theme changes
-// propagate automatically. Changes are intentionally subtle.
+//
+// Each mood gets its own shape, spacing, depth, and colour treatment.
+// All values use existing CSS variables — dark-mode and theme safe.
+//
+// borderRadius uses slightly irregular per-corner values (top-left, top-right,
+// bottom-right, bottom-left) to remove the "perfect UI component" feel.
+// Differences are 1–2px — subliminal, not visible as an obvious quirk.
+//
+// tailBorder is the full border shorthand used for the diamond tail's
+// top and left edges (the only two sides that are visible above the bubble).
 const MOOD_BUBBLE = {
   urgent: {
+    // Warmer, denser — serious without being alarming
     bg:           'var(--accent-light)',
     border:       '0.5px solid var(--accent)',
-    borderLeft:   '2.5px solid var(--accent)',
-    tailBorder:   'var(--accent)',
+    borderLeft:   '3px solid var(--accent)',
+    borderRadius: '9px 10px 10px 9px',        // top-l, top-r, bot-r, bot-l
+    padding:      '9px 11px 9px 12px',         // tighter = more serious
+    boxShadow:    '0 1px 6px rgba(0,0,0,0.07)',
+    tailBorder:   '1px solid var(--accent)',
     tailFill:     'var(--accent-light)',
     textColor:    'var(--text)',
     textWeight:   600,
     moreColor:    'var(--accent)',
   },
   attention: {
+    // Neutral, clear — something to note
     bg:           'var(--bg2)',
     border:       '0.5px solid var(--border-mid)',
     borderLeft:   '2px solid var(--border-mid)',
-    tailBorder:   'var(--border-mid)',
+    borderRadius: '10px 9px 10px 9px',
+    padding:      '10px 12px 10px 14px',
+    boxShadow:    '0 1px 4px rgba(0,0,0,0.05)',
+    tailBorder:   '0.5px solid var(--border-mid)',
     tailFill:     'var(--bg2)',
     textColor:    'var(--text)',
     textWeight:   500,
     moreColor:    'var(--text3)',
   },
   calm: {
+    // Light, spacious — nothing pressing today
     bg:           'var(--bg2)',
     border:       '0.5px solid var(--border)',
     borderLeft:   '0.5px solid var(--border)',
-    tailBorder:   'var(--border)',
+    borderRadius: '11px 10px 11px 10px',      // slightly rounder = more relaxed
+    padding:      '12px 14px 12px 16px',       // more air = unhurried
+    boxShadow:    'none',
+    tailBorder:   '0.5px solid var(--border)',
     tailFill:     'var(--bg2)',
     textColor:    'var(--text2)',
     textWeight:   400,
@@ -274,56 +295,14 @@ export default function App() {
             <p style={{ fontSize: 22, fontWeight: 500 }}>Overview</p>
           </div>
 
-          {/* Row 2: speech bubble — always shown, mood-aware */}
-          <div style={{ position: 'relative', marginTop: 8 }}>
-
-            {/* Tail — outer layer (border colour) */}
-            <div style={{
-              position: 'absolute', top: -8, left: 18, zIndex: 1,
-              width: 0, height: 0,
-              borderLeft: '6px solid transparent',
-              borderRight: '6px solid transparent',
-              borderBottom: `8px solid ${moodStyle.tailBorder}`,
-            }} />
-            {/* Tail — inner layer (fill colour, covers border) */}
-            <div style={{
-              position: 'absolute', top: -6, left: 18, zIndex: 2,
-              width: 0, height: 0,
-              borderLeft: '6px solid transparent',
-              borderRight: '6px solid transparent',
-              borderBottom: `8px solid ${moodStyle.tailFill}`,
-            }} />
-
-            {/* Bubble card */}
-            <button
-              onClick={() => setHousePanelOpen(true)}
-              style={{
-                position: 'relative', zIndex: 3,
-                width: '100%', textAlign: 'left',
-                background:   moodStyle.bg,
-                border:       moodStyle.border,
-                borderLeft:   moodStyle.borderLeft,
-                borderRadius: 9,
-                padding: '10px 12px 10px 14px',
-                display: 'flex', alignItems: 'center', gap: 10,
-                transition: 'opacity 0.15s',
-              }}
-            >
-              <span style={{
-                fontSize: 13, fontWeight: moodStyle.textWeight,
-                color: moodStyle.textColor,
-                flex: 1, lineHeight: 1.35,
-              }}>
-                {bubbleMessage}
-              </span>
-              {activeUpdates.length > 1 && (
-                <span style={{ fontSize: 11, color: moodStyle.moreColor, whiteSpace: 'nowrap', flexShrink: 0 }}>
-                  +{activeUpdates.length - 1} more
-                </span>
-              )}
-              <span style={{ fontSize: 13, color: 'var(--text3)', flexShrink: 0 }}>→</span>
-            </button>
-          </div>
+          {/* Row 2: speech bubble — always shown, mood-aware, animated on mount */}
+          <SpeechBubble
+            moodStyle={moodStyle}
+            mood={mood}
+            message={bubbleMessage}
+            extraCount={activeUpdates.length > 1 ? activeUpdates.length - 1 : 0}
+            onOpen={() => setHousePanelOpen(true)}
+          />
         </div>
       ) : (
         <div style={{
