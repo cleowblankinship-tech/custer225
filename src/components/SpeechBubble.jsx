@@ -33,7 +33,7 @@ export default function SpeechBubble({ moodStyle, mood, message, extraCount, onO
     // Wrapper animates both tail + bubble as a single unit
     <div style={{
       position: 'relative',
-      marginTop: -10,
+      marginTop: -18,
       opacity:   visible ? 1 : 0,
       transform: visible ? 'translateY(0) scale(1)' : 'translateY(10px) scale(0.98)',
       transition: 'opacity 260ms ease, transform 260ms ease',
@@ -80,7 +80,7 @@ export default function SpeechBubble({ moodStyle, mood, message, extraCount, onO
         <span style={{ flex: 1, minWidth: 0 }}>
           <span style={{
             display:    'block',
-            fontSize:   14,
+            fontSize:   15,
             fontWeight: moodStyle.textWeight,
             color:      moodStyle.textColor,
             lineHeight: 1.35,

@@ -54,17 +54,16 @@ const MOOD_BUBBLE = {
     moreColor:    'var(--text3)',
   },
   calm: {
-    // White card so it reads as a distinct element, not background noise
     bg:           '#fff',
-    border:       '1px solid rgba(0,0,0,0.09)',
-    borderLeft:   '1px solid rgba(0,0,0,0.09)',
+    border:       '1px solid rgba(0,0,0,0.13)',
+    borderLeft:   '1px solid rgba(0,0,0,0.13)',
     borderRadius: '13px 10px 14px 11px',
     padding:      '13px 15px 13px 17px',
-    boxShadow:    '0 1px 8px rgba(0,0,0,0.06)',
-    tailBorder:   '1px solid rgba(0,0,0,0.09)',
+    boxShadow:    '0 3px 18px rgba(0,0,0,0.1)',
+    tailBorder:   '1px solid rgba(0,0,0,0.13)',
     tailFill:     '#fff',
     textColor:    'var(--text)',
-    textWeight:   500,
+    textWeight:   600,
     moreColor:    'var(--text3)',
   },
 }
@@ -376,7 +375,7 @@ export default function App() {
             <PLSummary expenses={expenses} onNavigate={navigateToList} />
 
             {/* P&L link */}
-            <div style={{ padding: '0 20px 18px' }}>
+            <div style={{ padding: '0 20px 24px' }}>
               <button
                 onClick={() => setView('pl')}
                 style={{

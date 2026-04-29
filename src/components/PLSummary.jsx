@@ -50,10 +50,10 @@ export default function PLSummary({ expenses, onNavigate }) {
         onClick={() => onNavigate?.('income', null)}
         style={{
           width: '100%', textAlign: 'left', marginBottom: 10,
-          background: stats.totalRevenue > 0 ? 'var(--gold-bg)' : '#FDF5F5',
+          background: stats.totalRevenue > 0 ? 'var(--gold-bg)' : '#FAEEEE',
           borderRadius: 'var(--radius-sm)',
           padding: '18px 18px 16px',
-          borderLeft: stats.totalRevenue > 0 ? '3px solid var(--gold)' : '3px solid #D4A0A0',
+          borderLeft: stats.totalRevenue > 0 ? '3px solid var(--gold)' : '3px solid #C07878',
           transition: 'background 0.2s',
         }}
       >
@@ -63,7 +63,7 @@ export default function PLSummary({ expenses, onNavigate }) {
         <p style={{ fontSize: 34, fontWeight: 700, lineHeight: 1, letterSpacing: '-0.02em', color: stats.totalRevenue > 0 ? 'var(--gold)' : 'var(--text)' }}>
           {fmt(stats.totalRevenue)}
         </p>
-        <p style={{ fontSize: 12, marginTop: 6, color: stats.totalRevenue > 0 ? 'var(--text3)' : '#C09090' }}>
+        <p style={{ fontSize: 12, marginTop: 6, color: stats.totalRevenue > 0 ? 'var(--text3)' : '#A87070' }}>
           {stats.totalRevenue > 0 ? 'all time · tap to view' : 'No income yet'}
         </p>
       </button>

@@ -54,12 +54,11 @@ export default function SetupCard({ onNavigate }) {
         textAlign: 'left',
       }}
     >
-      {/* Label + chevron */}
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 4 }}>
+      {/* Label */}
+      <div style={{ marginBottom: 4 }}>
         <span style={{ fontSize: 11, fontWeight: 500, color: 'rgba(255,255,255,0.45)', letterSpacing: '0.09em', textTransform: 'uppercase' }}>
           Launch readiness
         </span>
-        <span style={{ color: 'rgba(255,255,255,0.35)', fontSize: 13 }}>→</span>
       </div>
 
       {/* Big % + personality */}
@@ -74,7 +73,7 @@ export default function SetupCard({ onNavigate }) {
 
       {/* Thick progress bar with accent gradient */}
       <div style={{
-        height: 8,
+        height: 10,
         borderRadius: 3,
         background: 'rgba(255,255,255,0.12)',
         overflow: 'hidden',
@@ -91,16 +90,16 @@ export default function SetupCard({ onNavigate }) {
         }} />
       </div>
 
-      {/* Stats row */}
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+      {/* Stats */}
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end' }}>
         <div>
-          <span style={{ fontSize: 12, color: 'rgba(255,255,255,0.55)' }}>
-            {stats.done} / {stats.total} complete
-          </span>
+          <p style={{ fontSize: 12, color: 'rgba(255,255,255,0.55)' }}>
+            {stats.done} of {stats.total} complete
+          </p>
           {stats.remaining > 0 && (
-            <span style={{ fontSize: 11, color: 'rgba(255,255,255,0.3)', marginLeft: 8 }}>
+            <p style={{ fontSize: 11, color: 'rgba(255,255,255,0.32)', marginTop: 2 }}>
               {stats.remaining} remaining
-            </span>
+            </p>
           )}
         </div>
         {stats.photoTasksRemaining > 0 && (
