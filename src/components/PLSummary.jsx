@@ -106,7 +106,7 @@ export default function PLSummary({ expenses, onNavigate }) {
           value={fmt(stats.allTimeDepreciable)}
           sub="all time"
           color="var(--blue)"
-          bg="var(--bg2)"
+          bg="var(--blue-bg)"
           onClick={() => onNavigate?.('depreciate', null)}
           fullWidth
           soft

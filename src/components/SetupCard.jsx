@@ -34,6 +34,15 @@ export default function SetupCard({ onNavigate }) {
 
   const complete = stats.pct === 100
 
+  function readinessLine(pct) {
+    if (pct === 100) return 'Ready to launch'
+    if (pct >= 90)  return 'Final stretch'
+    if (pct >= 75)  return 'Almost there'
+    if (pct >= 50)  return 'More than halfway'
+    if (pct >= 25)  return 'Making progress'
+    return 'Just getting started'
+  }
+
   return (
     <button
       onClick={onNavigate}
@@ -53,14 +62,19 @@ export default function SetupCard({ onNavigate }) {
         <span style={{ color: 'rgba(255,255,255,0.35)', fontSize: 13 }}>→</span>
       </div>
 
-      {/* Big % */}
-      <p style={{ fontSize: 48, fontWeight: 700, lineHeight: 1, color: '#fff', letterSpacing: '-0.03em', marginBottom: 14 }}>
-        {stats.pct}%
-      </p>
+      {/* Big % + personality */}
+      <div style={{ marginBottom: 14 }}>
+        <p style={{ fontSize: 48, fontWeight: 700, lineHeight: 1, color: '#fff', letterSpacing: '-0.03em' }}>
+          {stats.pct}%
+        </p>
+        <p style={{ fontSize: 12, color: 'rgba(255,255,255,0.45)', marginTop: 4, fontStyle: 'italic' }}>
+          {readinessLine(stats.pct)}
+        </p>
+      </div>
 
       {/* Thick progress bar with accent gradient */}
       <div style={{
-        height: 6,
+        height: 8,
         borderRadius: 3,
         background: 'rgba(255,255,255,0.12)',
         overflow: 'hidden',
@@ -85,7 +99,7 @@ export default function SetupCard({ onNavigate }) {
           </span>
           {stats.remaining > 0 && (
             <span style={{ fontSize: 11, color: 'rgba(255,255,255,0.3)', marginLeft: 8 }}>
-              {stats.remaining} to go
+              {stats.remaining} remaining
             </span>
           )}
         </div>

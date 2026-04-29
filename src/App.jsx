@@ -319,6 +319,7 @@ export default function App() {
             aria-label="Open House Today"
             style={{
               padding: 0, display: 'block', lineHeight: 0,
+              position: 'relative', zIndex: 5,
               transform: iconPressed
                 ? 'scale(0.91) rotate(-1deg)'
                 : 'scale(1) rotate(-3deg)',
@@ -375,7 +376,7 @@ export default function App() {
             <PLSummary expenses={expenses} onNavigate={navigateToList} />
 
             {/* P&L link */}
-            <div style={{ padding: '0 20px 12px' }}>
+            <div style={{ padding: '0 20px 18px' }}>
               <button
                 onClick={() => setView('pl')}
                 style={{

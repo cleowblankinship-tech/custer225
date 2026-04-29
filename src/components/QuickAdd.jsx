@@ -92,7 +92,7 @@ export default function QuickAdd({ onAdd }) {
               onKeyDown={handleKeyDown}
               placeholder="Add expense, task, or reminder…"
               style={{
-                border: '1.5px solid var(--border-mid)',
+                border: '1.5px solid rgba(0,0,0,0.18)',
                 padding: '11px 14px',
                 fontSize: 15,
               }}
@@ -105,7 +105,7 @@ export default function QuickAdd({ onAdd }) {
               height: 46, padding: '0 20px', borderRadius: 'var(--radius-sm)',
               background: 'var(--accent)',
               color: '#fff',
-              opacity: input.trim() ? 1 : 0.35,
+              opacity: input.trim() ? 1 : 0.55,
               fontWeight: 600, flexShrink: 0, transition: 'opacity 0.15s',
               fontSize: 14,
             }}
