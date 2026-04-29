@@ -32,16 +32,16 @@ export default function SetupCard({ onNavigate }) {
 
   if (!stats) return null
 
-  const barColor = stats.pct === 100 ? 'var(--green)' : 'var(--accent)'
+  const complete = stats.pct === 100
 
   return (
     <button
       onClick={onNavigate}
       style={{
         width: '100%',
-        padding: '13px 16px',
+        padding: '14px 16px',
         borderRadius: 'var(--radius-sm)',
-        background: 'var(--bg2)',
+        background: complete ? 'var(--green)' : 'var(--text)',
         display: 'flex',
         alignItems: 'center',
         gap: 12,
@@ -56,12 +56,12 @@ export default function SetupCard({ onNavigate }) {
           display: 'flex',
           justifyContent: 'space-between',
           alignItems: 'baseline',
-          marginBottom: 6,
+          marginBottom: 8,
         }}>
-          <span style={{ fontSize: 14, fontWeight: 500, color: 'var(--text)' }}>
+          <span style={{ fontSize: 11, fontWeight: 500, color: 'rgba(255,255,255,0.5)', letterSpacing: '0.08em', textTransform: 'uppercase' }}>
             Launch readiness
           </span>
-          <span style={{ fontSize: 14, fontWeight: 600, color: 'var(--text)' }}>
+          <span style={{ fontSize: 16, fontWeight: 600, color: '#fff' }}>
             {stats.pct}%
           </span>
         </div>
@@ -70,14 +70,14 @@ export default function SetupCard({ onNavigate }) {
         <div style={{
           height: 3,
           borderRadius: 2,
-          background: 'var(--border)',
+          background: 'rgba(255,255,255,0.15)',
           overflow: 'hidden',
-          marginBottom: 6,
+          marginBottom: 8,
         }}>
           <div style={{
             height: '100%',
             width: stats.pct + '%',
-            background: barColor,
+            background: 'rgba(255,255,255,0.85)',
             borderRadius: 2,
             transition: 'width 0.3s ease',
           }} />
@@ -85,11 +85,11 @@ export default function SetupCard({ onNavigate }) {
 
         {/* Subtext row */}
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-          <span style={{ fontSize: 11, color: 'var(--text3)' }}>
+          <span style={{ fontSize: 11, color: 'rgba(255,255,255,0.45)' }}>
             {stats.done} of {stats.total} complete · {stats.remaining} remaining
           </span>
           {stats.photoTasksRemaining > 0 && (
-            <span style={{ fontSize: 11, color: 'var(--accent)', fontWeight: 500 }}>
+            <span style={{ fontSize: 11, color: 'rgba(255,255,255,0.7)', fontWeight: 500 }}>
               📷 {stats.photoTasksRemaining}
             </span>
           )}
@@ -98,7 +98,7 @@ export default function SetupCard({ onNavigate }) {
       </div>
 
       {/* Chevron */}
-      <span style={{ color: 'var(--text3)', fontSize: 14, flexShrink: 0 }}>→</span>
+      <span style={{ color: 'rgba(255,255,255,0.4)', fontSize: 14, flexShrink: 0 }}>→</span>
     </button>
   )
 }
