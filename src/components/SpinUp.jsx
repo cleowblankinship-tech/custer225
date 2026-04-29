@@ -187,7 +187,7 @@ export default function SpinUp() {
       return s ? JSON.parse(s) : INITIAL_ITEMS
     } catch { return INITIAL_ITEMS }
   })
-  const [filterType, setFilterType] = useState('all')
+  const [filterType, setFilterType] = useState('remaining')
   const [filterCat, setFilterCat] = useState(null)
   const [expanded, setExpanded] = useState(null)
   const [collapsed, setCollapsed] = useState({})
