@@ -45,32 +45,33 @@ export default function PLSummary({ expenses, onNavigate }) {
         {now.getFullYear()} overview
       </p>
 
-      {/* Revenue — hero card, full width */}
+      {/* Revenue — hero, tier 1 */}
       <button
         onClick={() => onNavigate?.('income', null)}
         style={{
-          width: '100%', textAlign: 'left', marginBottom: 10,
-          background: stats.totalRevenue > 0 ? 'var(--gold-bg)' : '#FAEEEE',
+          width: '100%', textAlign: 'left', marginBottom: 16,
+          background: stats.totalRevenue > 0 ? 'var(--gold-bg)' : '#F7E8E8',
           borderRadius: 'var(--radius-sm)',
-          padding: '18px 18px 16px',
-          borderLeft: stats.totalRevenue > 0 ? '3px solid var(--gold)' : '3px solid #C07878',
+          padding: '22px 20px 18px',
+          borderLeft: stats.totalRevenue > 0 ? '4px solid var(--gold)' : '4px solid #B86060',
           transition: 'background 0.2s',
         }}
       >
-        <p style={{ fontSize: 11, fontWeight: 600, letterSpacing: '0.08em', textTransform: 'uppercase', marginBottom: 7, color: stats.totalRevenue > 0 ? 'var(--gold)' : '#B87878' }}>
+        <p style={{ fontSize: 10, fontWeight: 600, letterSpacing: '0.1em', textTransform: 'uppercase', marginBottom: 8, color: stats.totalRevenue > 0 ? 'var(--gold)' : '#B06060' }}>
           Revenue
         </p>
-        <p style={{ fontSize: 34, fontWeight: 700, lineHeight: 1, letterSpacing: '-0.02em', color: stats.totalRevenue > 0 ? 'var(--gold)' : 'var(--text)' }}>
+        <p style={{ fontSize: 38, fontWeight: 700, lineHeight: 1, letterSpacing: '-0.03em', color: stats.totalRevenue > 0 ? 'var(--gold)' : 'var(--text)' }}>
           {fmt(stats.totalRevenue)}
         </p>
-        <p style={{ fontSize: 12, marginTop: 6, color: stats.totalRevenue > 0 ? 'var(--text3)' : '#A87070' }}>
-          {stats.totalRevenue > 0 ? 'all time · tap to view' : 'No income yet'}
+        <p style={{ fontSize: 12, marginTop: 8, color: stats.totalRevenue > 0 ? 'var(--text3)' : '#9E6060' }}>
+          {stats.totalRevenue > 0 ? 'all time · tap to view' : 'No income yet — let\'s fix that'}
         </p>
       </button>
 
+      {/* Tier 2 + 3 grid */}
       <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10 }}>
 
-        {/* Month spend card — special: opens picker */}
+        {/* Month spend — tier 2, opens picker */}
         <button
           onClick={() => setShowPicker(p => !p)}
           style={{
@@ -83,9 +84,9 @@ export default function PLSummary({ expenses, onNavigate }) {
           }}
         >
           <p style={{ fontSize: 11, fontWeight: 500, marginBottom: 4, color: showPicker ? 'rgba(255,255,255,0.55)' : 'var(--text2)' }}>
-            {selectedMonthName} spend ▾
+            {selectedMonth === currentMonth ? 'This month' : selectedMonthName} ▾
           </p>
-          <p style={{ fontSize: 22, fontWeight: 500, lineHeight: 1, color: showPicker ? 'white' : 'var(--text)' }}>
+          <p style={{ fontSize: 24, fontWeight: 600, lineHeight: 1, color: showPicker ? 'white' : 'var(--text)' }}>
             {fmt(stats.monthTotal)}
           </p>
           <p style={{ fontSize: 11, marginTop: 4, color: showPicker ? 'rgba(255,255,255,0.4)' : 'var(--text3)' }}>
@@ -93,16 +94,20 @@ export default function PLSummary({ expenses, onNavigate }) {
           </p>
         </button>
 
+        {/* Total expenses — tier 2, slightly muted */}
         <StatCard
-          label="Direct expenses"
+          label="Total expenses"
           value={fmt(stats.allTimeExpenses)}
           sub="all time"
           color="var(--green)"
-          bg="var(--green-bg)"
+          bg="rgba(234,243,222,0.65)"
+          valueSize={20}
           onClick={() => onNavigate?.('expense', null)}
         />
+
+        {/* Assets — tier 3, clearly secondary */}
         <StatCard
-          label="Depreciable assets"
+          label="Assets"
           value={fmt(stats.allTimeDepreciable)}
           sub="all time"
           color="var(--blue)"
@@ -161,7 +166,12 @@ export default function PLSummary({ expenses, onNavigate }) {
   )
 }
 
-function StatCard({ label, value, sub, color, bg, onClick, fullWidth, soft }) {
+function StatCard({ label, value, sub, color, bg, onClick, fullWidth, soft, valueSize }) {
+  const numSize = valueSize ?? (soft ? 18 : 22)
+  const numWeight = soft ? 400 : 500
+  const labelColor = soft ? 'var(--text3)' : (color || 'var(--text2)')
+  const valueColor = soft ? 'var(--text2)' : (color || 'var(--text)')
+
   return (
     <button
       onClick={onClick}
@@ -178,8 +188,8 @@ function StatCard({ label, value, sub, color, bg, onClick, fullWidth, soft }) {
       onMouseUp={e => { e.currentTarget.style.opacity = '1' }}
       onMouseLeave={e => { e.currentTarget.style.opacity = '1' }}
     >
-      <p style={{ fontSize: 11, color: soft ? 'var(--text3)' : (color || 'var(--text2)'), fontWeight: 500, marginBottom: 3 }}>{label}</p>
-      <p style={{ fontSize: soft ? 18 : 22, fontWeight: soft ? 400 : 500, color: soft ? 'var(--text2)' : (color || 'var(--text)'), lineHeight: 1 }}>{value}</p>
+      <p style={{ fontSize: 11, color: labelColor, fontWeight: 500, marginBottom: 3 }}>{label}</p>
+      <p style={{ fontSize: numSize, fontWeight: numWeight, color: valueColor, lineHeight: 1 }}>{value}</p>
       {sub && <p style={{ fontSize: 11, color: 'var(--text3)', marginTop: 3 }}>{sub}</p>}
     </button>
   )
