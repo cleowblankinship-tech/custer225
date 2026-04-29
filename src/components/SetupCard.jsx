@@ -39,73 +39,62 @@ export default function SetupCard({ onNavigate }) {
       onClick={onNavigate}
       style={{
         width: '100%',
-        padding: '14px 16px',
+        padding: '18px 20px 16px',
         borderRadius: 'var(--radius-sm)',
         background: complete ? 'var(--green)' : 'var(--text)',
-        display: 'flex',
-        alignItems: 'center',
-        gap: 12,
         textAlign: 'left',
       }}
     >
-      {/* Main content */}
-      <div style={{ flex: 1, minWidth: 0 }}>
+      {/* Label + chevron */}
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 4 }}>
+        <span style={{ fontSize: 11, fontWeight: 500, color: 'rgba(255,255,255,0.45)', letterSpacing: '0.09em', textTransform: 'uppercase' }}>
+          Launch readiness
+        </span>
+        <span style={{ color: 'rgba(255,255,255,0.35)', fontSize: 13 }}>→</span>
+      </div>
 
-        {/* Title row */}
+      {/* Big % */}
+      <p style={{ fontSize: 48, fontWeight: 700, lineHeight: 1, color: '#fff', letterSpacing: '-0.03em', marginBottom: 14 }}>
+        {stats.pct}%
+      </p>
+
+      {/* Thick progress bar with accent gradient */}
+      <div style={{
+        height: 6,
+        borderRadius: 3,
+        background: 'rgba(255,255,255,0.12)',
+        overflow: 'hidden',
+        marginBottom: 10,
+      }}>
         <div style={{
-          display: 'flex',
-          justifyContent: 'space-between',
-          alignItems: 'baseline',
-          marginBottom: 8,
-        }}>
-          <span style={{ fontSize: 11, fontWeight: 500, color: 'rgba(255,255,255,0.5)', letterSpacing: '0.08em', textTransform: 'uppercase' }}>
-            Launch readiness
-          </span>
-          <span style={{ fontSize: 16, fontWeight: 600, color: '#fff' }}>
-            {stats.pct}%
-          </span>
-        </div>
+          height: '100%',
+          width: stats.pct + '%',
+          background: complete
+            ? 'rgba(255,255,255,0.9)'
+            : 'linear-gradient(to right, #E07050, #C05538)',
+          borderRadius: 3,
+          transition: 'width 0.4s ease',
+        }} />
+      </div>
 
-        {/* Progress bar */}
-        <div style={{
-          height: 3,
-          borderRadius: 2,
-          background: 'rgba(255,255,255,0.15)',
-          overflow: 'hidden',
-          marginBottom: 8,
-        }}>
-          <div style={{
-            height: '100%',
-            width: stats.pct + '%',
-            background: 'rgba(255,255,255,0.85)',
-            borderRadius: 2,
-            transition: 'width 0.3s ease',
-          }} />
-        </div>
-
-        {/* Subtext row */}
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-          <div>
-            <span style={{ fontSize: 12, color: 'rgba(255,255,255,0.55)' }}>
-              {stats.done} / {stats.total} complete
-            </span>
-            {stats.remaining > 0 && (
-              <span style={{ fontSize: 11, color: 'rgba(255,255,255,0.35)', marginLeft: 8 }}>
-                {stats.remaining} remaining
-              </span>
-            )}
-          </div>
-          {stats.photoTasksRemaining > 0 && (
-            <span style={{ fontSize: 11, color: 'rgba(255,255,255,0.65)', fontWeight: 500 }}>
-              📷 {stats.photoTasksRemaining}
+      {/* Stats row */}
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+        <div>
+          <span style={{ fontSize: 12, color: 'rgba(255,255,255,0.55)' }}>
+            {stats.done} / {stats.total} complete
+          </span>
+          {stats.remaining > 0 && (
+            <span style={{ fontSize: 11, color: 'rgba(255,255,255,0.3)', marginLeft: 8 }}>
+              {stats.remaining} to go
             </span>
           )}
         </div>
-
+        {stats.photoTasksRemaining > 0 && (
+          <span style={{ fontSize: 11, color: 'rgba(255,255,255,0.6)', fontWeight: 500 }}>
+            📷 {stats.photoTasksRemaining}
+          </span>
+        )}
       </div>
-
-      {/* Chevron */}
-      <span style={{ color: 'rgba(255,255,255,0.4)', fontSize: 14, flexShrink: 0 }}>→</span>
     </button>
   )
 }

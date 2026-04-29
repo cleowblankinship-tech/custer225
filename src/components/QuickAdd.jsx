@@ -103,9 +103,10 @@ export default function QuickAdd({ onAdd }) {
             disabled={!input.trim()}
             style={{
               height: 46, padding: '0 20px', borderRadius: 'var(--radius-sm)',
-              background: input.trim() ? 'var(--accent)' : 'var(--bg2)',
-              color: input.trim() ? '#fff' : 'var(--text3)',
-              fontWeight: 600, flexShrink: 0, transition: 'all 0.15s',
+              background: 'var(--accent)',
+              color: '#fff',
+              opacity: input.trim() ? 1 : 0.35,
+              fontWeight: 600, flexShrink: 0, transition: 'opacity 0.15s',
               fontSize: 14,
             }}
           >
