@@ -9,6 +9,7 @@ import SetupCard from './components/SetupCard'
 import { getExpenses, addExpense, deleteExpense, getTasks, addTask, deleteTask, toggleTask } from './lib/supabase'
 import IntroSplash from './components/IntroSplash'
 import HouseToday from './components/HouseToday'
+import DebtDashboard from './components/DebtDashboard'
 import SpeechBubble from './components/SpeechBubble'
 import { getActiveUpdates, getHouseMood, getCalmMessage } from './lib/houseUpdates'
 import { fetchWeather } from './lib/weather'
@@ -292,13 +293,14 @@ export default function App() {
   // ── Nav ───────────────────────────────────────────────────────────────────
 
   const navItems = [
-    { key: 'home',   label: 'Home',    icon: '⌂' },
-    { key: 'list',   label: 'Ledger',  icon: '≡' },
-    { key: 'spinup', label: 'Setup',   icon: '✓' },
-    { key: 'import', label: 'Import',  icon: '↑' },
+    { key: 'home',   label: 'Home',   icon: '⌂' },
+    { key: 'list',   label: 'Ledger', icon: '≡' },
+    { key: 'debt',   label: 'Debt',   icon: '$' },
+    { key: 'spinup', label: 'Setup',  icon: '✓' },
+    { key: 'import', label: 'Import', icon: '↑' },
   ]
 
-  const viewTitle = { home: 'Overview', list: 'Ledger', spinup: 'Spin-Up', import: 'Import', pl: 'P&L Report' }
+  const viewTitle = { home: 'Overview', list: 'Ledger', debt: 'Debt', spinup: 'Spin-Up', import: 'Import', pl: 'P&L Report' }
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', minHeight: '100dvh' }}>
@@ -415,6 +417,8 @@ export default function App() {
           />
         )}
 
+        {!loading && view === 'debt' && <DebtDashboard />}
+
         {!loading && view === 'spinup' && <SpinUp />}
 
         {!loading && view === 'import' && (
@@ -434,12 +438,17 @@ export default function App() {
         />
       )}
 
-      {/* Bottom nav — fixed so it's always visible regardless of scroll */}
+      {/* Bottom nav — fixed, background spans viewport, tabs constrained to content width */}
       <div style={{
         position: 'fixed', bottom: 0, left: 0, right: 0, zIndex: 100,
-        display: 'flex', borderTop: '0.5px solid var(--border)',
-        background: 'var(--bg)', paddingBottom: 'env(safe-area-inset-bottom)',
+        borderTop: '0.5px solid var(--border)',
+        background: 'var(--bg)',
       }}>
+        <div style={{
+          maxWidth: 480, margin: '0 auto',
+          display: 'flex',
+          paddingBottom: 'env(safe-area-inset-bottom)',
+        }}>
         {navItems.map(item => (
           <button
             key={item.key}
@@ -457,6 +466,7 @@ export default function App() {
             <span style={{ fontSize: 10, fontWeight: view === item.key ? 500 : 400 }}>{item.label}</span>
           </button>
         ))}
+        </div>
       </div>
     </div>
   )
