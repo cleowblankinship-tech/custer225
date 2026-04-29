@@ -90,17 +90,23 @@ export default function QuickAdd({ onAdd }) {
               value={input}
               onChange={e => handleInput(e.target.value)}
               onKeyDown={handleKeyDown}
-              placeholder="spatula $14  ·  fix hinge  ·  trash tomorrow"
+              placeholder="Add expense, task, or reminder…"
+              style={{
+                border: '1.5px solid var(--border-mid)',
+                padding: '11px 14px',
+                fontSize: 15,
+              }}
             />
           </div>
           <button
             onClick={handleParse}
             disabled={!input.trim()}
             style={{
-              height: 44, padding: '0 18px', borderRadius: 'var(--radius-sm)',
-              background: input.trim() ? 'var(--text)' : 'var(--bg2)',
-              color: input.trim() ? 'var(--bg)' : 'var(--text3)',
-              fontWeight: 500, flexShrink: 0, transition: 'all 0.15s'
+              height: 46, padding: '0 20px', borderRadius: 'var(--radius-sm)',
+              background: input.trim() ? 'var(--accent)' : 'var(--bg2)',
+              color: input.trim() ? '#fff' : 'var(--text3)',
+              fontWeight: 600, flexShrink: 0, transition: 'all 0.15s',
+              fontSize: 14,
             }}
           >
             Add

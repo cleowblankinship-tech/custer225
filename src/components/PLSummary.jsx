@@ -45,6 +45,29 @@ export default function PLSummary({ expenses, onNavigate }) {
         {now.getFullYear()} overview
       </p>
 
+      {/* Revenue — hero card, full width */}
+      <button
+        onClick={() => onNavigate?.('income', null)}
+        style={{
+          width: '100%', textAlign: 'left', marginBottom: 10,
+          background: stats.totalRevenue > 0 ? 'var(--gold-bg)' : 'var(--bg2)',
+          borderRadius: 'var(--radius-sm)',
+          padding: '16px 18px',
+          borderLeft: stats.totalRevenue > 0 ? '3px solid var(--gold)' : '3px solid var(--border-mid)',
+          transition: 'background 0.2s',
+        }}
+      >
+        <p style={{ fontSize: 11, fontWeight: 500, letterSpacing: '0.06em', textTransform: 'uppercase', marginBottom: 6, color: stats.totalRevenue > 0 ? 'var(--gold)' : 'var(--text3)' }}>
+          Revenue
+        </p>
+        <p style={{ fontSize: 32, fontWeight: 600, lineHeight: 1, letterSpacing: '-0.02em', color: stats.totalRevenue > 0 ? 'var(--gold)' : 'var(--text)' }}>
+          {fmt(stats.totalRevenue)}
+        </p>
+        <p style={{ fontSize: 12, marginTop: 5, color: 'var(--text3)' }}>
+          {stats.totalRevenue > 0 ? 'all time · tap to view' : 'no income logged yet'}
+        </p>
+      </button>
+
       <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10 }}>
 
         {/* Month spend card — special: opens picker */}
@@ -71,14 +94,6 @@ export default function PLSummary({ expenses, onNavigate }) {
         </button>
 
         <StatCard
-          label="Revenue"
-          value={fmt(stats.totalRevenue)}
-          sub={stats.totalRevenue > 0 ? 'all time' : 'none logged yet'}
-          color="var(--accent)"
-          bg="var(--accent-light)"
-          onClick={() => onNavigate?.('income', null)}
-        />
-        <StatCard
           label="Direct expenses"
           value={fmt(stats.allTimeExpenses)}
           sub="all time"
@@ -93,6 +108,7 @@ export default function PLSummary({ expenses, onNavigate }) {
           color="var(--blue)"
           bg="var(--blue-bg)"
           onClick={() => onNavigate?.('depreciate', null)}
+          fullWidth
         />
       </div>
 
@@ -144,7 +160,7 @@ export default function PLSummary({ expenses, onNavigate }) {
   )
 }
 
-function StatCard({ label, value, sub, color, bg, onClick }) {
+function StatCard({ label, value, sub, color, bg, onClick, fullWidth }) {
   return (
     <button
       onClick={onClick}
@@ -155,6 +171,7 @@ function StatCard({ label, value, sub, color, bg, onClick }) {
         textAlign: 'left',
         width: '100%',
         transition: 'opacity 0.15s',
+        gridColumn: fullWidth ? '1 / -1' : undefined,
       }}
       onMouseDown={e => { e.currentTarget.style.opacity = '0.7' }}
       onMouseUp={e => { e.currentTarget.style.opacity = '1' }}

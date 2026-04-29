@@ -28,45 +28,43 @@ import { getRecurringRemindersForDate, getUserRules, saveUserRule } from './lib/
 // top and left edges (the only two sides that are visible above the bubble).
 const MOOD_BUBBLE = {
   urgent: {
-    // Warmer tint, denser padding, strong left accent — clearly serious
-    bg:           '#FEF4EC',                   // warm off-white, distinct from bg2
-    border:       '1px solid #E8C49A',         // warm amber border, matches tint
-    borderLeft:   '3.5px solid var(--accent)', // strong left accent
-    borderRadius: '8px 12px 11px 9px',         // noticeably irregular
-    padding:      '9px 11px 9px 12px',         // compact
-    boxShadow:    '0 2px 8px rgba(0,0,0,0.08)',
-    tailBorder:   '1px solid #E8C49A',
-    tailFill:     '#FEF4EC',
+    bg:           'var(--accent-light)',
+    border:       '1px solid rgba(192,85,56,0.25)',
+    borderLeft:   '3.5px solid var(--accent)',
+    borderRadius: '8px 12px 11px 9px',
+    padding:      '10px 12px 10px 14px',
+    boxShadow:    '0 2px 10px rgba(192,85,56,0.12)',
+    tailBorder:   '1px solid rgba(192,85,56,0.25)',
+    tailFill:     'var(--accent-light)',
     textColor:    'var(--text)',
     textWeight:   600,
     moreColor:    'var(--accent)',
   },
   attention: {
-    // Neutral, slightly defined — something worth noting
-    bg:           'var(--bg2)',
-    border:       '0.5px solid var(--border-mid)',
-    borderLeft:   '2.5px solid var(--border-mid)',
-    borderRadius: '11px 9px 12px 10px',        // visibly irregular
-    padding:      '10px 12px 10px 14px',
-    boxShadow:    '0 1px 5px rgba(0,0,0,0.05)',
-    tailBorder:   '0.5px solid var(--border-mid)',
-    tailFill:     'var(--bg2)',
+    bg:           '#fff',
+    border:       '1px solid rgba(0,0,0,0.1)',
+    borderLeft:   '2.5px solid var(--text3)',
+    borderRadius: '11px 9px 12px 10px',
+    padding:      '11px 13px 11px 15px',
+    boxShadow:    '0 1px 6px rgba(0,0,0,0.07)',
+    tailBorder:   '1px solid rgba(0,0,0,0.1)',
+    tailFill:     '#fff',
     textColor:    'var(--text)',
     textWeight:   500,
     moreColor:    'var(--text3)',
   },
   calm: {
-    // Light, airy, unhurried
-    bg:           'var(--bg2)',
-    border:       '0.5px solid var(--border)',
-    borderLeft:   '0.5px solid var(--border)',
-    borderRadius: '13px 10px 14px 11px',       // rounder and more irregular = relaxed
-    padding:      '12px 14px 12px 16px',       // generous air
-    boxShadow:    'none',
-    tailBorder:   '0.5px solid var(--border)',
-    tailFill:     'var(--bg2)',
-    textColor:    'var(--text2)',
-    textWeight:   400,
+    // White card so it reads as a distinct element, not background noise
+    bg:           '#fff',
+    border:       '1px solid rgba(0,0,0,0.09)',
+    borderLeft:   '1px solid rgba(0,0,0,0.09)',
+    borderRadius: '13px 10px 14px 11px',
+    padding:      '13px 15px 13px 17px',
+    boxShadow:    '0 1px 8px rgba(0,0,0,0.06)',
+    tailBorder:   '1px solid rgba(0,0,0,0.09)',
+    tailFill:     '#fff',
+    textColor:    'var(--text)',
+    textWeight:   500,
     moreColor:    'var(--text3)',
   },
 }
@@ -321,16 +319,18 @@ export default function App() {
             aria-label="Open House Today"
             style={{
               padding: 0, display: 'block', lineHeight: 0,
-              transform: iconPressed ? 'scale(0.93)' : 'scale(1)',
+              transform: iconPressed
+                ? 'scale(0.91) rotate(-1deg)'
+                : 'scale(1) rotate(-3deg)',
               transition: iconPressed
                 ? 'transform 80ms ease-in'
-                : 'transform 220ms cubic-bezier(0.34, 1.56, 0.64, 1)',
+                : 'transform 240ms cubic-bezier(0.34, 1.56, 0.64, 1)',
             }}
           >
             <img
               src="/logo.png"
               alt="225 Custer"
-              style={{ height: 52, width: 'auto', display: 'block' }}
+              style={{ height: 64, width: 'auto', display: 'block' }}
             />
           </button>
 
@@ -375,7 +375,7 @@ export default function App() {
             <PLSummary expenses={expenses} onNavigate={navigateToList} />
 
             {/* P&L link */}
-            <div style={{ padding: '0 20px 8px' }}>
+            <div style={{ padding: '0 20px 12px' }}>
               <button
                 onClick={() => setView('pl')}
                 style={{
@@ -391,7 +391,7 @@ export default function App() {
             </div>
 
             {/* Setup progress card */}
-            <div style={{ padding: '0 20px 20px' }}>
+            <div style={{ padding: '0 20px 24px' }}>
               <SetupCard onNavigate={() => setView('spinup')} />
             </div>
 
@@ -459,7 +459,7 @@ export default function App() {
             style={{
               flex: 1, padding: '12px 0', display: 'flex', flexDirection: 'column',
               alignItems: 'center', gap: 3,
-              color: view === item.key ? 'var(--text)' : 'var(--text3)',
+              color: view === item.key ? 'var(--accent)' : 'var(--text3)',
             }}
           >
             <span style={{ fontSize: 18 }}>{item.icon}</span>

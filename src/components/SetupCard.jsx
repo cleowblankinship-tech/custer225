@@ -85,11 +85,18 @@ export default function SetupCard({ onNavigate }) {
 
         {/* Subtext row */}
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-          <span style={{ fontSize: 11, color: 'rgba(255,255,255,0.45)' }}>
-            {stats.done} of {stats.total} complete · {stats.remaining} remaining
-          </span>
+          <div>
+            <span style={{ fontSize: 12, color: 'rgba(255,255,255,0.55)' }}>
+              {stats.done} / {stats.total} complete
+            </span>
+            {stats.remaining > 0 && (
+              <span style={{ fontSize: 11, color: 'rgba(255,255,255,0.35)', marginLeft: 8 }}>
+                {stats.remaining} remaining
+              </span>
+            )}
+          </div>
           {stats.photoTasksRemaining > 0 && (
-            <span style={{ fontSize: 11, color: 'rgba(255,255,255,0.7)', fontWeight: 500 }}>
+            <span style={{ fontSize: 11, color: 'rgba(255,255,255,0.65)', fontWeight: 500 }}>
               📷 {stats.photoTasksRemaining}
             </span>
           )}
