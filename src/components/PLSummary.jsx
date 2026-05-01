@@ -18,9 +18,11 @@ export default function PLSummary({ expenses, onNavigate }) {
   const [showPicker, setShowPicker] = useState(false)
 
   const availableMonths = useMemo(() => {
-    const months = [...new Set(expenses.map(e => e.date?.slice(0,7)).filter(Boolean))]
-    return months.sort().reverse()
-  }, [expenses])
+    // Always include the current month even if it has no expenses yet,
+    // so the user can always navigate back to it after selecting a past month.
+    const months = new Set([currentMonth, ...expenses.map(e => e.date?.slice(0,7)).filter(Boolean)])
+    return [...months].sort().reverse()
+  }, [expenses, currentMonth])
 
   const stats = useMemo(() => {
     const incomeEntries = expenses.filter(e => e.entry_type === 'income')
@@ -130,7 +132,7 @@ export default function PLSummary({ expenses, onNavigate }) {
             Select month
           </p>
           <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap', marginBottom: 12 }}>
-            {(availableMonths.length > 0 ? availableMonths : [currentMonth]).map(m => (
+            {availableMonths.map(m => (
               <button
                 key={m}
                 onClick={() => setSelectedMonth(m)}
