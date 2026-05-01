@@ -17,24 +17,24 @@ import { getRecurringRemindersForDate, getUserRules, saveUserRule } from './lib/
 
 // ── Mood → bubble visual config ───────────────────────────────────────────────
 //
-// Each mood gets its own shape, spacing, depth, and colour treatment.
-// All values use existing CSS variables — dark-mode and theme safe.
+// The bubble sits to the RIGHT of the house icon in a flex row.
+// The tail points LEFT, connecting back to the house character.
 //
-// borderRadius uses slightly irregular per-corner values (top-left, top-right,
-// bottom-right, bottom-left) to remove the "perfect UI component" feel.
-// Differences are 1–2px — subliminal, not visible as an obvious quirk.
+// Because the tail is now on the left edge, we do NOT use a heavy
+// borderLeft accent — that would clash with the tail junction.
+// Urgency is conveyed through background tint and border color instead.
 //
-// tailBorder is the full border shorthand used for the diamond tail's
-// top and left edges (the only two sides that are visible above the bubble).
+// borderRadius: left corners (10px) are tighter at the tail attachment;
+// right corners (16-18px) are rounder, giving a natural "bubble" silhouette.
 const MOOD_BUBBLE = {
   urgent: {
     bg:           'var(--accent-light)',
-    border:       '1px solid rgba(192,85,56,0.25)',
-    borderLeft:   '3.5px solid var(--accent)',
-    borderRadius: '8px 12px 11px 9px',
-    padding:      '10px 12px 10px 14px',
-    boxShadow:    '0 2px 10px rgba(192,85,56,0.12)',
-    tailBorder:   '1px solid rgba(192,85,56,0.25)',
+    border:       '1.5px solid rgba(192,85,56,0.3)',
+    borderLeft:   '1.5px solid rgba(192,85,56,0.3)',
+    borderRadius: '10px 16px 16px 10px',
+    padding:      '10px 13px',
+    boxShadow:    '0 2px 12px rgba(192,85,56,0.13)',
+    tailBorder:   '1.5px solid rgba(192,85,56,0.3)',
     tailFill:     'var(--accent-light)',
     textColor:    'var(--text)',
     textWeight:   600,
@@ -42,12 +42,12 @@ const MOOD_BUBBLE = {
   },
   attention: {
     bg:           '#fff',
-    border:       '1px solid rgba(0,0,0,0.1)',
-    borderLeft:   '2.5px solid var(--text3)',
-    borderRadius: '11px 9px 12px 10px',
-    padding:      '11px 13px 11px 15px',
-    boxShadow:    '0 1px 6px rgba(0,0,0,0.07)',
-    tailBorder:   '1px solid rgba(0,0,0,0.1)',
+    border:       '1px solid rgba(0,0,0,0.12)',
+    borderLeft:   '1px solid rgba(0,0,0,0.12)',
+    borderRadius: '10px 16px 16px 10px',
+    padding:      '10px 13px',
+    boxShadow:    '0 1px 8px rgba(0,0,0,0.08)',
+    tailBorder:   '1px solid rgba(0,0,0,0.12)',
     tailFill:     '#fff',
     textColor:    'var(--text)',
     textWeight:   500,
@@ -55,15 +55,15 @@ const MOOD_BUBBLE = {
   },
   calm: {
     bg:           '#fff',
-    border:       '1px solid rgba(0,0,0,0.13)',
-    borderLeft:   '1px solid rgba(0,0,0,0.13)',
-    borderRadius: '13px 10px 14px 11px',
-    padding:      '13px 15px 13px 17px',
-    boxShadow:    '0 3px 18px rgba(0,0,0,0.1)',
-    tailBorder:   '1px solid rgba(0,0,0,0.13)',
+    border:       '1px solid rgba(0,0,0,0.1)',
+    borderLeft:   '1px solid rgba(0,0,0,0.1)',
+    borderRadius: '10px 18px 18px 10px',
+    padding:      '10px 13px',
+    boxShadow:    '0 2px 16px rgba(0,0,0,0.08)',
+    tailBorder:   '1px solid rgba(0,0,0,0.1)',
     tailFill:     '#fff',
     textColor:    'var(--text)',
-    textWeight:   600,
+    textWeight:   500,
     moreColor:    'var(--text3)',
   },
 }
@@ -309,40 +309,46 @@ export default function App() {
       {view === 'home' ? (
         <div style={{ padding: '44px 20px 16px', borderBottom: '0.5px solid var(--border)' }}>
 
-          {/* House icon — primary identity, taps to open House Today */}
-          <button
-            onClick={() => setHousePanelOpen(true)}
-            onPointerDown={() => setIconPressed(true)}
-            onPointerUp={() => setIconPressed(false)}
-            onPointerLeave={() => setIconPressed(false)}
-            aria-label="Open House Today"
-            style={{
-              padding: 0, display: 'block', lineHeight: 0,
-              position: 'relative', zIndex: 5,
-              transform: iconPressed
-                ? 'scale(0.91) rotate(-1deg)'
-                : 'scale(1) rotate(-3deg)',
-              transition: iconPressed
-                ? 'transform 80ms ease-in'
-                : 'transform 240ms cubic-bezier(0.34, 1.56, 0.64, 1)',
-            }}
-          >
-            <img
-              src="/logo.png"
-              alt="225 Custer"
-              style={{ height: 64, width: 'auto', display: 'block' }}
-            />
-          </button>
+          {/* Character row — house mascot left, speech bubble right */}
+          <div style={{ display: 'flex', alignItems: 'center', gap: 14 }}>
 
-          {/* Speech bubble — primary headline, directly below the house */}
-          <SpeechBubble
-            moodStyle={moodStyle}
-            mood={mood}
-            message={bubbleMessage}
-            extraCount={activeUpdates.length > 1 ? activeUpdates.length - 1 : 0}
-            onOpen={() => setHousePanelOpen(true)}
-            weatherBlurb={bubbleWeatherSubtitle}
-          />
+            {/* House icon — mascot/identity anchor. Stable, intentional, not overlapping. */}
+            <button
+              onClick={() => setHousePanelOpen(true)}
+              onPointerDown={() => setIconPressed(true)}
+              onPointerUp={() => setIconPressed(false)}
+              onPointerLeave={() => setIconPressed(false)}
+              aria-label="Open House Today"
+              style={{
+                padding: 0, display: 'block', lineHeight: 0, flexShrink: 0,
+                transform: iconPressed
+                  ? 'scale(0.91) rotate(-1deg)'
+                  : 'scale(1) rotate(-3deg)',
+                transition: iconPressed
+                  ? 'transform 80ms ease-in'
+                  : 'transform 240ms cubic-bezier(0.34, 1.56, 0.64, 1)',
+              }}
+            >
+              <img
+                src="/logo.png"
+                alt="225 Custer"
+                style={{ height: 56, width: 'auto', display: 'block' }}
+              />
+            </button>
+
+            {/* Speech bubble — what the house is saying right now.
+                Flex-grows to fill available width. Tail points left toward the house. */}
+            <div style={{ flex: 1, minWidth: 0 }}>
+              <SpeechBubble
+                moodStyle={moodStyle}
+                mood={mood}
+                message={bubbleMessage}
+                extraCount={activeUpdates.length > 1 ? activeUpdates.length - 1 : 0}
+                onOpen={() => setHousePanelOpen(true)}
+                weatherBlurb={bubbleWeatherSubtitle}
+              />
+            </div>
+          </div>
         </div>
       ) : (
         <div style={{
