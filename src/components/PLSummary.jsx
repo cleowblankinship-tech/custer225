@@ -34,8 +34,9 @@ export default function PLSummary({ expenses, onNavigate }) {
     const totalRevenue = incomeEntries.reduce((s, e) => s + Number(e.amount), 0)
     const allTimeDepreciable = expenseEntries.filter(e => e.tax_type === 'depreciate').reduce((s, e) => s + Number(e.amount), 0)
     const allTimeExpenses = expenseEntries.filter(e => e.tax_type === 'expense').reduce((s, e) => s + Number(e.amount), 0)
+    const allTimeTotal = allTimeExpenses + allTimeDepreciable
 
-    return { monthTotal, totalRevenue, allTimeDepreciable, allTimeExpenses }
+    return { monthTotal, totalRevenue, allTimeDepreciable, allTimeExpenses, allTimeTotal }
   }, [expenses, selectedMonth])
 
   const fmt = (n) => '$' + Number(n).toLocaleString('en-US', { minimumFractionDigits: 0, maximumFractionDigits: 0 })
@@ -96,11 +97,11 @@ export default function PLSummary({ expenses, onNavigate }) {
           </p>
         </button>
 
-        {/* Total expenses — tier 2, slightly muted */}
+        {/* Total expenses — tier 2, combined direct + assets */}
         <StatCard
           label="Total expenses"
-          value={fmt(stats.allTimeExpenses)}
-          sub="all time"
+          value={fmt(stats.allTimeTotal)}
+          sub={`incl. ${fmt(stats.allTimeDepreciable)} assets`}
           color="var(--green)"
           bg="rgba(234,243,222,0.65)"
           valueSize={20}
