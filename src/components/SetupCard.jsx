@@ -71,10 +71,10 @@ export default function SetupCard({ onNavigate }) {
         </p>
       </div>
 
-      {/* Thick progress bar with accent gradient */}
+      {/* Progress bar — intentionally blocky/geometric per design system */}
       <div style={{
         height: 10,
-        borderRadius: 3,
+        borderRadius: 2,
         background: 'rgba(255,255,255,0.12)',
         overflow: 'hidden',
         marginBottom: 10,
@@ -85,7 +85,7 @@ export default function SetupCard({ onNavigate }) {
           background: complete
             ? 'rgba(255,255,255,0.9)'
             : 'linear-gradient(to right, #E07050, #C05538)',
-          borderRadius: 3,
+          borderRadius: 0,
           transition: 'width 0.4s ease',
         }} />
       </div>

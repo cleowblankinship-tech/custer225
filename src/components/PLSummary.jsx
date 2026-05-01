@@ -97,24 +97,22 @@ export default function PLSummary({ expenses, onNavigate }) {
           </p>
         </button>
 
-        {/* Total expenses — tier 2, combined direct + assets */}
+        {/* Total expenses — tier 2, neutral bg, color on number only */}
         <StatCard
           label="Total expenses"
           value={fmt(stats.allTimeTotal)}
           sub={`incl. ${fmt(stats.allTimeDepreciable)} assets`}
           color="var(--green)"
-          bg="rgba(234,243,222,0.65)"
           valueSize={20}
           onClick={() => onNavigate?.('expense', null)}
         />
 
-        {/* Assets — tier 3, clearly secondary */}
+        {/* Assets — tier 3, muted/secondary */}
         <StatCard
           label="Assets"
           value={fmt(stats.allTimeDepreciable)}
           sub="all time"
           color="var(--blue)"
-          bg="var(--blue-bg)"
           onClick={() => onNavigate?.('depreciate', null)}
           fullWidth
           soft
@@ -138,7 +136,7 @@ export default function PLSummary({ expenses, onNavigate }) {
                 key={m}
                 onClick={() => setSelectedMonth(m)}
                 style={{
-                  padding: '6px 13px', borderRadius: 20, fontSize: 13,
+                  padding: '6px 13px', borderRadius: 'var(--radius-sm)', fontSize: 13,
                   background: selectedMonth === m ? 'var(--text)' : 'var(--bg)',
                   color: selectedMonth === m ? 'white' : 'var(--text2)',
                   fontWeight: selectedMonth === m ? 500 : 400,

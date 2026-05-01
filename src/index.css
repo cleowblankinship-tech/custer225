@@ -10,8 +10,9 @@
   --accent-light: #FAEDE9;
   --border: rgba(0,0,0,0.08);
   --border-mid: rgba(0,0,0,0.12);
-  --radius: 12px;
-  --radius-sm: 8px;
+  --radius: 12px;     /* cards, panels */
+  --radius-sm: 8px;   /* smaller cards, inputs, chips */
+  --radius-bar: 2px;  /* progress bar fills — intentionally blocky/geometric */
   --green: #3B6D11;
   --green-bg: #EAF3DE;
   --blue: #185FA5;
