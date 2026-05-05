@@ -187,6 +187,10 @@ export default function App() {
         const dbItems = await getSetupItems()
         if (dbItems && dbItems.length > 0) { setSetupStats(computeSpinUpStats(dbItems)); return }
       } catch {}
+      // Supabase unavailable — try localStorage, fall back to INITIAL_ITEMS
+      if (!import.meta.env.VITE_SUPABASE_URL) {
+        console.warn('[225] Supabase not configured. Launch readiness is showing INITIAL_ITEMS fallback (dev only — deploy with env vars to see real data).')
+      }
       try {
         const s = localStorage.getItem('225-spinup-v1')
         setSetupStats(computeSpinUpStats(s ? JSON.parse(s) : INITIAL_ITEMS))
@@ -377,7 +381,7 @@ export default function App() {
                 padding: 0, display: 'block', lineHeight: 0, flexShrink: 0,
                 transform: iconPressed
                   ? 'scale(0.91) rotate(-1deg)'
-                  : 'scale(1) rotate(-3deg)',
+                  : 'scale(1) rotate(-2deg)',
                 transition: iconPressed
                   ? 'transform 80ms ease-in'
                   : 'transform 240ms cubic-bezier(0.34, 1.56, 0.64, 1)',

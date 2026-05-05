@@ -78,7 +78,7 @@ export default function PLSummary({ expenses, onNavigate, isPreLaunch }) {
           {isPreLaunch && stats.totalRevenue === 0 && (
             <span style={{
               fontSize: 9, fontWeight: 600, letterSpacing: '0.08em', textTransform: 'uppercase',
-              color: 'var(--accent)', background: 'var(--accent-light)',
+              color: 'var(--text)', background: 'rgba(255,255,255,0.18)',
               borderRadius: 4, padding: '2px 6px',
             }}>
               Pre-launch
@@ -119,12 +119,11 @@ export default function PLSummary({ expenses, onNavigate, isPreLaunch }) {
           </p>
         </button>
 
-        {/* Total Spending — tier 2, neutral bg, combined total */}
+        {/* Total Spending — tier 2, neutral — green reserved for income/profit */}
         <StatCard
           label="Total Spending"
           value={fmt(stats.allTimeTotal)}
           sub={`incl. ${fmt(stats.allTimeDepreciable)} startup assets`}
-          color="var(--green)"
           valueSize={20}
           onClick={() => onNavigate?.('expense', null)}
         />
@@ -140,7 +139,6 @@ export default function PLSummary({ expenses, onNavigate, isPreLaunch }) {
           label="Operating Expenses"
           value={fmt(stats.allTimeExpenses)}
           sub="direct house costs"
-          color="var(--green)"
           onClick={() => onNavigate?.('expense', null)}
           soft
         />
@@ -148,7 +146,6 @@ export default function PLSummary({ expenses, onNavigate, isPreLaunch }) {
           label="Startup Assets"
           value={fmt(stats.allTimeDepreciable)}
           sub="furniture, supplies, setup"
-          color="var(--blue)"
           onClick={() => onNavigate?.('depreciate', null)}
           soft
         />

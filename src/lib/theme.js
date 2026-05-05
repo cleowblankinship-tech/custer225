@@ -33,8 +33,8 @@ const BASE = {
     '--bg':             '#F6EFE4',
     '--bg2':            '#EDE3D2',
     '--text':           '#1A1208',
-    '--text2':          '#5E4E3A',
-    '--text3':          '#9A8470',
+    '--text2':          '#504030',   // darkened for label readability on warm bg
+    '--text3':          '#857060',   // darkened for placeholder/nav readability
     '--accent':         '#C84E18',
     '--accent-light':   '#F5E0D4',
     '--border':         'rgba(0,0,0,0.09)',
@@ -66,16 +66,16 @@ const BASE = {
     '--surface-strong': '#2A180E',
   },
   night: {
-    '--bg':             '#2B1F1A',
-    '--bg2':            '#3A2A24',
+    '--bg':             '#261A16',   // slightly darker — more distinct from cards
+    '--bg2':            '#3D2C25',   // card surface — clear separation from bg
     '--text':           '#F7F0E5',
     '--text2':          '#C9A996',
-    '--text3':          '#8A6352',
+    '--text3':          '#9A7060',   // slightly lighter for input placeholder readability
     '--accent':         '#E8622C',
     '--accent-light':   '#5C2E20',
-    '--border':         'rgba(247,240,229,0.11)',
-    '--border-mid':     'rgba(247,240,229,0.18)',
-    '--surface-strong': '#1C120E',
+    '--border':         'rgba(247,240,229,0.12)',
+    '--border-mid':     'rgba(247,240,229,0.20)',
+    '--surface-strong': '#150D09',   // darkest — SetupCard, clearly below bg
     // Semantic data colors — lighter for readability on dark bg
     '--green':          '#7DC140',
     '--green-bg':       '#1C3010',
