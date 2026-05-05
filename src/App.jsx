@@ -11,8 +11,7 @@ import { INITIAL_ITEMS, computeSpinUpStats } from './lib/spinupData'
 import IntroSplash from './components/IntroSplash'
 import HouseToday from './components/HouseToday'
 import DebtDashboard from './components/DebtDashboard'
-import SpeechBubble from './components/SpeechBubble'
-import HouseIcon from './components/HouseIcon'
+import HeroSection from './components/HeroSection'
 import { getActiveUpdates, getHouseMood, getCalmMessage, getCompositeMessage } from './lib/houseUpdates'
 import { fetchWeather } from './lib/weather'
 import { getRecurringRemindersForDate, getUserRules, saveUserRule } from './lib/recurringRules'
@@ -99,7 +98,6 @@ export default function App() {
   const [themeMode, setThemeMode] = useState(() => localStorage.getItem('custer225_theme_mode') || 'auto')
   const [showIntro, setShowIntro] = useState(true) // true on every cold load
   const [housePanelOpen, setHousePanelOpen] = useState(false)
-  const [iconPressed, setIconPressed] = useState(false)
   const [userRules, setUserRules] = useState(() => getUserRules())
   const [setupStats, setSetupStats] = useState(null) // launch readiness snapshot
 
@@ -370,83 +368,25 @@ export default function App() {
 
       {/* Header */}
       {view === 'home' ? (
-        <div style={{ padding: '44px 20px 16px', borderBottom: '0.5px solid var(--border)' }}>
-
-          {/* Character row — house mascot left, speech bubble right */}
-          <div style={{ display: 'flex', alignItems: 'center', gap: 14, position: 'relative' }}>
-
-            {/* House icon — monochrome SVG, inherits var(--text) for theme-aware color */}
-            <button
-              onClick={() => setHousePanelOpen(true)}
-              onPointerDown={() => setIconPressed(true)}
-              onPointerUp={() => setIconPressed(false)}
-              onPointerLeave={() => setIconPressed(false)}
-              aria-label="Open House Today"
-              style={{
-                padding: '4px',
-                display: 'flex', alignItems: 'center', justifyContent: 'center',
-                flexShrink: 0,
-                color: 'var(--text)',  // drives SVG stroke via currentColor
-                transform: iconPressed
-                  ? 'scale(0.88)'
-                  : 'scale(1)',
-                transition: iconPressed
-                  ? 'transform 80ms ease-in'
-                  : 'transform 240ms cubic-bezier(0.34, 1.56, 0.64, 1)',
-              }}
-            >
-              <HouseIcon size={46} />
-            </button>
-
-            {/* Speech bubble — what the house is saying right now.
-                Flex-grows to fill available width. Tail points left toward the house. */}
-            <div style={{ flex: 1, minWidth: 0 }}>
-              <SpeechBubble
-                moodStyle={moodStyle}
-                mood={mood}
-                message={bubbleMessage}
-                extraCount={activeUpdates.length > 1 ? activeUpdates.length - 1 : 0}
-                onOpen={() => setHousePanelOpen(true)}
-                weatherBlurb={bubbleWeatherSubtitle}
-              />
-            </div>
-
-            {/* Theme toggle — subtle, cycles auto → day → evening → night */}
-            {(() => {
-              const CYCLE = ['auto', 'day', 'evening', 'night']
-              const ICONS  = { auto: '◐', day: '☀', evening: '◑', night: '☾' }
-              const LABELS = { auto: 'Auto (follows time of day)', day: 'Day mode', evening: 'Evening mode', night: 'Night mode' }
-              const next = CYCLE[(CYCLE.indexOf(themeMode) + 1) % CYCLE.length]
-              return (
-                <button
-                  onClick={() => {
-                    const m = next
-                    setThemeMode(m)
-                    localStorage.setItem('custer225_theme_mode', m)
-                  }}
-                  aria-label={`Theme: ${LABELS[themeMode]}. Tap to switch.`}
-                  title={`Theme: ${themeMode}`}
-                  style={{
-                    position:   'absolute',
-                    top:        -32,
-                    right:      0,
-                    fontSize:   15,
-                    color:      'var(--text3)',
-                    padding:    '8px 10px',
-                    lineHeight: 1,
-                    minWidth:   36,
-                    minHeight:  36,
-                    display:    'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                  }}
-                >
-                  {ICONS[themeMode]}
-                </button>
-              )
-            })()}
-          </div>
-        </div>
+        // ── Hero landscape section ─────────────────────────────────────────
+        // Replaces the old house-icon + speech-bubble header on the home view.
+        // Painting background, house embedded in scene, bubble revealed on tap.
+        <HeroSection
+          moodStyle={moodStyle}
+          message={bubbleMessage}
+          extraCount={activeUpdates.length > 1 ? activeUpdates.length - 1 : 0}
+          onOpen={() => setHousePanelOpen(true)}
+          weatherBlurb={bubbleWeatherSubtitle}
+          setupStats={setupStats}
+          totalRevenue={totalRevenue}
+          themeMode={themeMode}
+          onThemeToggle={() => {
+            const CYCLE = ['auto', 'day', 'evening', 'night']
+            const m = CYCLE[(CYCLE.indexOf(themeMode) + 1) % CYCLE.length]
+            setThemeMode(m)
+            localStorage.setItem('custer225_theme_mode', m)
+          }}
+        />
       ) : (
         <div style={{
           padding: '48px 20px 18px',

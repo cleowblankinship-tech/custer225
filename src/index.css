@@ -113,3 +113,18 @@ input:focus, select:focus, textarea:focus {
 input::placeholder, textarea::placeholder {
   color: var(--text3);
 }
+
+/* ── Hero section animations ──────────────────────────────────────────────── */
+
+/* Speech bubble fade-in + subtle upward slide when revealed by house tap.
+   Used by HeroSection's bubble div via `animation: heroBubbleIn ...`.        */
+@keyframes heroBubbleIn {
+  from {
+    opacity:   0;
+    transform: translateY(-8px) scale(0.97);
+  }
+  to {
+    opacity:   1;
+    transform: translateY(0)    scale(1);
+  }
+}
