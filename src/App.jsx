@@ -29,45 +29,49 @@ import { getTimeOfDay, getTheme, applyTheme } from './lib/theme'
 //
 // borderRadius: left corners (10px) are tighter at the tail attachment;
 // right corners (16-18px) are rounder, giving a natural "bubble" silhouette.
+// Bubble surfaces now use --bubble-bg / --bubble-border / --bubble-sub tokens
+// so the parchment color in night mode transitions smoothly with the rest of
+// the palette. Shadows are reduced — dark mode relies on surface + border
+// contrast rather than drop shadows.
 const MOOD_BUBBLE = {
   urgent: {
     bg:           'var(--accent-light)',
-    border:       '1.5px solid rgba(192,85,56,0.3)',
-    borderLeft:   '1.5px solid rgba(192,85,56,0.3)',
+    border:       '1px solid rgba(192,85,56,0.22)',
+    borderLeft:   '1px solid rgba(192,85,56,0.22)',
     borderRadius: '10px 16px 16px 10px',
-    padding:      '12px 14px',
-    boxShadow:    '0 2px 12px rgba(192,85,56,0.13)',
-    tailBorder:   '1.5px solid rgba(192,85,56,0.3)',
+    padding:      '11px 14px',
+    boxShadow:    '0 1px 6px rgba(0,0,0,0.08)',
+    tailBorder:   '1px solid rgba(192,85,56,0.22)',
     tailFill:     'var(--accent-light)',
     textColor:    'var(--text)',
     textWeight:   600,
     moreColor:    'var(--accent)',
   },
   attention: {
-    bg:           '#fff',
-    border:       '1px solid rgba(0,0,0,0.12)',
-    borderLeft:   '1px solid rgba(0,0,0,0.12)',
+    bg:           'var(--bubble-bg)',
+    border:       '1px solid var(--bubble-border)',
+    borderLeft:   '1px solid var(--bubble-border)',
     borderRadius: '10px 16px 16px 10px',
-    padding:      '12px 14px',
-    boxShadow:    '0 1px 8px rgba(0,0,0,0.08)',
-    tailBorder:   '1px solid rgba(0,0,0,0.12)',
-    tailFill:     '#fff',
-    textColor:    '#1A1A1A',   // always dark — bubble is always white
+    padding:      '11px 14px',
+    boxShadow:    '0 1px 5px rgba(0,0,0,0.06)',
+    tailBorder:   '1px solid var(--bubble-border)',
+    tailFill:     'var(--bubble-bg)',
+    textColor:    '#1A1208',
     textWeight:   500,
-    moreColor:    '#A0A0A0',
+    moreColor:    'var(--bubble-sub)',
   },
   calm: {
-    bg:           '#fff',
-    border:       '1px solid rgba(0,0,0,0.1)',
-    borderLeft:   '1px solid rgba(0,0,0,0.1)',
+    bg:           'var(--bubble-bg)',
+    border:       '1px solid var(--bubble-border)',
+    borderLeft:   '1px solid var(--bubble-border)',
     borderRadius: '10px 18px 18px 10px',
-    padding:      '12px 14px',
-    boxShadow:    '0 2px 16px rgba(0,0,0,0.08)',
-    tailBorder:   '1px solid rgba(0,0,0,0.1)',
-    tailFill:     '#fff',
-    textColor:    '#1A1A1A',   // always dark — bubble is always white
+    padding:      '11px 14px',
+    boxShadow:    '0 1px 5px rgba(0,0,0,0.06)',
+    tailBorder:   '1px solid var(--bubble-border)',
+    tailFill:     'var(--bubble-bg)',
+    textColor:    '#1A1208',
     textWeight:   500,
-    moreColor:    '#A0A0A0',
+    moreColor:    'var(--bubble-sub)',
   },
 }
 

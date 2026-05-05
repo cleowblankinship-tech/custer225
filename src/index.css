@@ -14,6 +14,9 @@
 @property --border         { syntax: '<color>'; inherits: true; initial-value: rgba(0,0,0,0.08); }
 @property --border-mid     { syntax: '<color>'; inherits: true; initial-value: rgba(0,0,0,0.13); }
 @property --surface-strong { syntax: '<color>'; inherits: true; initial-value: #2B1F1A; }
+@property --bubble-bg      { syntax: '<color>'; inherits: true; initial-value: #FFFFFF; }
+@property --bubble-border  { syntax: '<color>'; inherits: true; initial-value: rgba(0,0,0,0.09); }
+@property --bubble-sub     { syntax: '<color>'; inherits: true; initial-value: #888880; }
 
 :root {
   /* Color tokens — overwritten at runtime by theme.js */
@@ -27,6 +30,9 @@
   --border: rgba(0,0,0,0.08);
   --border-mid: rgba(0,0,0,0.13);
   --surface-strong: #2B1F1A;
+  --bubble-bg:      #FFFFFF;
+  --bubble-border:  rgba(0,0,0,0.09);
+  --bubble-sub:     #888880;
 
   /* Semantic transitions — smooth cross-fades when theme switches */
   transition:
@@ -39,7 +45,10 @@
     --accent-light   250ms ease,
     --border         350ms ease,
     --border-mid     350ms ease,
-    --surface-strong 350ms ease;
+    --surface-strong 350ms ease,
+    --bubble-bg      350ms ease,
+    --bubble-border  350ms ease,
+    --bubble-sub     250ms ease;
 
   /* Layout / radius tokens — static */
   --radius: 12px;     /* cards, panels */

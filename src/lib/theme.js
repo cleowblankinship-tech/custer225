@@ -33,13 +33,16 @@ const BASE = {
     '--bg':             '#F6EFE4',
     '--bg2':            '#EDE3D2',
     '--text':           '#1A1208',
-    '--text2':          '#504030',   // darkened for label readability on warm bg
-    '--text3':          '#857060',   // darkened for placeholder/nav readability
+    '--text2':          '#504030',
+    '--text3':          '#857060',
     '--accent':         '#C84E18',
     '--accent-light':   '#F5E0D4',
     '--border':         'rgba(0,0,0,0.09)',
     '--border-mid':     'rgba(0,0,0,0.14)',
     '--surface-strong': '#2B1810',
+    '--bubble-bg':      '#FDFAF5',          // near-white with warm tint
+    '--bubble-border':  'rgba(0,0,0,0.10)',
+    '--bubble-sub':     '#6E5840',          // readable warm brown on light bubble
   },
   day: {
     '--bg':             '#FAFAF8',
@@ -52,6 +55,9 @@ const BASE = {
     '--border':         'rgba(0,0,0,0.09)',
     '--border-mid':     'rgba(0,0,0,0.13)',
     '--surface-strong': '#2B1F1A',
+    '--bubble-bg':      '#FFFFFF',
+    '--bubble-border':  'rgba(0,0,0,0.09)',
+    '--bubble-sub':     '#888880',
   },
   evening: {
     '--bg':             '#EFE0C6',
@@ -64,18 +70,24 @@ const BASE = {
     '--border':         'rgba(0,0,0,0.11)',
     '--border-mid':     'rgba(0,0,0,0.16)',
     '--surface-strong': '#2A180E',
+    '--bubble-bg':      '#FBF5EC',          // warm ivory
+    '--bubble-border':  'rgba(0,0,0,0.11)',
+    '--bubble-sub':     '#78603A',
   },
   night: {
-    '--bg':             '#261A16',   // slightly darker — more distinct from cards
-    '--bg2':            '#3D2C25',   // card surface — clear separation from bg
+    '--bg':             '#261A16',
+    '--bg2':            '#3D2C25',
     '--text':           '#F7F0E5',
     '--text2':          '#C9A996',
-    '--text3':          '#9A7060',   // slightly lighter for input placeholder readability
+    '--text3':          '#9A7060',
     '--accent':         '#E8622C',
     '--accent-light':   '#5C2E20',
     '--border':         'rgba(247,240,229,0.12)',
     '--border-mid':     'rgba(247,240,229,0.20)',
-    '--surface-strong': '#150D09',   // darkest — SetupCard, clearly below bg
+    '--surface-strong': '#150D09',
+    '--bubble-bg':      '#E8E0D5',          // warm parchment — contrasts dark bg, not stark white
+    '--bubble-border':  'rgba(160,138,118,0.32)',
+    '--bubble-sub':     '#6A5848',          // dark warm brown — readable on parchment
     // Semantic data colors — lighter for readability on dark bg
     '--green':          '#7DC140',
     '--green-bg':       '#1C3010',

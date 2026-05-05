@@ -10,7 +10,7 @@ import { useState, useEffect } from 'react'
 //          ↑
 //     left-pointing tail
 //
-// Tail geometry (16×16 square, rotated 45°):
+// Tail geometry (10×10 square, rotated 45°):
 //   After rotation the four corners point: up, right, down, LEFT.
 //   The LEFT corner is the tip pointing toward the house icon.
 //   That corner is the original bottom-left corner of the square.
@@ -20,10 +20,10 @@ import { useState, useEffect } from 'react'
 //   hiding those inner edges cleanly.
 //
 //   Positioning:
-//     left: -8  → half the diamond protrudes from the bubble's left edge
-//     top: 50%, marginTop: -8  → vertically centred on the bubble
+//     left: -5  → half the diamond protrudes from the bubble's left edge
+//     top: 50%, marginTop: -5  → vertically centred on the bubble
 //
-//   borderRadius: '0 0 0 3px' softens the tip corner (pre-rotation
+//   borderRadius: '0 0 0 2px' softens the tip corner (pre-rotation
 //   bottom-left becomes the post-rotation left-pointing tip).
 
 export default function SpeechBubble({ moodStyle, mood, message, extraCount, onOpen, weatherBlurb }) {
@@ -47,20 +47,20 @@ export default function SpeechBubble({ moodStyle, mood, message, extraCount, onO
     }}>
 
       {/* ── Tail — left-pointing diamond ───────────────────────────────── */}
-      {/* 16×16 square rotated 45°. Only borderLeft + borderBottom drawn.  */}
+      {/* 10×10 square rotated 45°. Only borderLeft + borderBottom drawn.  */}
       {/* The left corner becomes the tip pointing toward the house.        */}
       <div style={{
         position:     'absolute',
-        left:         -8,
+        left:         -5,
         top:          '50%',
-        marginTop:    -8,
-        width:        16,
-        height:       16,
+        marginTop:    -5,
+        width:        10,
+        height:       10,
         background:   moodStyle.tailFill,
         borderLeft:   moodStyle.tailBorder,
         borderBottom: moodStyle.tailBorder,
         transform:    'rotate(45deg)',
-        borderRadius: '0 0 0 3px',   // softens the left-pointing tip
+        borderRadius: '0 0 0 2px',   // softens the left-pointing tip
         zIndex:       2,
       }} />
 
@@ -101,7 +101,7 @@ export default function SpeechBubble({ moodStyle, mood, message, extraCount, onO
             <span style={{
               display:    'block',
               fontSize:   11,
-              color:      'var(--text2)',
+              color:      'var(--bubble-sub)',
               marginTop:  4,
               lineHeight: 1.35,
             }}>
@@ -121,7 +121,7 @@ export default function SpeechBubble({ moodStyle, mood, message, extraCount, onO
           </span>
         )}
 
-        <span style={{ fontSize: 13, color: 'var(--text3)', flexShrink: 0 }}>→</span>
+        <span style={{ fontSize: 13, color: 'var(--bubble-sub)', flexShrink: 0 }}>→</span>
       </button>
     </div>
   )
