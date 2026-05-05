@@ -48,16 +48,6 @@ export default function HouseIcon({ size = 46, style }) {
       */}
       <path d="M 15.5 37.5 L 15.5 30.5 Q 15.5 26 19.5 26 Q 23.5 26 23.5 30.5 L 23.5 37.5" />
 
-      {/*
-        Windows — cross-shaped (two short lines).
-        Minimal and hand-drawn; avoids the geometric-rectangle-inside-rectangle problem.
-        Left at (10.5, 27), right at (29, 27).
-      */}
-      {/* Left window */}
-      <path d="M 8.5 27 L 12.5 27 M 10.5 25 L 10.5 29" />
-
-      {/* Right window */}
-      <path d="M 27 27 L 31 27 M 29 25 L 29 29" />
     </svg>
   )
 }
