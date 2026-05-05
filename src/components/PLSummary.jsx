@@ -64,21 +64,21 @@ export default function PLSummary({ expenses, onNavigate, isPreLaunch }) {
         onClick={() => onNavigate?.('income', null)}
         style={{
           width: '100%', textAlign: 'left', marginBottom: 16,
-          background: stats.totalRevenue > 0 ? 'var(--gold-bg)' : '#F7E8E8',
+          background: stats.totalRevenue > 0 ? 'var(--gold-bg)' : 'var(--accent-light)',
           borderRadius: 'var(--radius-sm)',
           padding: '22px 20px 18px',
-          borderLeft: stats.totalRevenue > 0 ? '4px solid var(--gold)' : '4px solid #B86060',
+          borderLeft: stats.totalRevenue > 0 ? '4px solid var(--gold)' : '4px solid var(--accent)',
           transition: 'background 0.2s',
         }}
       >
         <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 8 }}>
-          <p style={{ fontSize: 10, fontWeight: 600, letterSpacing: '0.1em', textTransform: 'uppercase', color: stats.totalRevenue > 0 ? 'var(--gold)' : '#B06060' }}>
+          <p style={{ fontSize: 10, fontWeight: 600, letterSpacing: '0.1em', textTransform: 'uppercase', color: stats.totalRevenue > 0 ? 'var(--gold)' : 'var(--accent)' }}>
             Airbnb Revenue
           </p>
           {isPreLaunch && stats.totalRevenue === 0 && (
             <span style={{
               fontSize: 9, fontWeight: 600, letterSpacing: '0.08em', textTransform: 'uppercase',
-              color: '#B06060', background: 'rgba(176,96,96,0.1)',
+              color: 'var(--accent)', background: 'var(--accent-light)',
               borderRadius: 4, padding: '2px 6px',
             }}>
               Pre-launch
@@ -88,7 +88,7 @@ export default function PLSummary({ expenses, onNavigate, isPreLaunch }) {
         <p style={{ fontSize: 38, fontWeight: 700, lineHeight: 1, letterSpacing: '-0.03em', color: stats.totalRevenue > 0 ? 'var(--gold)' : 'var(--text)' }}>
           {fmt(stats.totalRevenue)}
         </p>
-        <p style={{ fontSize: 12, marginTop: 8, color: stats.totalRevenue > 0 ? 'var(--text3)' : '#9E6060' }}>
+        <p style={{ fontSize: 12, marginTop: 8, color: stats.totalRevenue > 0 ? 'var(--text3)' : 'var(--text2)' }}>
           {stats.totalRevenue > 0 ? 'all time · tap to view' : revenueZeroCopy}
         </p>
       </button>

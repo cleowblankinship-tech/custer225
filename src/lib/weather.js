@@ -232,11 +232,29 @@ export async function fetchWeather() {
     const hasStormAlert = alerts.some(a => a.id === 'owm-storm')
     const blurb = hasStormAlert ? null : buildWeatherBlurb(w)
 
-    return { alerts, blurb }
+    // ── Theme condition — drives the color system in theme.js ─────────────
+    const themeCondition = getThemeCondition(weatherId, Math.round(w.main.temp))
+
+    return { alerts, blurb, themeCondition }
   } catch (err) {
     console.warn('[weather] fetch failed silently:', err.message)
-    return { alerts: [], blurb: null }
+    return { alerts: [], blurb: null, themeCondition: 'clear' }
   }
+}
+
+// ── Theme condition mapper ────────────────────────────────────────────────────
+//
+// Maps an OWM weather ID + current temp (°F) to one of the theme keys
+// used by theme.js: 'clear' | 'cloudy' | 'rain' | 'snow' | 'cold' | 'storm'
+
+export function getThemeCondition(weatherId, tempF) {
+  if (weatherId >= 200 && weatherId < 300) return 'storm'
+  if (weatherId >= 300 && weatherId < 400) return 'rain'
+  if (weatherId >= 500 && weatherId < 600) return 'rain'
+  if (weatherId >= 600 && weatherId < 700) return 'snow'
+  if (tempF != null && tempF < 38) return 'cold'
+  if (weatherId >= 803 && weatherId < 900) return 'cloudy'
+  return 'clear'
 }
 
 // Keep legacy export name working during any cached imports

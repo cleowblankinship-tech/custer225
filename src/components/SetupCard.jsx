@@ -53,7 +53,7 @@ export default function SetupCard({ onNavigate }) {
         width: '100%',
         padding: '18px 20px 16px',
         borderRadius: 'var(--radius-sm)',
-        background: complete ? 'var(--green)' : 'var(--text)',
+        background: complete ? 'var(--green)' : 'var(--surface-strong)',
         textAlign: 'left',
       }}
     >

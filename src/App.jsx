@@ -15,6 +15,7 @@ import SpeechBubble from './components/SpeechBubble'
 import { getActiveUpdates, getHouseMood, getCalmMessage, getCompositeMessage } from './lib/houseUpdates'
 import { fetchWeather } from './lib/weather'
 import { getRecurringRemindersForDate, getUserRules, saveUserRule } from './lib/recurringRules'
+import { getTimeOfDay, getTheme, applyTheme } from './lib/theme'
 
 // ── Mood → bubble visual config ───────────────────────────────────────────────
 //
@@ -88,6 +89,9 @@ export default function App() {
   const [tasks, setTasks] = useState([])
   const [weatherConditions, setWeatherConditions] = useState([])
   const [weatherBlurb, setWeatherBlurb] = useState(null)
+  const [weatherCondition, setWeatherCondition] = useState('clear')
+  // themeMode: 'auto' = follows time + weather; 'day' / 'night' = forced
+  const [themeMode, setThemeMode] = useState(() => localStorage.getItem('custer225_theme_mode') || 'auto')
   const [showIntro, setShowIntro] = useState(true) // true on every cold load
   const [housePanelOpen, setHousePanelOpen] = useState(false)
   const [iconPressed, setIconPressed] = useState(false)
@@ -148,14 +152,33 @@ export default function App() {
   // Activates automatically once VITE_OWM_KEY + VITE_PROPERTY_LAT/LON are set
   useEffect(() => {
     async function refresh() {
-      const { alerts, blurb } = await fetchWeather()
+      const { alerts, blurb, themeCondition } = await fetchWeather()
       setWeatherConditions(alerts)
       setWeatherBlurb(blurb)
+      setWeatherCondition(themeCondition ?? 'clear')
     }
     refresh()
     const id = setInterval(refresh, 30 * 60 * 1000)
     return () => clearInterval(id)
   }, [])
+
+  // ── Apply theme ───────────────────────────────────────────────────────────
+  // Runs immediately, then re-checks every 60 s in auto mode so the palette
+  // naturally transitions at the time-band boundaries (morning → day, etc.).
+  useEffect(() => {
+    function apply() {
+      const tod = themeMode === 'auto'   ? getTimeOfDay()
+                : themeMode === 'night'  ? 'night'
+                : themeMode === 'morning'? 'morning'
+                : themeMode === 'evening'? 'evening'
+                :                         'day'
+      applyTheme(getTheme({ timeOfDay: tod, weatherCondition }))
+    }
+    apply()
+    if (themeMode !== 'auto') return   // no polling needed when forced
+    const id = setInterval(apply, 60_000)
+    return () => clearInterval(id)
+  }, [themeMode, weatherCondition])
 
   // Load launch readiness stats (mirrors SetupCard's data fetch)
   useEffect(() => {
@@ -341,7 +364,7 @@ export default function App() {
         <div style={{ padding: '44px 20px 16px', borderBottom: '0.5px solid var(--border)' }}>
 
           {/* Character row — house mascot left, speech bubble right */}
-          <div style={{ display: 'flex', alignItems: 'center', gap: 14 }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 14, position: 'relative' }}>
 
             {/* House icon — mascot/identity anchor. Stable, intentional, not overlapping. */}
             <button
@@ -379,6 +402,31 @@ export default function App() {
                 weatherBlurb={bubbleWeatherSubtitle}
               />
             </div>
+
+            {/* Theme toggle — tiny, top-right, cycles auto → day → night */}
+            {(() => {
+              const CYCLE = ['auto', 'day', 'evening', 'night']
+              const ICONS  = { auto: '◐', day: '☀', evening: '◑', night: '☾' }
+              const next = CYCLE[(CYCLE.indexOf(themeMode) + 1) % CYCLE.length]
+              return (
+                <button
+                  onClick={() => {
+                    const m = next
+                    setThemeMode(m)
+                    localStorage.setItem('custer225_theme_mode', m)
+                  }}
+                  title={`Theme: ${themeMode} — tap to switch`}
+                  style={{
+                    position: 'absolute', top: -28, right: 0,
+                    fontSize: 14, color: 'var(--text3)',
+                    padding: '2px 4px', lineHeight: 1,
+                    opacity: 0.6,
+                  }}
+                >
+                  {ICONS[themeMode]}
+                </button>
+              )
+            })()}
           </div>
         </div>
       ) : (

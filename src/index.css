@@ -1,6 +1,22 @@
 *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
+/* ── @property — typed custom properties enable CSS transitions ────────────────
+   Supported: Chrome 85+, Safari 15.4+, Firefox 128+.
+   Falls back gracefully (no transition) on older browsers.                    */
+
+@property --bg             { syntax: '<color>'; inherits: true; initial-value: #FAFAF8; }
+@property --bg2            { syntax: '<color>'; inherits: true; initial-value: #F2F0EC; }
+@property --text           { syntax: '<color>'; inherits: true; initial-value: #1A1A1A; }
+@property --text2          { syntax: '<color>'; inherits: true; initial-value: #888880; }
+@property --text3          { syntax: '<color>'; inherits: true; initial-value: #BBBBBB; }
+@property --accent         { syntax: '<color>'; inherits: true; initial-value: #C05538; }
+@property --accent-light   { syntax: '<color>'; inherits: true; initial-value: #FAEDE9; }
+@property --border         { syntax: '<color>'; inherits: true; initial-value: rgba(0,0,0,0.08); }
+@property --border-mid     { syntax: '<color>'; inherits: true; initial-value: rgba(0,0,0,0.12); }
+@property --surface-strong { syntax: '<color>'; inherits: true; initial-value: #2B1F1A; }
+
 :root {
+  /* Color tokens — overwritten at runtime by theme.js */
   --bg: #FAFAF8;
   --bg2: #F2F0EC;
   --text: #1A1A1A;
@@ -10,9 +26,27 @@
   --accent-light: #FAEDE9;
   --border: rgba(0,0,0,0.08);
   --border-mid: rgba(0,0,0,0.12);
+  --surface-strong: #2B1F1A;
+
+  /* Semantic transitions — smooth cross-fades when theme switches */
+  transition:
+    --bg             350ms ease,
+    --bg2            350ms ease,
+    --text           250ms ease,
+    --text2          250ms ease,
+    --text3          250ms ease,
+    --accent         250ms ease,
+    --accent-light   250ms ease,
+    --border         350ms ease,
+    --border-mid     350ms ease,
+    --surface-strong 350ms ease;
+
+  /* Layout / radius tokens — static */
   --radius: 12px;     /* cards, panels */
   --radius-sm: 8px;   /* smaller cards, inputs, chips */
   --radius-bar: 2px;  /* progress bar fills — intentionally blocky/geometric */
+
+  /* Semantic accent colors — not theme-shifted, used for data labels */
   --green: #3B6D11;
   --green-bg: #EAF3DE;
   --blue: #185FA5;
