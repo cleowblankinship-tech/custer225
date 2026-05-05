@@ -63,23 +63,28 @@ const PAINTINGS = [
     id: 'sisley-terrace-spring',
     src: 'https://commons.wikimedia.org/wiki/Special:FilePath/Alfred_Sisley_-_The_Terrace_at_Saint-Germain,_Spring_-_Google_Art_Project.jpg?width=960',
     alt: 'The Terrace at Saint-Germain, Spring — Alfred Sisley, c.1875',
-    // Placement zone: left path edge, under the spring canopy.
+    // Placement zone: left edge, under the spring canopy.
     // Sampled tones: cool blue-green + pale sky. → Muted warm olive-tan.
+    // objectPosition 30% (was 52%) — avoids the stone terrace railing at the
+    // bottom of the painting; shows the atmospheric landscape and sky instead.
     houseColor: '#8C7048',
     houseX: 18,
     houseY: 46,
-    objectPosition: 'center 52%',
+    objectPosition: 'center 30%',
   },
   {
-    id: 'pissarro-hay-eragny',
-    src: 'https://commons.wikimedia.org/wiki/Special:FilePath/Hay_Harvest_at_%C3%89ragny,_1901,_Camille_Pissarro.jpg?width=960',
-    alt: 'Hay Harvest at Éragny — Camille Pissarro, 1901',
-    // Placement zone: left field boundary, near the working figures.
-    // Sampled tones: bright straw + warm green. → App terracotta; stands out.
+    id: 'monet-haystacks-summer',
+    src: 'https://commons.wikimedia.org/wiki/Special:FilePath/Claude_Monet_-_Haystacks%2C_end_of_Summer_-_Google_Art_Project.jpg?width=960',
+    alt: 'Haystacks, End of Summer — Claude Monet, 1891',
+    // Replaces Pissarro Éragny whose large figures dominated every crop.
+    // Haystacks end of Summer: open field, two haystacks right-of-center,
+    // soft misty left zone. Very calm horizontal composition.
+    // Placement zone: left field, open misty area before the haystacks.
+    // Sampled tones: soft warm haze → app terracotta reads cleanly.
     houseColor: '#C05538',
     houseX: 16,
-    houseY: 44,
-    objectPosition: 'center 50%',
+    houseY: 46,
+    objectPosition: 'center 55%',
   },
 ]
 
