@@ -51,9 +51,9 @@ const MOOD_BUBBLE = {
     boxShadow:    '0 1px 8px rgba(0,0,0,0.08)',
     tailBorder:   '1px solid rgba(0,0,0,0.12)',
     tailFill:     '#fff',
-    textColor:    'var(--text)',
+    textColor:    '#1A1A1A',   // always dark — bubble is always white
     textWeight:   500,
-    moreColor:    'var(--text3)',
+    moreColor:    '#A0A0A0',
   },
   calm: {
     bg:           '#fff',
@@ -64,9 +64,9 @@ const MOOD_BUBBLE = {
     boxShadow:    '0 2px 16px rgba(0,0,0,0.08)',
     tailBorder:   '1px solid rgba(0,0,0,0.1)',
     tailFill:     '#fff',
-    textColor:    'var(--text)',
+    textColor:    '#1A1A1A',   // always dark — bubble is always white
     textWeight:   500,
-    moreColor:    'var(--text3)',
+    moreColor:    '#A0A0A0',
   },
 }
 
@@ -403,10 +403,11 @@ export default function App() {
               />
             </div>
 
-            {/* Theme toggle — tiny, top-right, cycles auto → day → night */}
+            {/* Theme toggle — subtle, cycles auto → day → evening → night */}
             {(() => {
               const CYCLE = ['auto', 'day', 'evening', 'night']
               const ICONS  = { auto: '◐', day: '☀', evening: '◑', night: '☾' }
+              const LABELS = { auto: 'Auto (follows time of day)', day: 'Day mode', evening: 'Evening mode', night: 'Night mode' }
               const next = CYCLE[(CYCLE.indexOf(themeMode) + 1) % CYCLE.length]
               return (
                 <button
@@ -415,12 +416,21 @@ export default function App() {
                     setThemeMode(m)
                     localStorage.setItem('custer225_theme_mode', m)
                   }}
-                  title={`Theme: ${themeMode} — tap to switch`}
+                  aria-label={`Theme: ${LABELS[themeMode]}. Tap to switch.`}
+                  title={`Theme: ${themeMode}`}
                   style={{
-                    position: 'absolute', top: -28, right: 0,
-                    fontSize: 14, color: 'var(--text3)',
-                    padding: '2px 4px', lineHeight: 1,
-                    opacity: 0.6,
+                    position:   'absolute',
+                    top:        -32,
+                    right:      0,
+                    fontSize:   15,
+                    color:      'var(--text3)',
+                    padding:    '8px 10px',
+                    lineHeight: 1,
+                    minWidth:   36,
+                    minHeight:  36,
+                    display:    'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
                   }}
                 >
                   {ICONS[themeMode]}
@@ -483,10 +493,23 @@ export default function App() {
             {/* Computed from: launch % → revenue → fallback              */}
             {(() => {
               let msg, sub, onClick
-              if (setupStats && setupStats.pct < 100) {
-                const n = setupStats.remaining
-                msg     = n === 1 ? 'Finish the last launch task' : `Finish the last ${n} launch tasks`
+              if (!setupStats) {
+                // Data unavailable or still loading
+                msg     = 'Review launch checklist'
                 sub     = 'View launch list'
+                onClick = () => setView('spinup')
+              } else if (setupStats.pct < 100) {
+                const { remaining, done } = setupStats
+                if (done === 0) {
+                  msg = 'Start the launch checklist'
+                  sub = `${setupStats.total} tasks to go`
+                } else if (remaining <= 10) {
+                  msg = remaining === 1 ? 'Finish the last launch task' : `Finish the last ${remaining} launch tasks`
+                  sub = 'View launch list'
+                } else {
+                  msg = 'Work through the launch checklist'
+                  sub = `${remaining} tasks remaining`
+                }
                 onClick = () => setView('spinup')
               } else if (totalRevenue === 0) {
                 msg     = 'Add your first Airbnb booking when it comes in'
@@ -590,7 +613,7 @@ export default function App() {
             style={{
               flex: 1, padding: '12px 0', display: 'flex', flexDirection: 'column',
               alignItems: 'center', gap: 3,
-              color: view === item.key ? 'var(--accent)' : 'rgba(0,0,0,0.38)',
+              color: view === item.key ? 'var(--accent)' : 'var(--text3)',
             }}
           >
             <span style={{ fontSize: 18 }}>{item.icon}</span>

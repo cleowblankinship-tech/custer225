@@ -5,27 +5,27 @@
    Falls back gracefully (no transition) on older browsers.                    */
 
 @property --bg             { syntax: '<color>'; inherits: true; initial-value: #FAFAF8; }
-@property --bg2            { syntax: '<color>'; inherits: true; initial-value: #F2F0EC; }
+@property --bg2            { syntax: '<color>'; inherits: true; initial-value: #EEECEA; }
 @property --text           { syntax: '<color>'; inherits: true; initial-value: #1A1A1A; }
-@property --text2          { syntax: '<color>'; inherits: true; initial-value: #888880; }
-@property --text3          { syntax: '<color>'; inherits: true; initial-value: #BBBBBB; }
+@property --text2          { syntax: '<color>'; inherits: true; initial-value: #6E6E68; }
+@property --text3          { syntax: '<color>'; inherits: true; initial-value: #ABABAB; }
 @property --accent         { syntax: '<color>'; inherits: true; initial-value: #C05538; }
-@property --accent-light   { syntax: '<color>'; inherits: true; initial-value: #FAEDE9; }
+@property --accent-light   { syntax: '<color>'; inherits: true; initial-value: #F5E8E4; }
 @property --border         { syntax: '<color>'; inherits: true; initial-value: rgba(0,0,0,0.08); }
-@property --border-mid     { syntax: '<color>'; inherits: true; initial-value: rgba(0,0,0,0.12); }
+@property --border-mid     { syntax: '<color>'; inherits: true; initial-value: rgba(0,0,0,0.13); }
 @property --surface-strong { syntax: '<color>'; inherits: true; initial-value: #2B1F1A; }
 
 :root {
   /* Color tokens — overwritten at runtime by theme.js */
   --bg: #FAFAF8;
-  --bg2: #F2F0EC;
+  --bg2: #EEECEA;
   --text: #1A1A1A;
-  --text2: #888880;
-  --text3: #BBBBBB;
+  --text2: #6E6E68;
+  --text3: #ABABAB;
   --accent: #C05538;
-  --accent-light: #FAEDE9;
+  --accent-light: #F5E8E4;
   --border: rgba(0,0,0,0.08);
-  --border-mid: rgba(0,0,0,0.12);
+  --border-mid: rgba(0,0,0,0.13);
   --surface-strong: #2B1F1A;
 
   /* Semantic transitions — smooth cross-fades when theme switches */

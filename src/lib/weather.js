@@ -54,45 +54,46 @@ function timeWord() {
 const BLURB_TEMPLATES = {
   clear: [
     'Clear and {label} outside.',
-    'Clear skies. {Label} {time}.',
-    '{Label} and clear right now.',
-    'Sunny and {label} at the property.',
+    'Clear skies. Good day for exterior work.',
+    '{Label} and clear at the property.',
+    'Sunny and {label}. Good conditions outside.',
   ],
   'mostly clear': [
     'Mostly clear. {Label} {time}.',
-    'A few clouds, otherwise clear.',
     '{Label} with clear skies holding.',
+    'Clear enough for outdoor tasks.',
   ],
   'partly cloudy': [
     'Partly cloudy and {label} outside.',
     '{Label} with some clouds today.',
-    'Mixed skies. {Label} right now.',
+    'Mixed skies. {Label} at the property.',
   ],
   cloudy: [
     'Overcast and {label} outside.',
-    '{Label} and grey today.',
+    '{Label} and grey today. Good for indoor work.',
     'Cloudy skies. {Label} out there.',
-    'Overcast. {Label} {time}.',
+    'Overcast {time}. {Label} conditions.',
   ],
   drizzly: [
     'Light drizzle outside. {Label}.',
     'Damp and {label} right now.',
-    'A bit of drizzle. {Label} out there.',
+    'A bit of drizzle. Nothing urgent.',
   ],
   rainy: [
-    'Rain outside. {Label} {time}.',
+    'Rain outside. Check the property after it passes.',
     'Wet and {label} at the property.',
-    'Raining. {Label} conditions outside.',
+    'Raining. Check gutters and the side gate.',
+    'Rain today. Good time to stay on top of indoor tasks.',
   ],
   snowy: [
-    'Snow outside. {Label} tonight.',
-    'Winter conditions. {Label} right now.',
-    'It is snowing. {Label} out there.',
+    'Snow outside. Check paths and steps.',
+    'Winter conditions at the property.',
+    'Snowing. Check the driveway and walkways.',
   ],
   hazy: [
     'Hazy and {label} outside.',
     'Low visibility. {Label} {time}.',
-    'Some haze. {Label} right now.',
+    'Some haze outside. {Label} conditions.',
   ],
 }
 
@@ -190,6 +191,7 @@ export async function fetchWeather() {
               `Breezy today. ${windMph} mph.`,
               'Wind picking up. Nothing serious yet.',
               'A little breezy outside. Patio items may shift.',
+              'Breezy today. Check porch items and outdoor furniture.',
             ]),
         detail:   isHigh
           ? 'Secure patio furniture and check the fence gate before it gets worse.'
