@@ -12,6 +12,7 @@ import IntroSplash from './components/IntroSplash'
 import HouseToday from './components/HouseToday'
 import DebtDashboard from './components/DebtDashboard'
 import SpeechBubble from './components/SpeechBubble'
+import HouseIcon from './components/HouseIcon'
 import { getActiveUpdates, getHouseMood, getCalmMessage, getCompositeMessage } from './lib/houseUpdates'
 import { fetchWeather } from './lib/weather'
 import { getRecurringRemindersForDate, getUserRules, saveUserRule } from './lib/recurringRules'
@@ -370,7 +371,7 @@ export default function App() {
           {/* Character row — house mascot left, speech bubble right */}
           <div style={{ display: 'flex', alignItems: 'center', gap: 14, position: 'relative' }}>
 
-            {/* House icon — mascot/identity anchor. Stable, intentional, not overlapping. */}
+            {/* House icon — monochrome SVG, inherits var(--text) for theme-aware color */}
             <button
               onClick={() => setHousePanelOpen(true)}
               onPointerDown={() => setIconPressed(true)}
@@ -378,20 +379,19 @@ export default function App() {
               onPointerLeave={() => setIconPressed(false)}
               aria-label="Open House Today"
               style={{
-                padding: 0, display: 'block', lineHeight: 0, flexShrink: 0,
+                padding: '4px',
+                display: 'flex', alignItems: 'center', justifyContent: 'center',
+                flexShrink: 0,
+                color: 'var(--text)',  // drives SVG stroke via currentColor
                 transform: iconPressed
-                  ? 'scale(0.91) rotate(-1deg)'
-                  : 'scale(1) rotate(-2deg)',
+                  ? 'scale(0.88)'
+                  : 'scale(1)',
                 transition: iconPressed
                   ? 'transform 80ms ease-in'
                   : 'transform 240ms cubic-bezier(0.34, 1.56, 0.64, 1)',
               }}
             >
-              <img
-                src="/logo.png"
-                alt="225 Custer"
-                style={{ height: 56, width: 'auto', display: 'block' }}
-              />
+              <HouseIcon size={46} />
             </button>
 
             {/* Speech bubble — what the house is saying right now.
