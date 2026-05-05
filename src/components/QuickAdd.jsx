@@ -1,4 +1,17 @@
-import { useState } from 'react'
+import { useState, useMemo } from 'react'
+
+// Rotating examples teach the user what kinds of things can be entered.
+// A random one is chosen on mount and stays stable for the session.
+const QUICK_ADD_EXAMPLES = [
+  '$42 curtains from Target',
+  'task: replace vent covers',
+  'remind me trash Thursday',
+  '$85 cleaning supplies',
+  'Booked 3 nights $450 income',
+  '$18 coffee and paper goods',
+  'task: fix bathroom caulk',
+  'remind me HVAC filter monthly',
+]
 import { parseNaturalLanguage, CATEGORIES, INCOME_CATEGORIES } from '../lib/parser'
 import { nextWeekdayDate } from '../lib/recurringRules'
 
@@ -23,6 +36,11 @@ export default function QuickAdd({ onAdd }) {
   const [input, setInput] = useState('')
   const [parsed, setParsed] = useState(null)
   const [confirming, setConfirming] = useState(false)
+  // Pick one example on mount — stays stable, teaches NL input format
+  const placeholder = useMemo(
+    () => QUICK_ADD_EXAMPLES[Math.floor(Math.random() * QUICK_ADD_EXAMPLES.length)],
+    []
+  )
 
   function handleInput(val) {
     setInput(val)
@@ -90,7 +108,7 @@ export default function QuickAdd({ onAdd }) {
               value={input}
               onChange={e => handleInput(e.target.value)}
               onKeyDown={handleKeyDown}
-              placeholder="Add expense, task, or reminder…"
+              placeholder={placeholder}
               style={{
                 border: '1.5px solid rgba(0,0,0,0.24)',
                 padding: '11px 14px',

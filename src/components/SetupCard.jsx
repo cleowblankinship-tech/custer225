@@ -34,11 +34,14 @@ export default function SetupCard({ onNavigate }) {
 
   const complete = stats.pct === 100
 
-  function readinessLine(pct) {
+  function readinessLine({ pct, remaining }) {
     if (pct === 100) return 'Ready to launch'
-    if (pct >= 90)  return 'Final stretch'
-    if (pct >= 75)  return 'Almost there'
-    if (pct >= 50)  return 'More than halfway'
+    if (pct >= 90) {
+      const n = remaining
+      return n === 1 ? '1 task left before launch' : `${n} tasks left before launch`
+    }
+    if (pct >= 75)  return 'Almost there — keep going'
+    if (pct >= 50)  return 'More than halfway there'
     if (pct >= 25)  return 'Making progress'
     return 'Just getting started'
   }
@@ -67,7 +70,7 @@ export default function SetupCard({ onNavigate }) {
           {stats.pct}%
         </p>
         <p style={{ fontSize: 12, color: 'rgba(255,255,255,0.45)', marginTop: 4, fontStyle: 'italic' }}>
-          {readinessLine(stats.pct)}
+          {readinessLine(stats)}
         </p>
       </div>
 

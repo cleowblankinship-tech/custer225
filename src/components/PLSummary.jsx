@@ -11,7 +11,7 @@ function formatMonthLabel(ym) {
   return `${MONTH_NAMES[parseInt(month) - 1]} ${year}`
 }
 
-export default function PLSummary({ expenses, onNavigate }) {
+export default function PLSummary({ expenses, onNavigate, isPreLaunch }) {
   const now = new Date()
   const currentMonth = `${now.getFullYear()}-${String(now.getMonth()+1).padStart(2,'0')}`
   const [selectedMonth, setSelectedMonth] = useState(currentMonth)
@@ -42,13 +42,19 @@ export default function PLSummary({ expenses, onNavigate }) {
   const fmt = (n) => '$' + Number(n).toLocaleString('en-US', { minimumFractionDigits: 0, maximumFractionDigits: 0 })
   const selectedMonthName = MONTH_NAMES[parseInt(selectedMonth.split('-')[1]) - 1]
 
+  // Revenue zero-state copy depends on whether we're still pre-launch
+  const revenueZeroCopy = isPreLaunch
+    ? 'Almost ready to earn.'
+    : 'Add your first booking when it comes in.'
+
   return (
     <div style={{ padding: '0 20px 20px' }}>
-      <p style={{ fontSize: 11, fontWeight: 500, color: 'var(--text2)', letterSpacing: '0.07em', textTransform: 'uppercase', marginBottom: 12 }}>
-        {now.getFullYear()} overview
+      {/* Section header — warm mixed-case, not all-caps corporate */}
+      <p style={{ fontSize: 11, fontWeight: 500, color: 'var(--text2)', letterSpacing: '0.04em', marginBottom: 12 }}>
+        The House So Far
       </p>
 
-      {/* Revenue — hero, tier 1 */}
+      {/* Airbnb Revenue — hero, tier 1 */}
       <button
         onClick={() => onNavigate?.('income', null)}
         style={{
@@ -61,13 +67,13 @@ export default function PLSummary({ expenses, onNavigate }) {
         }}
       >
         <p style={{ fontSize: 10, fontWeight: 600, letterSpacing: '0.1em', textTransform: 'uppercase', marginBottom: 8, color: stats.totalRevenue > 0 ? 'var(--gold)' : '#B06060' }}>
-          Revenue
+          Airbnb Revenue
         </p>
         <p style={{ fontSize: 38, fontWeight: 700, lineHeight: 1, letterSpacing: '-0.03em', color: stats.totalRevenue > 0 ? 'var(--gold)' : 'var(--text)' }}>
           {fmt(stats.totalRevenue)}
         </p>
         <p style={{ fontSize: 12, marginTop: 8, color: stats.totalRevenue > 0 ? 'var(--text3)' : '#9E6060' }}>
-          {stats.totalRevenue > 0 ? 'all time · tap to view' : 'No income yet — let\'s fix that'}
+          {stats.totalRevenue > 0 ? 'all time · tap to view' : revenueZeroCopy}
         </p>
       </button>
 
@@ -87,7 +93,7 @@ export default function PLSummary({ expenses, onNavigate }) {
           }}
         >
           <p style={{ fontSize: 11, fontWeight: 500, marginBottom: 4, color: showPicker ? 'rgba(255,255,255,0.55)' : 'var(--text2)' }}>
-            {selectedMonth === currentMonth ? 'This month' : selectedMonthName} ▾
+            {selectedMonthName} Spending ▾
           </p>
           <p style={{ fontSize: 24, fontWeight: 600, lineHeight: 1, color: showPicker ? 'white' : 'var(--text)' }}>
             {fmt(stats.monthTotal)}
@@ -97,24 +103,37 @@ export default function PLSummary({ expenses, onNavigate }) {
           </p>
         </button>
 
-        {/* Total expenses — tier 2, neutral bg, color on number only */}
+        {/* Total Spending — tier 2, neutral bg, combined total */}
         <StatCard
-          label="Total expenses"
+          label="Total Spending"
           value={fmt(stats.allTimeTotal)}
-          sub={`incl. ${fmt(stats.allTimeDepreciable)} assets`}
+          sub={`incl. ${fmt(stats.allTimeDepreciable)} startup assets`}
           color="var(--green)"
           valueSize={20}
           onClick={() => onNavigate?.('expense', null)}
         />
 
-        {/* Assets — tier 3, muted/secondary */}
+        {/*
+          Tier 3 — two side-by-side cards breaking down Total Spending.
+          TODO: In future, distinguish true operating costs (ongoing: cleaning,
+          utilities, maintenance) from one-time launch expenses within the
+          'expense' tax_type bucket. Currently all 'expense' entries are treated
+          as Operating; all 'depreciate' entries as Startup Assets.
+        */}
         <StatCard
-          label="Assets"
+          label="Operating"
+          value={fmt(stats.allTimeExpenses)}
+          sub="direct expenses"
+          color="var(--green)"
+          onClick={() => onNavigate?.('expense', null)}
+          soft
+        />
+        <StatCard
+          label="Startup Assets"
           value={fmt(stats.allTimeDepreciable)}
-          sub="all time"
+          sub="furniture, supplies, setup"
           color="var(--blue)"
           onClick={() => onNavigate?.('depreciate', null)}
-          fullWidth
           soft
         />
       </div>

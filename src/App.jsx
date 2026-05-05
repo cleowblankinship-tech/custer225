@@ -6,12 +6,13 @@ import ExpenseList from './components/ExpenseList'
 import CSVImport from './components/CSVImport'
 import SpinUp from './components/SpinUp'
 import SetupCard from './components/SetupCard'
-import { getExpenses, addExpense, deleteExpense, getTasks, addTask, deleteTask, toggleTask } from './lib/supabase'
+import { getExpenses, addExpense, deleteExpense, getTasks, addTask, deleteTask, toggleTask, getSetupItems } from './lib/supabase'
+import { INITIAL_ITEMS, computeSpinUpStats } from './lib/spinupData'
 import IntroSplash from './components/IntroSplash'
 import HouseToday from './components/HouseToday'
 import DebtDashboard from './components/DebtDashboard'
 import SpeechBubble from './components/SpeechBubble'
-import { getActiveUpdates, getHouseMood, getCalmMessage } from './lib/houseUpdates'
+import { getActiveUpdates, getHouseMood, getCalmMessage, getCompositeMessage } from './lib/houseUpdates'
 import { fetchWeather } from './lib/weather'
 import { getRecurringRemindersForDate, getUserRules, saveUserRule } from './lib/recurringRules'
 
@@ -91,6 +92,7 @@ export default function App() {
   const [housePanelOpen, setHousePanelOpen] = useState(false)
   const [iconPressed, setIconPressed] = useState(false)
   const [userRules, setUserRules] = useState(() => getUserRules())
+  const [setupStats, setSetupStats] = useState(null) // launch readiness snapshot
 
   // ── Derive today's reminders from the tasks system ────────────────────────
   const todayStr = new Date().toISOString().split('T')[0]
@@ -112,12 +114,24 @@ export default function App() {
   const topUpdate      = activeUpdates[0] ?? null
   const mood           = getHouseMood(activeUpdates)
   const moodStyle      = MOOD_BUBBLE[mood]
+
+  // All-time Airbnb revenue — used for bubble message + NBA card
+  const totalRevenue = expenses
+    .filter(e => e.entry_type === 'income')
+    .reduce((s, e) => s + Number(e.amount), 0)
+
   // Bubble message:
-  //   updates present  → show top update title; weather blurb appears as subtitle
-  //   nothing active   → weather blurb is the main message; no subtitle needed
-  //   no weather data  → fall back to generic calm message
-  const bubbleMessage          = topUpdate ? topUpdate.title : (weatherBlurb ?? getCalmMessage())
-  const bubbleWeatherSubtitle  = (weatherBlurb && topUpdate) ? weatherBlurb : null
+  //   updates present → show top update title; weather is the subtitle
+  //   nothing active  → composite message weaves weather + readiness + revenue
+  const bubbleMessage = topUpdate
+    ? topUpdate.title
+    : getCompositeMessage({
+        weatherBlurb,
+        setupPct:       setupStats?.pct       ?? 100,
+        setupRemaining: setupStats?.remaining ?? 0,
+        totalRevenue,
+      })
+  const bubbleWeatherSubtitle = (weatherBlurb && topUpdate) ? weatherBlurb : null
   const [view, setView] = useState('home') // home | list | spinup | import | pl
   const [listFilter, setListFilter] = useState('all')
   const [listMonth, setListMonth] = useState(null)
@@ -141,6 +155,23 @@ export default function App() {
     refresh()
     const id = setInterval(refresh, 30 * 60 * 1000)
     return () => clearInterval(id)
+  }, [])
+
+  // Load launch readiness stats (mirrors SetupCard's data fetch)
+  useEffect(() => {
+    async function loadSetup() {
+      try {
+        const dbItems = await getSetupItems()
+        if (dbItems && dbItems.length > 0) { setSetupStats(computeSpinUpStats(dbItems)); return }
+      } catch {}
+      try {
+        const s = localStorage.getItem('225-spinup-v1')
+        setSetupStats(computeSpinUpStats(s ? JSON.parse(s) : INITIAL_ITEMS))
+      } catch {
+        setSetupStats(computeSpinUpStats(INITIAL_ITEMS))
+      }
+    }
+    loadSetup()
   }, [])
 
   // Load expenses from Supabase if env vars are present
@@ -293,7 +324,7 @@ export default function App() {
     { key: 'home',   label: 'Home',   icon: '⌂' },
     { key: 'list',   label: 'Ledger', icon: '≡' },
     { key: 'debt',   label: 'Debt',   icon: '$' },
-    { key: 'spinup', label: 'Setup',  icon: '✓' },
+    { key: 'spinup', label: 'Launch', icon: '✓' },
     { key: 'import', label: 'Import', icon: '↑' },
   ]
 
@@ -378,7 +409,11 @@ export default function App() {
 
         {!loading && view === 'home' && (
           <>
-            <PLSummary expenses={expenses} onNavigate={navigateToList} />
+            <PLSummary
+              expenses={expenses}
+              onNavigate={navigateToList}
+              isPreLaunch={!setupStats || setupStats.pct < 100}
+            />
 
             {/* P&L link */}
             <div style={{ padding: '0 20px 24px' }}>
@@ -396,7 +431,43 @@ export default function App() {
               </button>
             </div>
 
-            {/* Setup progress card */}
+            {/* ── Next Best Action ─────────────────────────────────────── */}
+            {/* Computed from: launch % → revenue → fallback              */}
+            {(() => {
+              let msg, onClick
+              if (setupStats && setupStats.pct < 100) {
+                const n = setupStats.remaining
+                msg     = n === 1 ? 'Finish the last launch task' : `Finish the last ${n} launch tasks`
+                onClick = () => setView('spinup')
+              } else if (totalRevenue === 0) {
+                msg     = 'Add your first Airbnb booking when it comes in'
+                onClick = () => navigateToList('income', null)
+              } else {
+                msg     = "Review this month's house spending"
+                onClick = () => setView('pl')
+              }
+              return (
+                <div style={{ padding: '0 20px 24px' }}>
+                  <p style={{ fontSize: 11, fontWeight: 500, color: 'var(--text2)', letterSpacing: '0.07em', textTransform: 'uppercase', marginBottom: 8 }}>
+                    Next Best Action
+                  </p>
+                  <button
+                    onClick={onClick}
+                    style={{
+                      width: '100%', padding: '13px 16px',
+                      borderRadius: 'var(--radius-sm)', background: 'var(--bg2)',
+                      display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+                      textAlign: 'left',
+                    }}
+                  >
+                    <span style={{ fontSize: 14, fontWeight: 500, color: 'var(--text)' }}>{msg}</span>
+                    <span style={{ fontSize: 13, color: 'var(--accent)', flexShrink: 0, marginLeft: 8 }}>→</span>
+                  </button>
+                </div>
+              )
+            })()}
+
+            {/* Launch readiness card */}
             <div style={{ padding: '0 20px 24px' }}>
               <SetupCard onNavigate={() => setView('spinup')} />
             </div>

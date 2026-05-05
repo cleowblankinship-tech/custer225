@@ -121,6 +121,64 @@ export function getCalmMessage() {
   return pick
 }
 
+// ── Composite message ─────────────────────────────────────────────────────────
+//
+// Called when there are no active alerts/reminders — replaces the plain
+// calm message with something that synthesises current app state.
+// Priority: near-launch countdown → pre-launch no-revenue → launched no-revenue
+//           → weather → calm fallback.
+//
+// All arguments are optional with safe defaults so callers can pass partial state.
+
+/**
+ * @param {object} opts
+ * @param {string|null}  opts.weatherBlurb    — short weather string, e.g. "Hazy and cold."
+ * @param {number}       opts.setupPct        — 0–100 launch readiness %
+ * @param {number}       opts.setupRemaining  — tasks still incomplete
+ * @param {number}       opts.totalRevenue    — all-time Airbnb revenue
+ * @returns {string}
+ */
+export function getCompositeMessage({
+  weatherBlurb = null,
+  setupPct = 100,
+  setupRemaining = 0,
+  totalRevenue = 0,
+} = {}) {
+  const launched   = setupPct >= 100
+  const hasRevenue = totalRevenue > 0
+  const w          = weatherBlurb   // shorthand
+
+  // Near launch: specific task countdown
+  if (!launched && setupPct >= 85) {
+    const tasks = setupRemaining === 1 ? '1 task' : `${setupRemaining} tasks`
+    return w
+      ? `${w} ${tasks} left before launch.`
+      : `${tasks} left before launch. Final stretch.`
+  }
+
+  // Pre-launch, no revenue — motivate
+  if (!launched && !hasRevenue) {
+    if (setupPct >= 60) {
+      return w
+        ? `${w} Almost ready to earn.`
+        : `No income yet, but the house is almost ready.`
+    }
+    return w
+      ? `${w} House is ${setupPct}% ready.`
+      : `The house is ${setupPct}% ready. Keep going.`
+  }
+
+  // Launched, still no revenue — prompt for first booking
+  if (launched && !hasRevenue) {
+    return w
+      ? `${w} Add your first Airbnb booking when it comes in.`
+      : `Ready to launch. Add your first booking when it comes in.`
+  }
+
+  // All good — fall back to weather or calm pool
+  return w ?? getCalmMessage()
+}
+
 // ── API ───────────────────────────────────────────────────────────────────────
 
 /**
