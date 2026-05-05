@@ -154,16 +154,14 @@ export default function HeroSection({
   return (
     <div
       style={{
-        position:     'relative',
-        height:       'min(260px, 31vh)',
-        minHeight:    180,
-        overflow:     'hidden',
+        position:   'relative',
+        height:     'min(260px, 31vh)',
+        minHeight:  180,
+        overflow:   'hidden',
         // Warm neutral placeholder while image loads
-        background:   '#CDC3B0',
-        borderBottom: '0.5px solid var(--border)',
-        // Safe-area clearance for the notch — painting extends behind it,
-        // interactive elements sit below via their own top values.
-        paddingTop:   0,
+        background: '#CDC3B0',
+        // No borderBottom — the gradient fade handles the visual separation
+        // between hero and dashboard. The card overlap reinforces the join.
       }}
     >
       {/* ── Landscape painting ──────────────────────────────────────────── */}
@@ -196,26 +194,66 @@ export default function HeroSection({
       {/* ── Theme-sensitive color wash ───────────────────────────────────── */}
       <div
         style={{
-          position:   'absolute',
-          inset:      0,
-          background: overlayColor,
-          transition: 'background 0.35s ease',
+          position:      'absolute',
+          inset:         0,
+          background:    overlayColor,
+          transition:    'background 0.35s ease',
           pointerEvents: 'none',
         }}
       />
 
+      {/* ── Bottom gradient fade ─────────────────────────────────────────── */}
+      {/*
+        Fades the painting into the page background color at the bottom edge.
+        This creates a seamless visual join between hero and dashboard, and
+        makes the card-overlap effect feel natural rather than abrupt.
+
+        Height: 55% of hero — a very gradual fade starting near mid-hero.
+        zIndex: 1 — above painting/overlay (z:0), below house (z:5).
+
+        Gradient target is var(--bg): typed @property, so it transitions
+        smoothly when the theme changes, matching the background color exactly
+        in all modes (cream → tan → deep brown).
+      */}
+      <div
+        style={{
+          position:      'absolute',
+          bottom:        0,
+          left:          0,
+          right:         0,
+          height:        '55%',
+          background:    'linear-gradient(to bottom, transparent, var(--bg))',
+          zIndex:        1,
+          pointerEvents: 'none',
+          // Transition the gradient itself when theme switches.
+          // Works because --bg is a typed @property <color>.
+          transition:    '--bg 350ms ease',
+        }}
+      />
+
       {/* ── Speech bubble (appears on house tap) ────────────────────────── */}
-      {visible && (
+      {/*
+        Positioned relative to the house (not the hero top) so it feels
+        anchored to the scene. bubbleTopPct = houseY * 0.40 places the
+        bubble at ~40% of the house's Y offset — in the upper portion of
+        the hero but clearly above the horizon/house rather than pinned
+        to the very top edge.
+
+        CSS max() ensures the bubble clears the iOS notch/island when the
+        percentage resolves smaller than the safe-area inset.
+      */}
+      {visible && (() => {
+        const bubbleTopPct = Math.round(painting.houseY * 0.40)
+        return (
         <div
           style={{
-            position:   'absolute',
-            top:        'calc(env(safe-area-inset-top, 0px) + 12px)',
-            left:       bubbleOnLeft ? 14  : 'auto',
-            right:      bubbleOnLeft ? 'auto' : 14,
-            maxWidth:   '68%',
-            zIndex:     10,
-            // heroBubbleIn defined in index.css
-            animation:  'heroBubbleIn 220ms cubic-bezier(0.22, 1, 0.36, 1) both',
+            position:  'absolute',
+            top:       `max(calc(env(safe-area-inset-top, 0px) + 8px), ${bubbleTopPct}%)`,
+            left:      bubbleOnLeft ? 14  : 'auto',
+            right:     bubbleOnLeft ? 'auto' : 14,
+            maxWidth:  '68%',
+            zIndex:    10,
+            animation: 'heroBubbleIn 220ms cubic-bezier(0.22, 1, 0.36, 1) both',
           }}
         >
           {/*
@@ -286,7 +324,8 @@ export default function HeroSection({
             )}
           </button>
         </div>
-      )}
+        )
+      })()}
 
       {/* ── House icon + contrast assist ─────────────────────────────────── */}
       {/*
@@ -342,7 +381,7 @@ export default function HeroSection({
             filter:     'drop-shadow(0 2px 5px rgba(0,0,0,0.32))',
           }}
         >
-          <HouseIcon size={50} />
+          <HouseIcon size={54} />
         </button>
       </div>
 

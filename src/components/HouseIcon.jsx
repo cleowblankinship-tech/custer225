@@ -14,6 +14,7 @@
 //
 // viewBox: 0 0 40 40
 // Display size: 46×46 px (slightly smaller than the 56px logo — less weight)
+// strokeWidth bumped from 1.8 → 2.0 (~11% heavier) for hero legibility
 
 export default function HouseIcon({ size = 46, style }) {
   return (
@@ -23,7 +24,7 @@ export default function HouseIcon({ size = 46, style }) {
       height={size}
       fill="none"
       stroke="currentColor"
-      strokeWidth="1.8"
+      strokeWidth="2.0"
       strokeLinecap="round"
       strokeLinejoin="round"
       style={{ display: 'block', flexShrink: 0, ...style }}

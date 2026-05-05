@@ -408,18 +408,31 @@ export default function App() {
       )}
 
       {/* Content — bottom padding reserves space for the fixed nav */}
-      <div style={{ flex: 1, paddingTop: 20, paddingBottom: 'calc(64px + env(safe-area-inset-bottom))' }}>
+      {/* paddingTop: 0 on home — the hero fade + card overlap handles separation.
+          paddingTop: 20 on all other views — normal header gap.              */}
+      <div style={{ flex: 1, paddingTop: view === 'home' ? 0 : 20, paddingBottom: 'calc(64px + env(safe-area-inset-bottom))' }}>
         {loading && (
           <p style={{ textAlign: 'center', color: 'var(--text3)', fontSize: 14, padding: 40 }}>Loading...</p>
         )}
 
         {!loading && view === 'home' && (
           <>
-            <PLSummary
-              expenses={expenses}
-              onNavigate={navigateToList}
-              isPreLaunch={!setupStats || setupStats.pct < 100}
-            />
+            {/*
+              Negative marginTop pulls PLSummary up 55px into the hero's
+              gradient fade zone, creating a card-overlap effect.
+              zIndex: 2 ensures cards render above the gradient (z:1) and
+              overlay, but below the house (z:5) and bubble (z:10).
+              The section header ("The House So Far") appears ~47px above the
+              hero bottom edge — floating in the soft fade, bridging hero and
+              dashboard visually.
+            */}
+            <div style={{ position: 'relative', zIndex: 2, marginTop: -55 }}>
+              <PLSummary
+                expenses={expenses}
+                onNavigate={navigateToList}
+                isPreLaunch={!setupStats || setupStats.pct < 100}
+              />
+            </div>
 
             {/* P&L link */}
             <div style={{ padding: '0 20px 24px' }}>

@@ -48,7 +48,7 @@ export default function PLSummary({ expenses, onNavigate, isPreLaunch }) {
     : 'Add your first booking when it comes in.'
 
   return (
-    <div style={{ padding: '0 20px 20px' }}>
+    <div style={{ padding: '8px 20px 20px' }}>
       {/* Section header */}
       <div style={{ display: 'flex', alignItems: 'baseline', justifyContent: 'space-between', marginBottom: 14 }}>
         <p style={{ fontSize: 13, fontWeight: 600, color: 'var(--text)', letterSpacing: '-0.01em' }}>
