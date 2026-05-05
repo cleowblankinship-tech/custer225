@@ -101,9 +101,9 @@ export default function SpeechBubble({ moodStyle, mood, message, extraCount, onO
             <span style={{
               display:    'block',
               fontSize:   11,
-              color:      'var(--text3)',
-              marginTop:  3,
-              lineHeight: 1.3,
+              color:      'var(--text2)',
+              marginTop:  4,
+              lineHeight: 1.35,
             }}>
               {weatherBlurb}
             </span>

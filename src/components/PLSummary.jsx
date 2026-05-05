@@ -49,10 +49,15 @@ export default function PLSummary({ expenses, onNavigate, isPreLaunch }) {
 
   return (
     <div style={{ padding: '0 20px 20px' }}>
-      {/* Section header — warm mixed-case, not all-caps corporate */}
-      <p style={{ fontSize: 11, fontWeight: 500, color: 'var(--text2)', letterSpacing: '0.04em', marginBottom: 12 }}>
-        The House So Far
-      </p>
+      {/* Section header */}
+      <div style={{ display: 'flex', alignItems: 'baseline', justifyContent: 'space-between', marginBottom: 14 }}>
+        <p style={{ fontSize: 13, fontWeight: 600, color: 'var(--text)', letterSpacing: '-0.01em' }}>
+          The House So Far
+        </p>
+        <p style={{ fontSize: 11, fontWeight: 400, color: 'var(--text3)', letterSpacing: '0.02em' }}>
+          2026
+        </p>
+      </div>
 
       {/* Airbnb Revenue — hero, tier 1 */}
       <button
@@ -66,9 +71,20 @@ export default function PLSummary({ expenses, onNavigate, isPreLaunch }) {
           transition: 'background 0.2s',
         }}
       >
-        <p style={{ fontSize: 10, fontWeight: 600, letterSpacing: '0.1em', textTransform: 'uppercase', marginBottom: 8, color: stats.totalRevenue > 0 ? 'var(--gold)' : '#B06060' }}>
-          Airbnb Revenue
-        </p>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 8 }}>
+          <p style={{ fontSize: 10, fontWeight: 600, letterSpacing: '0.1em', textTransform: 'uppercase', color: stats.totalRevenue > 0 ? 'var(--gold)' : '#B06060' }}>
+            Airbnb Revenue
+          </p>
+          {isPreLaunch && stats.totalRevenue === 0 && (
+            <span style={{
+              fontSize: 9, fontWeight: 600, letterSpacing: '0.08em', textTransform: 'uppercase',
+              color: '#B06060', background: 'rgba(176,96,96,0.1)',
+              borderRadius: 4, padding: '2px 6px',
+            }}>
+              Pre-launch
+            </span>
+          )}
+        </div>
         <p style={{ fontSize: 38, fontWeight: 700, lineHeight: 1, letterSpacing: '-0.03em', color: stats.totalRevenue > 0 ? 'var(--gold)' : 'var(--text)' }}>
           {fmt(stats.totalRevenue)}
         </p>
@@ -121,9 +137,9 @@ export default function PLSummary({ expenses, onNavigate, isPreLaunch }) {
           as Operating; all 'depreciate' entries as Startup Assets.
         */}
         <StatCard
-          label="Operating"
+          label="Operating Expenses"
           value={fmt(stats.allTimeExpenses)}
-          sub="direct expenses"
+          sub="direct house costs"
           color="var(--green)"
           onClick={() => onNavigate?.('expense', null)}
           soft

@@ -33,7 +33,7 @@ const MOOD_BUBBLE = {
     border:       '1.5px solid rgba(192,85,56,0.3)',
     borderLeft:   '1.5px solid rgba(192,85,56,0.3)',
     borderRadius: '10px 16px 16px 10px',
-    padding:      '10px 13px',
+    padding:      '12px 14px',
     boxShadow:    '0 2px 12px rgba(192,85,56,0.13)',
     tailBorder:   '1.5px solid rgba(192,85,56,0.3)',
     tailFill:     'var(--accent-light)',
@@ -46,7 +46,7 @@ const MOOD_BUBBLE = {
     border:       '1px solid rgba(0,0,0,0.12)',
     borderLeft:   '1px solid rgba(0,0,0,0.12)',
     borderRadius: '10px 16px 16px 10px',
-    padding:      '10px 13px',
+    padding:      '12px 14px',
     boxShadow:    '0 1px 8px rgba(0,0,0,0.08)',
     tailBorder:   '1px solid rgba(0,0,0,0.12)',
     tailFill:     '#fff',
@@ -59,7 +59,7 @@ const MOOD_BUBBLE = {
     border:       '1px solid rgba(0,0,0,0.1)',
     borderLeft:   '1px solid rgba(0,0,0,0.1)',
     borderRadius: '10px 18px 18px 10px',
-    padding:      '10px 13px',
+    padding:      '12px 14px',
     boxShadow:    '0 2px 16px rgba(0,0,0,0.08)',
     tailBorder:   '1px solid rgba(0,0,0,0.1)',
     tailFill:     '#fff',
@@ -434,16 +434,19 @@ export default function App() {
             {/* ── Next Best Action ─────────────────────────────────────── */}
             {/* Computed from: launch % → revenue → fallback              */}
             {(() => {
-              let msg, onClick
+              let msg, sub, onClick
               if (setupStats && setupStats.pct < 100) {
                 const n = setupStats.remaining
                 msg     = n === 1 ? 'Finish the last launch task' : `Finish the last ${n} launch tasks`
+                sub     = 'View launch list'
                 onClick = () => setView('spinup')
               } else if (totalRevenue === 0) {
                 msg     = 'Add your first Airbnb booking when it comes in'
+                sub     = 'Tap to log income'
                 onClick = () => navigateToList('income', null)
               } else {
                 msg     = "Review this month's house spending"
+                sub     = 'View full P&L'
                 onClick = () => setView('pl')
               }
               return (
@@ -460,7 +463,10 @@ export default function App() {
                       textAlign: 'left',
                     }}
                   >
-                    <span style={{ fontSize: 14, fontWeight: 500, color: 'var(--text)' }}>{msg}</span>
+                    <span style={{ flex: 1 }}>
+                      <span style={{ display: 'block', fontSize: 14, fontWeight: 500, color: 'var(--text)' }}>{msg}</span>
+                      {sub && <span style={{ display: 'block', fontSize: 11, color: 'var(--text3)', marginTop: 2 }}>{sub}</span>}
+                    </span>
                     <span style={{ fontSize: 13, color: 'var(--accent)', flexShrink: 0, marginLeft: 8 }}>→</span>
                   </button>
                 </div>
@@ -536,7 +542,7 @@ export default function App() {
             style={{
               flex: 1, padding: '12px 0', display: 'flex', flexDirection: 'column',
               alignItems: 'center', gap: 3,
-              color: view === item.key ? 'var(--accent)' : 'var(--text3)',
+              color: view === item.key ? 'var(--accent)' : 'rgba(0,0,0,0.38)',
             }}
           >
             <span style={{ fontSize: 18 }}>{item.icon}</span>

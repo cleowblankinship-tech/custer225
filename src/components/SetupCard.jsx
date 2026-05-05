@@ -38,7 +38,7 @@ export default function SetupCard({ onNavigate }) {
     if (pct === 100) return 'Ready to launch'
     if (pct >= 90) {
       const n = remaining
-      return n === 1 ? '1 task left before launch' : `${n} tasks left before launch`
+      return n === 1 ? '1 task left before Airbnb launch.' : `${n} tasks left before Airbnb launch.`
     }
     if (pct >= 75)  return 'Almost there — keep going'
     if (pct >= 50)  return 'More than halfway there'
