@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo } from 'react'
+import { useState, useEffect, useMemo, useRef } from 'react'
 import { CATEGORIES, SHORT_CAT_NAMES, INITIAL_ITEMS, isItemDone } from '../lib/spinupData'
 import { getSetupItems, saveSetupItems } from '../lib/supabase'
 
@@ -194,6 +194,11 @@ export default function SpinUp() {
   const [addInput, setAddInput] = useState('')
   const [showAdd, setShowAdd] = useState(false)
 
+  // Guard: only write to Supabase when the user explicitly changes something.
+  // Without this, mounting with INITIAL_ITEMS (empty localStorage) immediately
+  // overwrites Supabase with zeroes before the DB load finishes — data loss.
+  const userModifiedRef = useRef(false)
+
   // On mount: pull from Supabase in the background and update if it has data.
   // Content shows immediately from localStorage so the page is never blocked.
   useEffect(() => {
@@ -204,15 +209,20 @@ export default function SpinUp() {
       .catch(() => {})
   }, [])
 
-  // Persist every change to localStorage (instant) + Supabase (synced).
+  // Persist every change to localStorage (instant).
+  // Only write to Supabase when the user has actually made a change —
+  // never on the initial mount or when we pull fresh data from Supabase.
   useEffect(() => {
     try { localStorage.setItem(STORAGE_KEY, JSON.stringify(items)) } catch {}
-    saveSetupItems(items).catch(() => {})
+    if (userModifiedRef.current) {
+      saveSetupItems(items).catch(() => {})
+    }
   }, [items])
 
   // ── Actions ──────────────────────────────────────────────────────────────
 
   function toggleItem(id) {
+    userModifiedRef.current = true
     setItems(prev => prev.map(it => {
       if (it.id !== id) return it
       if (it.qty !== null) {
@@ -224,6 +234,7 @@ export default function SpinUp() {
   }
 
   function adjustQty(id, delta) {
+    userModifiedRef.current = true
     setItems(prev => prev.map(it => {
       if (it.id !== id) return it
       const newQtyDone = Math.max(0, Math.min(it.qty, it.qtyDone + delta))
@@ -232,11 +243,13 @@ export default function SpinUp() {
   }
 
   function updateNotes(id, notes) {
+    userModifiedRef.current = true
     setItems(prev => prev.map(it => it.id === id ? { ...it, notes } : it))
   }
 
   function addCustomItem(title) {
     if (!title.trim()) return
+    userModifiedRef.current = true
     const newItem = {
       id: 'c' + Date.now(),
       title: title.trim(),
