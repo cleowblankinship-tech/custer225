@@ -1,4 +1,4 @@
-import { useState, useRef, useEffect } from 'react'
+import { useState, useRef } from 'react'
 import HouseIcon from './HouseIcon'
 
 // ── Painting collection ────────────────────────────────────────────────────────
@@ -142,59 +142,25 @@ export default function HeroSection({
   const [visible, setVisible] = useState(false)
   const [pressed, setPressed] = useState(false)
 
-  // ── Drag-to-position dev tool ─────────────────────────────────────────
+  // ── Drag system ───────────────────────────────────────────────────────
   //
-  // Usage:
-  //   1. Long-press the house icon (600ms) → drag mode activates
-  //   2. Drag anywhere in the hero → house follows, coords log to console
-  //   3. Release → final { x, y } logged with copy instruction
-  //   4. Paste into PAINTINGS[].pos in this file
+  // Immediate drag — no long-press required.
+  // setPointerCapture routes all pointer events to the button even when
+  // the pointer leaves it, so drag tracks freely across the whole hero.
   //
-  // Drag ends on pointerup (anywhere on page, including outside the app).
-  // Override persists for the session so you can verify bubble placement.
+  // Tap vs drag: distinguished by a 4px movement threshold.
+  //   • Moved < 4px before release → tap → toggle bubble
+  //   • Moved ≥ 4px              → drag → reposition house, log coords
   //
-  const heroRef        = useRef(null)
-  const longPressTimer = useRef(null)
-  const dragPosRef     = useRef(null)   // stable ref for closure in listeners
+  // Override persists for the session. Logged coords can be pasted into
+  // PAINTINGS[].pos to make the position permanent.
+  //
+  const heroRef      = useRef(null)
+  const dragStartRef = useRef(null)  // { x, y } screen coords on pointerdown
+  const hasDraggedRef = useRef(false)
+  const dragPosRef   = useRef(null)  // latest dragged pos, for the release log
   const [dragMode,    setDragMode]    = useState(false)
   const [overridePos, setOverridePos] = useState(null)
-
-  // Close bubble when drag mode activates
-  useEffect(() => { if (dragMode) setVisible(false) }, [dragMode])
-
-  // Window-level pointer listeners during drag — fires regardless of which
-  // element currently has pointer capture, and handles off-screen releases.
-  useEffect(() => {
-    if (!dragMode) return
-
-    const handleMove = (e) => {
-      if (!heroRef.current) return
-      const rect = heroRef.current.getBoundingClientRect()
-      const x = parseFloat(Math.max(0.05, Math.min(0.95, (e.clientX - rect.left) / rect.width)).toFixed(3))
-      const y = parseFloat(Math.max(0.05, Math.min(0.95, (e.clientY - rect.top)  / rect.height)).toFixed(3))
-      dragPosRef.current = { x, y }
-      setOverridePos({ x, y })
-      console.log(`[225 hero] pos: { x: ${x}, y: ${y} }`)
-    }
-
-    const handleUp = () => {
-      setDragMode(false)
-      const pos = dragPosRef.current
-      if (pos) {
-        console.log(`[225 hero] ── Final position for "${painting.id}" ──────────`)
-        console.log(`  pos: { x: ${pos.x}, y: ${pos.y} }`)
-        console.log(`  → Copy into PAINTINGS[].pos in HeroSection.jsx`)
-      }
-    }
-
-    // passive: false allows preventDefault to suppress scroll during drag
-    window.addEventListener('pointermove', handleMove, { passive: false })
-    window.addEventListener('pointerup',   handleUp)
-    return () => {
-      window.removeEventListener('pointermove', handleMove)
-      window.removeEventListener('pointerup',   handleUp)
-    }
-  }, [dragMode, painting.id])
 
   // ── Derived positioning ───────────────────────────────────────────────
   const effectivePos  = overridePos ?? painting.pos
@@ -206,29 +172,61 @@ export default function HeroSection({
   const bubbleTopPct  = Math.round(effectivePos.y * 100 * 0.40)
 
   // ── House pointer handlers ────────────────────────────────────────────
-  const handleHousePointerDown = () => {
+  const handleHousePointerDown = (e) => {
+    e.currentTarget.setPointerCapture(e.pointerId)
+    dragStartRef.current  = { x: e.clientX, y: e.clientY }
+    hasDraggedRef.current = false
+    dragPosRef.current    = null
     setPressed(true)
-    longPressTimer.current = setTimeout(() => {
+  }
+
+  const handleHousePointerMove = (e) => {
+    if (!dragStartRef.current || !heroRef.current) return
+    const dx = e.clientX - dragStartRef.current.x
+    const dy = e.clientY - dragStartRef.current.y
+    const moved = Math.sqrt(dx * dx + dy * dy) >= 4
+
+    if (!moved) return
+
+    // Crossed threshold — commit to drag
+    if (!hasDraggedRef.current) {
+      hasDraggedRef.current = true
       setDragMode(true)
+      setVisible(false)
       setPressed(false)
-      dragPosRef.current = null
-      console.log(`[225 hero] Drag mode ON — painting: "${painting.id}"`)
-      console.log(`[225 hero] Current pos: { x: ${painting.pos.x}, y: ${painting.pos.y} }`)
-    }, 600)
+    }
+
+    const rect = heroRef.current.getBoundingClientRect()
+    const x = parseFloat(Math.max(0.05, Math.min(0.95, (e.clientX - rect.left) / rect.width)).toFixed(3))
+    const y = parseFloat(Math.max(0.05, Math.min(0.95, (e.clientY - rect.top)  / rect.height)).toFixed(3))
+    dragPosRef.current = { x, y }
+    setOverridePos({ x, y })
   }
 
   const handleHousePointerUp = () => {
-    clearTimeout(longPressTimer.current)
     setPressed(false)
-    // Only toggle bubble on normal tap — not when ending a drag
-    if (!dragMode) setVisible(v => !v)
+    dragStartRef.current = null
+
+    if (!hasDraggedRef.current) {
+      // Clean tap — toggle bubble
+      setVisible(v => !v)
+    } else {
+      // End of drag — log final position
+      setDragMode(false)
+      const pos = dragPosRef.current
+      if (pos) {
+        console.log(`[225 hero] ── Final position for "${painting.id}" ──`)
+        console.log(`  pos: { x: ${pos.x}, y: ${pos.y} }`)
+        console.log(`  → Paste into PAINTINGS[].pos in HeroSection.jsx`)
+      }
+    }
   }
 
-  const handleHousePointerLeave = () => {
-    clearTimeout(longPressTimer.current)
+  const handleHousePointerCancel = () => {
     setPressed(false)
-    // Intentionally do NOT clear dragMode here —
-    // drag continues across the hero after pointer leaves the button.
+    setDragMode(false)
+    dragStartRef.current  = null
+    hasDraggedRef.current = false
   }
 
   return (
@@ -441,8 +439,9 @@ export default function HeroSection({
 
         <button
           onPointerDown={handleHousePointerDown}
+          onPointerMove={handleHousePointerMove}
           onPointerUp={handleHousePointerUp}
-          onPointerLeave={handleHousePointerLeave}
+          onPointerCancel={handleHousePointerCancel}
           aria-label="Show house status"
           style={{
             position:   'relative',
