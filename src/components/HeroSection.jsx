@@ -45,7 +45,7 @@ const PAINTINGS = [
     // Existing cottage/mill visible right-of-center (~70–80% x).
     // Icon on LEFT bank (tall tree / water's edge) to avoid that structure.
     // Sampled: deep green bank + warm dappled light → richer ochre-gold.
-    houseColor:     '#C48C38',
+    houseColor:     '#9FAF4A',
     pos:            { x: 0.22, y: 0.45 },
     objectPosition: 'center 42%',
   },
