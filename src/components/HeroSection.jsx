@@ -286,8 +286,8 @@ export default function HeroSection({
 
       const best = computeHouseColor(filtered)
       setAdaptiveColorState({ id: painting.id, hex: best })
-    } catch {
-      // Canvas tainted or image error — silently keep current color
+    } catch (err) {
+      console.warn('[225 color] canvas sample failed:', err?.message ?? err)
     }
   }
 
@@ -383,6 +383,13 @@ export default function HeroSection({
         src={painting.src}
         alt=""
         aria-hidden="true"
+        onLoad={() => {
+          // CORS img is ready — sample at current house position immediately.
+          // This fires whether the image was just fetched or was already cached.
+          // Covers the common case where the user drags before this img loaded.
+          sampleAdaptiveColor(dragPosRef.current ?? painting.pos)
+        }}
+        onError={() => console.warn('[225 color] CORS img failed to load:', painting.src)}
         style={{ display: 'none' }}
       />
 
