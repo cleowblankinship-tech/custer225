@@ -18,7 +18,7 @@ import HouseIcon from './HouseIcon'
 //
 // ── houseColor ────────────────────────────────────────────────────────────────
 // Default color for the static position. Once the user drags the house,
-// the adaptive color system takes over and picks from HOUSE_COLOR_CANDIDATES.
+// the adaptive color system computes a vivid contrasting color dynamically.
 //
 // ── Dev tool ─────────────────────────────────────────────────────────────────
 // Drag the house to reposition. Release logs final { x, y } to the console.
@@ -67,30 +67,7 @@ const PAINTINGS = [
   },
 ]
 
-// ── Adaptive color palette ────────────────────────────────────────────────────
-//
-// When the house is dragged, the local painting color is sampled and the best
-// candidate is chosen by WCAG contrast + hue-harmony scoring.
-// No random colors. No raw sampled color. No neon.
-
-const HOUSE_COLOR_CANDIDATES = [
-  { name: 'dusty chartreuse', hex: '#9FAF4A' },
-  { name: 'deeper olive',     hex: '#8C9A3C' },
-  { name: 'warm terracotta',  hex: '#C05538' },
-  { name: 'soft gold',        hex: '#C4A068' },
-  { name: 'warm cream',       hex: '#E8D7B3' },
-  { name: 'deep bark',        hex: '#7A5030' },
-]
-
 // ── Color math helpers ────────────────────────────────────────────────────────
-
-function hexToRgb(hex) {
-  return [
-    parseInt(hex.slice(1, 3), 16),
-    parseInt(hex.slice(3, 5), 16),
-    parseInt(hex.slice(5, 7), 16),
-  ]
-}
 
 function rgbToHsl(r, g, b) {
   r /= 255; g /= 255; b /= 255
@@ -108,17 +85,6 @@ function rgbToHsl(r, g, b) {
   return [h * 360, s, l]
 }
 
-function relativeLuminance(r, g, b) {
-  const lin = (v) => { v /= 255; return v <= 0.03928 ? v / 12.92 : Math.pow((v + 0.055) / 1.055, 2.4) }
-  return 0.2126 * lin(r) + 0.7152 * lin(g) + 0.0722 * lin(b)
-}
-
-function contrastRatio(rgb1, rgb2) {
-  const l1 = relativeLuminance(...rgb1)
-  const l2 = relativeLuminance(...rgb2)
-  return (Math.max(l1, l2) + 0.05) / (Math.min(l1, l2) + 0.05)
-}
-
 // Approximate the CSS filters applied to the painting image:
 //   saturate(0.45) + contrast(0.88)
 // Blur doesn't affect averaged color, so it's skipped.
@@ -133,56 +99,44 @@ function applyCssFilters(r, g, b) {
   return [c(r), c(g), c(b)]
 }
 
-// Pick the best palette candidate for a given background RGB.
-// Scoring: 70% WCAG contrast + 30% hue-harmony bias.
-function pickBestHouseColor(bgRgb) {
+// Convert HSL → hex. h: 0–360, s: 0–1, l: 0–1
+function hslToHex(h, s, l) {
+  const a = s * Math.min(l, 1 - l)
+  const f = (n) => {
+    const k     = (n + h / 30) % 12
+    const color = l - a * Math.max(Math.min(k - 3, 9 - k, 1), -1)
+    return Math.round(255 * color).toString(16).padStart(2, '0')
+  }
+  return `#${f(0)}${f(8)}${f(4)}`
+}
+
+// Dynamically compute a vivid, high-contrast house color from the sampled
+// background. No preset palette — the house is always the main character.
+//
+// Strategy:
+//   1. Shift hue ~165° (near-complement) for maximum perceptual contrast.
+//   2. Push saturation to 0.82 — the house should pop, not blend.
+//   3. Flip lightness relative to the background:
+//        dark bg  (L < 0.45) → bright house (L ≈ 0.70)
+//        light bg (L ≥ 0.45) → deep  house  (L ≈ 0.35)
+function computeHouseColor(bgRgb) {
   const [bgH, bgS, bgL] = rgbToHsl(...bgRgb)
 
-  const scored = HOUSE_COLOR_CANDIDATES.map((candidate) => {
-    const rgb      = hexToRgb(candidate.hex)
-    const contrast = contrastRatio(bgRgb, rgb)
-    const [, , cL] = rgbToHsl(...rgb)
+  // Near-complement hue shift — 165° gives strong contrast without feeling
+  // garish. On very desaturated backgrounds the hue choice matters less, so
+  // we still rotate to give the house a vivid anchor color.
+  const h = (bgH + 165) % 360
+  const s = 0.82
+  const l = bgL < 0.45 ? 0.70 : 0.35
 
-    // Contrast score: 0–1, saturating at 5:1
-    const contrastScore = Math.min(contrast / 5, 1)
-
-    // Hue-harmony bias — rules derived from painting palette analysis
-    let bias = 0
-    if (bgL < 0.28) {
-      // Dark bg → prefer lighter candidates that will show up
-      if (cL > 0.55) bias += 0.30
-      if (candidate.name === 'warm cream' || candidate.name === 'dusty chartreuse' || candidate.name === 'soft gold') bias += 0.15
-    } else if (bgL > 0.68) {
-      // Pale/bright bg → prefer darker candidates
-      if (cL < 0.45) bias += 0.30
-      if (candidate.name === 'deep bark' || candidate.name === 'deeper olive') bias += 0.15
-    } else if (bgS < 0.10) {
-      // Gray/foggy (desaturated) → pop with chartreuse or terracotta
-      if (candidate.name === 'dusty chartreuse' || candidate.name === 'warm terracotta') bias += 0.30
-    } else if (bgH >= 80 && bgH <= 160) {
-      // Green-heavy bg → warm colors read as contrast
-      if (candidate.name === 'soft gold' || candidate.name === 'warm cream' || candidate.name === 'warm terracotta') bias += 0.28
-    } else if (bgH >= 20 && bgH < 80) {
-      // Yellow/ochre bg → cool or dark reads better
-      if (candidate.name === 'deep bark' || candidate.name === 'warm terracotta') bias += 0.22
-    } else if (bgH >= 180 && bgH <= 260) {
-      // Blue/cool bg → warm tones for harmony
-      if (candidate.name === 'warm terracotta' || candidate.name === 'soft gold') bias += 0.25
-    }
-
-    const score = 0.70 * contrastScore + 0.30 * (0.5 + bias)
-    return { ...candidate, contrast, score }
-  })
-
-  scored.sort((a, b) => b.score - a.score)
+  const hex = hslToHex(h, s, l)
 
   if (import.meta.env.DEV) {
-    console.log(`[225 color] bg hsl(${bgH.toFixed(0)}° ${(bgS*100).toFixed(0)}% ${(bgL*100).toFixed(0)}%)`)
-    scored.forEach(c => console.log(`  ${c.name.padEnd(20)} contrast:${c.contrast.toFixed(2)}  score:${c.score.toFixed(3)}`))
-    console.log(`  → ${scored[0].name} ${scored[0].hex}`)
+    console.log(`[225 color] bg  hsl(${bgH.toFixed(0)}° ${(bgS*100).toFixed(0)}% ${(bgL*100).toFixed(0)}%)`)
+    console.log(`[225 color] → house hsl(${h.toFixed(0)}° ${(s*100).toFixed(0)}% ${(l*100).toFixed(0)}%) ${hex}`)
   }
 
-  return scored[0].hex
+  return hex
 }
 
 // ── Deterministic daily rotation ───────────────────────────────────────────────
@@ -330,7 +284,7 @@ export default function HeroSection({
       // Apply the same filters the img element uses
       const filtered = applyCssFilters(...raw)
 
-      const best = pickBestHouseColor(filtered)
+      const best = computeHouseColor(filtered)
       setAdaptiveColorState({ id: painting.id, hex: best })
     } catch {
       // Canvas tainted or image error — silently keep current color
@@ -366,9 +320,9 @@ export default function HeroSection({
     dragPosRef.current = { x, y }
     setOverridePos({ x, y })
 
-    // Throttled color sample — every 150ms while dragging
+    // Throttled color sample — every 60ms while dragging (≈16fps color updates)
     const now = Date.now()
-    if (now - lastSampleTime.current >= 150) {
+    if (now - lastSampleTime.current >= 60) {
       lastSampleTime.current = now
       sampleAdaptiveColor({ x, y })
     }
@@ -568,9 +522,11 @@ export default function HeroSection({
         icon BASE exactly at pos.y.
 
         Color: houseColor = adaptiveColor ?? painting.houseColor
-          adaptiveColor is sampled from the painting canvas on drag.
+          adaptiveColor is computed dynamically from the sampled painting pixels:
+            near-complement hue (+165°), vivid saturation (82%), lightness
+            flipped relative to background (bright on dark, deep on light).
           painting.houseColor is the hand-tuned default for the static position.
-          A 300ms color transition smooths the palette switch while dragging.
+          A 300ms color transition smooths the switch while dragging.
       */}
       <div
         style={{
@@ -616,8 +572,10 @@ export default function HeroSection({
                   ? 'scale(1.06) translateY(-1.5px)'
                   : 'scale(1)',
             transition: pressed
-              ? 'transform 70ms ease-in, color 300ms ease'
-              : 'transform 300ms cubic-bezier(0.34, 1.56, 0.64, 1), color 300ms ease',
+              ? 'transform 70ms ease-in, color 120ms ease'
+              : dragMode
+                ? 'transform 60ms linear, color 120ms ease'
+                : 'transform 300ms cubic-bezier(0.34, 1.56, 0.64, 1), color 200ms ease',
             filter:     'drop-shadow(0 1px 2px rgba(0,0,0,0.28)) drop-shadow(0 5px 8px rgba(0,0,0,0.36))',
           }}
         >
