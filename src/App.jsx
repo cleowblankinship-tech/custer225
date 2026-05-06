@@ -95,7 +95,7 @@ export default function App() {
   const [weatherBlurb, setWeatherBlurb] = useState(null)
   const [weatherCondition, setWeatherCondition] = useState('clear')
   // themeMode: 'auto' = follows time + weather; 'day' / 'night' = forced
-  const [themeMode, setThemeMode] = useState(() => localStorage.getItem('custer225_theme_mode') || 'night')
+  const [themeMode, setThemeMode] = useState(() => localStorage.getItem('custer225_theme_v2') || 'night')
   const [showIntro, setShowIntro] = useState(true) // true on every cold load
   const [housePanelOpen, setHousePanelOpen] = useState(false)
   const [userRules, setUserRules] = useState(() => getUserRules())
@@ -384,7 +384,7 @@ export default function App() {
             const CYCLE = ['auto', 'day', 'evening', 'night']
             const m = CYCLE[(CYCLE.indexOf(themeMode) + 1) % CYCLE.length]
             setThemeMode(m)
-            localStorage.setItem('custer225_theme_mode', m)
+            localStorage.setItem('custer225_theme_v2', m)
           }}
         />
       ) : (
