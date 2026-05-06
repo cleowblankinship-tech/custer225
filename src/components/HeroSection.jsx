@@ -377,19 +377,23 @@ export default function HeroSection({
         If the CORS img fails to load, sampleAdaptiveColor catches the error
         and silently keeps painting.houseColor.
       */}
+      {/*
+        Route through /api/img-proxy so we get Access-Control-Allow-Origin: *.
+        commons.wikimedia.org returns no CORS header on its redirect response,
+        which blocks direct crossOrigin img requests from the browser.
+        The proxy fetches server-side and re-serves with CORS headers.
+      */}
       <img
         ref={imgRef}
         crossOrigin="anonymous"
-        src={painting.src}
+        src={`/api/img-proxy?url=${encodeURIComponent(painting.src)}`}
         alt=""
         aria-hidden="true"
         onLoad={() => {
           // CORS img is ready — sample at current house position immediately.
-          // This fires whether the image was just fetched or was already cached.
-          // Covers the common case where the user drags before this img loaded.
           sampleAdaptiveColor(dragPosRef.current ?? painting.pos)
         }}
-        onError={() => console.warn('[225 color] CORS img failed to load:', painting.src)}
+        onError={() => console.warn('[225 color] proxy img failed to load:', painting.src)}
         style={{ display: 'none' }}
       />
 
