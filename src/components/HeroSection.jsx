@@ -35,7 +35,7 @@ const PAINTINGS = [
     // No existing structures. Left field edge near the tree cluster.
     // Sampled: warm mid-green + earth shadow → vivid red-brown.
     houseColor:     '#B85228',
-    pos:            { x: 0.20, y: 0.47 },
+    pos:            { x: 0.20, y: 0.40 },
     objectPosition: 'center 58%',
   },
   {
@@ -46,7 +46,7 @@ const PAINTINGS = [
     // Icon on LEFT bank (tall tree / water's edge) to avoid that structure.
     // Sampled: deep green bank + warm dappled light → richer ochre-gold.
     houseColor:     '#C48C38',
-    pos:            { x: 0.22, y: 0.47 },
+    pos:            { x: 0.22, y: 0.45 },
     objectPosition: 'center 42%',
   },
   {
@@ -56,7 +56,7 @@ const PAINTINGS = [
     // No prominent structures. Right side near the distant tree line.
     // Sampled: golden wheat + warm shadow → deeper saturated bark.
     houseColor:     '#8A5228',
-    pos:            { x: 0.74, y: 0.42 },
+    pos:            { x: 0.74, y: 0.38 },
     objectPosition: 'center 48%',
   },
   {
@@ -67,7 +67,7 @@ const PAINTINGS = [
     // Icon far-left in the atmospheric haze / tree edge.
     // Sampled: cool blue-green + pale diffused sky → warmer, more saturated tan.
     houseColor:     '#9A6A34',
-    pos:            { x: 0.18, y: 0.46 },
+    pos:            { x: 0.18, y: 0.47 },
     objectPosition: 'center 30%',
   },
   {
@@ -78,7 +78,7 @@ const PAINTINGS = [
     // where the painting is misty and unoccupied.
     // App terracotta reads cleanly against warm haze — brightened slightly.
     houseColor:     '#CC4A2C',
-    pos:            { x: 0.16, y: 0.46 },
+    pos:            { x: 0.16, y: 0.48 },
     objectPosition: 'center 55%',
   },
 ]
@@ -396,8 +396,9 @@ export default function HeroSection({
 
       {/* ── House icon ────────────────────────────────────────────────────── */}
       {/*
-        Positioned at effectivePos.{x,y} (0–1). translate(-50%,-50%) centers
-        the icon on the exact coordinate point.
+        pos.y is the HORIZON fraction (0–1). The wrapper uses translate(-50%, -86%)
+        which places the icon's BASE (SVG ground line at 93.75% of icon height)
+        exactly at pos.y — so pos.y directly means "the house sits on this horizon".
 
         During normal use: effectivePos = painting.pos (from PAINTINGS[]).
         During/after drag: effectivePos = overridePos (live-updated by drag).
@@ -409,32 +410,17 @@ export default function HeroSection({
         Grounding:
           • Dual drop-shadow: contact shadow (1px, 2px blur) + main shadow (5px, 8px blur)
           • Soft oval ground shadow div at the icon's base
-          • Radial veil behind icon clears local painting noise (Option B)
       */}
       <div
         style={{
           position:  'absolute',
           left:      `${effectivePos.x * 100}%`,
           top:       `${effectivePos.y * 100}%`,
-          transform: 'translate(-50%, -50%)',
+          transform: 'translate(-50%, -86%)',
           zIndex:    5,
           cursor:    dragMode ? 'grabbing' : 'pointer',
         }}
       >
-        {/* Radial veil — clears local painting noise, improves legibility.
-            Slightly enlarged (inset -26, transparent at 72%) vs. previous
-            (-20 / 68%) for a gentler clearing radius. */}
-        <div
-          style={{
-            position:      'absolute',
-            inset:         -26,
-            borderRadius:  '50%',
-            background:    isNight
-              ? 'radial-gradient(circle, rgba(0,0,0,0.35) 0%, transparent 72%)'
-              : 'radial-gradient(circle, rgba(255,255,255,0.30) 0%, transparent 72%)',
-            pointerEvents: 'none',
-          }}
-        />
 
         {/* Ground shadow — soft oval at icon base anchors house to landscape.
             Nearly invisible (0.20 opacity, 5px blur). */}
