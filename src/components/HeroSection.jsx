@@ -12,17 +12,20 @@ import HouseIcon from './HouseIcon'
 //   y: 0.0 = top edge    →  1.0 = bottom edge
 //
 // Placement rules:
-//   • Lower-left (x < 0.35) or lower-right (x > 0.65) — never centered
-//   • y ≈ 0.40–0.52 — near the compositional horizon
+//   • Left or right third (x < 0.35 or x > 0.65) — never centered
+//   • y ≈ 0.42–0.48 — base sits at or just above the compositional horizon
 //   • Avoid existing structures visible in each painting (documented inline)
 //
 // ── House color ───────────────────────────────────────────────────────────────
-// Presampled from the placement zone, adjusted for contrast, biased toward:
-//   terracotta #C05538  ·  bark #8B6348  ·  warm stone #C4A068
+// Sampled from the placement zone, then:
+//   1. Increased contrast vs. local background
+//   2. Slightly boosted saturation / warmth
+//   3. Biased toward: terracotta #CC4A2C · bark #8A5228 · ochre #C48C38
+// House should feel harmonious with the painting but a step more vivid.
 //
 // ── Dev tool ─────────────────────────────────────────────────────────────────
-// Long-press the house icon to enter drag mode. Drag to find ideal position.
-// Release to log final { x, y } to the console. Copy into pos: {} below.
+// Long-press the house icon (600ms) to enter drag mode. Drag to position.
+// Release logs final { x, y } to console. Copy into pos: {} below.
 
 const PAINTINGS = [
   {
@@ -30,9 +33,9 @@ const PAINTINGS = [
     src: 'https://commons.wikimedia.org/wiki/Special:FilePath/Monet_Poppies.jpg?width=960',
     alt: 'Poppies near Argenteuil — Claude Monet, 1873',
     // No existing structures. Left field edge near the tree cluster.
-    // Sampled: mid-green + dark earth → darkened terracotta.
-    houseColor:     '#A0502A',
-    pos:            { x: 0.20, y: 0.50 },
+    // Sampled: warm mid-green + earth shadow → vivid red-brown.
+    houseColor:     '#B85228',
+    pos:            { x: 0.20, y: 0.47 },
     objectPosition: 'center 58%',
   },
   {
@@ -40,11 +43,10 @@ const PAINTINGS = [
     src: 'https://commons.wikimedia.org/wiki/Special:FilePath/John_Constable_The_Hay_Wain.jpg?width=960',
     alt: 'The Hay Wain — John Constable, 1821',
     // Existing cottage/mill visible right-of-center (~70–80% x).
-    // Icon moved to LEFT bank (near the tall tree / grassy water's edge)
-    // to avoid placing it directly over the painting's own structure.
-    // Sampled: deep green bank + warm light → warm stone.
-    houseColor:     '#C4A068',
-    pos:            { x: 0.22, y: 0.50 },
+    // Icon on LEFT bank (tall tree / water's edge) to avoid that structure.
+    // Sampled: deep green bank + warm dappled light → richer ochre-gold.
+    houseColor:     '#C48C38',
+    pos:            { x: 0.22, y: 0.47 },
     objectPosition: 'center 42%',
   },
   {
@@ -52,19 +54,19 @@ const PAINTINGS = [
     src: 'https://commons.wikimedia.org/wiki/Special:FilePath/Camille_Pissarro_-_The_Harvest_-_Google_Art_Project.jpg?width=960',
     alt: 'The Harvest — Camille Pissarro, 1882',
     // No prominent structures. Right side near the distant tree line.
-    // Sampled: golden wheat + warm shadow → deepened bark brown.
-    houseColor:     '#7A5030',
-    pos:            { x: 0.74, y: 0.40 },
+    // Sampled: golden wheat + warm shadow → deeper saturated bark.
+    houseColor:     '#8A5228',
+    pos:            { x: 0.74, y: 0.42 },
     objectPosition: 'center 48%',
   },
   {
     id: 'sisley-terrace-spring',
     src: 'https://commons.wikimedia.org/wiki/Special:FilePath/Alfred_Sisley_-_The_Terrace_at_Saint-Germain,_Spring_-_Google_Art_Project.jpg?width=960',
     alt: 'The Terrace at Saint-Germain, Spring — Alfred Sisley, c.1875',
-    // objectPosition 30% avoids the stone terrace railing that dominates
-    // at 52%; shows the atmospheric landscape and horizon instead.
-    // Sampled: cool blue-green + pale sky → muted olive-tan.
-    houseColor:     '#8C7048',
+    // objectPosition 30% avoids the stone railing prominent at 52%.
+    // Icon far-left in the atmospheric haze / tree edge.
+    // Sampled: cool blue-green + pale diffused sky → warmer, more saturated tan.
+    houseColor:     '#9A6A34',
     pos:            { x: 0.18, y: 0.46 },
     objectPosition: 'center 30%',
   },
@@ -74,8 +76,8 @@ const PAINTINGS = [
     alt: 'Haystacks, End of Summer — Claude Monet, 1891',
     // Haystacks sit right-of-center (~55–75% x). Icon in open left field
     // where the painting is misty and unoccupied.
-    // Sampled: soft warm haze → app terracotta reads cleanly.
-    houseColor:     '#C05538',
+    // App terracotta reads cleanly against warm haze — brightened slightly.
+    houseColor:     '#CC4A2C',
     pos:            { x: 0.16, y: 0.46 },
     objectPosition: 'center 55%',
   },
@@ -303,11 +305,9 @@ export default function HeroSection({
 
       {/* ── Bottom gradient fade ─────────────────────────────────────────── */}
       {/*
-        Extended to 65% height (was 55%) with a flat-start multi-stop curve:
+        Extended to 65% height with a flat-start multi-stop curve:
         transparent → transparent (8%) → var(--bg) (100%).
-        The flat zone prevents the very top of the fade from looking washed out;
-        the remaining 92% of the gradient height does all the work, creating a
-        long, gentle, natural-feeling dissolve into the page color.
+        The flat zone prevents the very top of the fade from looking washed out.
 
         var(--bg) is a typed @property <color>, so this gradient endpoint
         cross-fades smoothly when the theme changes.
@@ -402,8 +402,14 @@ export default function HeroSection({
         During normal use: effectivePos = painting.pos (from PAINTINGS[]).
         During/after drag: effectivePos = overridePos (live-updated by drag).
 
-        Long press → drag mode → scale 1.12 (visual affordance without any
-        new UI element). Release → scale returns to normal or visible state.
+        Tap animation: scale(1.06) + translateY(-1.5px) lifts the house
+        slightly when the bubble is visible — subtle but intentional.
+        Long press → drag mode → scale 1.12 (affordance).
+
+        Grounding:
+          • Dual drop-shadow: contact shadow (1px, 2px blur) + main shadow (5px, 8px blur)
+          • Soft oval ground shadow div at the icon's base
+          • Radial veil behind icon clears local painting noise (Option B)
       */}
       <div
         style={{
@@ -415,15 +421,34 @@ export default function HeroSection({
           cursor:    dragMode ? 'grabbing' : 'pointer',
         }}
       >
-        {/* Contrast assist — radial veil behind the icon, barely perceptible */}
+        {/* Radial veil — clears local painting noise, improves legibility.
+            Slightly enlarged (inset -26, transparent at 72%) vs. previous
+            (-20 / 68%) for a gentler clearing radius. */}
         <div
           style={{
             position:      'absolute',
-            inset:         -20,
+            inset:         -26,
             borderRadius:  '50%',
             background:    isNight
-              ? 'radial-gradient(circle, rgba(0,0,0,0.30) 0%, transparent 68%)'
-              : 'radial-gradient(circle, rgba(255,255,255,0.25) 0%, transparent 68%)',
+              ? 'radial-gradient(circle, rgba(0,0,0,0.35) 0%, transparent 72%)'
+              : 'radial-gradient(circle, rgba(255,255,255,0.30) 0%, transparent 72%)',
+            pointerEvents: 'none',
+          }}
+        />
+
+        {/* Ground shadow — soft oval at icon base anchors house to landscape.
+            Nearly invisible (0.20 opacity, 5px blur). */}
+        <div
+          style={{
+            position:      'absolute',
+            bottom:        7,
+            left:          '50%',
+            transform:     'translateX(-50%)',
+            width:         36,
+            height:        7,
+            background:    'rgba(0,0,0,0.20)',
+            borderRadius:  '50%',
+            filter:        'blur(5px)',
             pointerEvents: 'none',
           }}
         />
@@ -441,14 +466,17 @@ export default function HeroSection({
               ? 'scale(0.86)'
               : dragMode
                 ? 'scale(1.12)'
-                : visible ? 'scale(1.07)' : 'scale(1)',
+                : visible
+                  ? 'scale(1.06) translateY(-1.5px)'
+                  : 'scale(1)',
             transition: pressed
               ? 'transform 70ms ease-in'
               : 'transform 300ms cubic-bezier(0.34, 1.56, 0.64, 1)',
-            filter:     'drop-shadow(0 2px 5px rgba(0,0,0,0.32))',
+            // Dual shadow: tight contact shadow + diffused main shadow
+            filter:     'drop-shadow(0 1px 2px rgba(0,0,0,0.28)) drop-shadow(0 5px 8px rgba(0,0,0,0.36))',
           }}
         >
-          <HouseIcon size={54} />
+          <HouseIcon size={58} />
         </button>
       </div>
 
