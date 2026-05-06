@@ -365,7 +365,7 @@ export default function HeroSection({
         minHeight:   180,
         overflow:    'hidden',
         background:  '#CDC3B0',
-        touchAction: dragMode ? 'none' : 'auto',
+        touchAction: 'pan-y',
       }}
     >
       {/* ── Hidden CORS image for canvas sampling ───────────────────────── */}
@@ -575,6 +575,9 @@ export default function HeroSection({
             position:   'relative',
             padding:    6,
             color:      houseColor,
+            touchAction: 'none',
+            userSelect:  'none',
+            WebkitUserSelect: 'none',
             transform:  pressed
               ? 'scale(0.86)'
               : dragMode
