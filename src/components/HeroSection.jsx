@@ -414,18 +414,32 @@ export default function HeroSection({
         touchAction: dragMode ? 'none' : 'auto',
       }}
     >
+      {/* ── Hidden CORS image for canvas sampling ───────────────────────── */}
+      {/*
+        A separate hidden img carries crossOrigin="anonymous" so canvas
+        sampling works without tainting the visible display image.
+        The display img below has no crossOrigin attribute — it loads from
+        the browser cache as normal and is never touched by canvas.
+        If the CORS img fails to load, sampleAdaptiveColor catches the error
+        and silently keeps painting.houseColor.
+      */}
+      <img
+        ref={imgRef}
+        crossOrigin="anonymous"
+        src={painting.src}
+        alt=""
+        aria-hidden="true"
+        style={{ display: 'none' }}
+      />
+
       {/* ── Landscape painting ──────────────────────────────────────────── */}
       {/*
-        crossOrigin="anonymous": required for canvas CORS sampling.
-        Wikimedia CDN (upload.wikimedia.org) sends Access-Control-Allow-Origin: *.
         scale(1.04): prevents blur filter from exposing white edges.
         saturate(0.45): ~55% vibrancy reduction — painting becomes atmosphere.
         contrast(0.88): gentle pull-back so it recedes behind the UI.
         blur(1.2px): overall softening pass.
       */}
       <img
-        ref={imgRef}
-        crossOrigin="anonymous"
         src={painting.src}
         alt={painting.alt}
         onLoad={() => setLoaded(true)}
