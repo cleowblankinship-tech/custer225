@@ -64,7 +64,9 @@ export default function PLSummary({ expenses, onNavigate, isPreLaunch }) {
         onClick={() => onNavigate?.('income', null)}
         style={{
           width: '100%', textAlign: 'left', marginBottom: 16,
-          background: stats.totalRevenue > 0 ? 'var(--gold-bg)' : 'var(--accent-light)',
+          background: stats.totalRevenue > 0
+            ? 'color-mix(in srgb, var(--gold-bg) 88%, var(--gold) 12%)'
+            : 'color-mix(in srgb, var(--accent-light) 88%, var(--accent) 12%)',
           borderRadius: 'var(--radius-sm)',
           padding: '22px 20px 18px',
           borderLeft: stats.totalRevenue > 0 ? '4px solid var(--gold)' : '4px solid var(--accent)',
