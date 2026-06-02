@@ -481,7 +481,7 @@ export default function App() {
       )}
 
       {/* ── Main content ─────────────────────────────────────────────────── */}
-      <div style={{ flex: 1, paddingTop: view === 'home' ? 0 : 20, paddingBottom: 'calc(64px + env(safe-area-inset-bottom))' }}>
+      <div className="content-main" style={{ flex: 1, paddingTop: view === 'home' ? 0 : 20, paddingBottom: 'calc(64px + env(safe-area-inset-bottom))' }}>
         {loading && (
           <p style={{ textAlign: 'center', color: 'var(--text3)', fontSize: 14, padding: 40 }}>Loading...</p>
         )}
@@ -489,8 +489,32 @@ export default function App() {
         {!loading && view === 'home' && (
           <div className="home-grid">
 
+            {/* ── Right column: calendar — first in markup = top on mobile ─ */}
+            <div className="home-right">
+              <div style={{ padding: '24px 20px 10px' }}>
+                <p style={{
+                  fontSize: 22, fontWeight: 800, color: 'var(--text)',
+                  letterSpacing: '-0.02em', lineHeight: 1,
+                }}>
+                  Bookings
+                </p>
+                <p style={{ fontSize: 12, color: 'var(--text3)', marginTop: 4 }}>
+                  Tap the house to open status
+                </p>
+              </div>
+              <GuestCard expenses={expenses} />
+            </div>
+
             {/* ── Left column: metrics + quick actions ─────────────────── */}
             <div className="home-left">
+              <div style={{ padding: '24px 20px 10px' }}>
+                <p style={{
+                  fontSize: 22, fontWeight: 800, color: 'var(--text)',
+                  letterSpacing: '-0.02em', lineHeight: 1,
+                }}>
+                  Financials
+                </p>
+              </div>
               <PLSummary
                 expenses={expenses}
                 onNavigate={navigateToList}
@@ -577,11 +601,6 @@ export default function App() {
                 </p>
               </div>
               <QuickAdd onAdd={handleAdd} />
-            </div>
-
-            {/* ── Right column: calendar / bookings ────────────────────── */}
-            <div className="home-right" style={{ paddingTop: 20 }}>
-              <GuestCard expenses={expenses} />
             </div>
 
           </div>

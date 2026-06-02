@@ -132,26 +132,27 @@ export default function GuestCard({ expenses = [] }) {
   const todayStr     = today.toLocaleDateString('en-CA')
 
   return (
-    <div style={{ padding: '0 20px 4px' }}>
+    <div style={{ padding: '0 20px 16px' }}>
       <div style={{ background: 'var(--bg2)', borderRadius: 'var(--radius)', overflow: 'hidden' }}>
 
         {/* ── Month header ──────────────────────────────────────────────── */}
         <div style={{
           display: 'flex', alignItems: 'center', justifyContent: 'space-between',
-          padding: '14px 16px 10px',
+          padding: '18px 20px 12px',
+          borderBottom: '1px solid var(--border)',
         }}>
-          <button onClick={prevMonth} style={{ fontSize: 18, color: 'var(--text2)', padding: '0 6px' }}>‹</button>
-          <p style={{ fontSize: 15, fontWeight: 600, color: 'var(--text)', letterSpacing: '-0.01em' }}>
+          <button onClick={prevMonth} style={{ fontSize: 22, color: 'var(--text2)', padding: '0 4px', lineHeight: 1 }}>‹</button>
+          <p style={{ fontSize: 18, fontWeight: 700, color: 'var(--text)', letterSpacing: '-0.02em' }}>
             {MONTH_NAMES[viewMonth]} {viewYear}
           </p>
-          <button onClick={nextMonth} style={{ fontSize: 18, color: 'var(--text2)', padding: '0 6px' }}>›</button>
+          <button onClick={nextMonth} style={{ fontSize: 22, color: 'var(--text2)', padding: '0 4px', lineHeight: 1 }}>›</button>
         </div>
 
         {/* ── Day-of-week labels ────────────────────────────────────────── */}
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(7, 1fr)', padding: '0 8px' }}>
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(7, 1fr)', padding: '10px 12px 4px' }}>
           {DAY_LABELS.map(l => (
-            <div key={l} style={{ textAlign: 'center', fontSize: 10, fontWeight: 600,
-              color: 'var(--text3)', letterSpacing: '0.04em', paddingBottom: 6 }}>
+            <div key={l} style={{ textAlign: 'center', fontSize: 11, fontWeight: 700,
+              color: 'var(--text3)', letterSpacing: '0.06em', paddingBottom: 4 }}>
               {l}
             </div>
           ))}
@@ -159,11 +160,11 @@ export default function GuestCard({ expenses = [] }) {
 
         {/* ── Calendar grid ─────────────────────────────────────────────── */}
         {loading ? (
-          <div style={{ padding: '24px 16px', textAlign: 'center', fontSize: 13, color: 'var(--text3)' }}>
+          <div style={{ padding: '32px 16px', textAlign: 'center', fontSize: 13, color: 'var(--text3)' }}>
             Loading bookings…
           </div>
         ) : (
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(7, 1fr)', padding: '0 8px 8px', rowGap: 2 }}>
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(7, 1fr)', padding: '0 12px 12px', rowGap: 3 }}>
             {/* Empty cells before first day */}
             {Array.from({ length: firstWeekDay }).map((_, i) => (
               <div key={`e${i}`} />
@@ -177,22 +178,22 @@ export default function GuestCard({ expenses = [] }) {
               const isToday = dateStr === todayStr
 
               return (
-                <div key={day} style={{ position: 'relative', height: 36 }}>
+                <div key={day} style={{ position: 'relative', height: 42 }}>
                   {/* Booking bar background */}
                   {info && (
                     <div style={{
                       position:    'absolute',
                       top:         '50%',
                       transform:   'translateY(-50%)',
-                      height:      26,
-                      left:        info.isFirst ? '10%' : 0,
-                      right:       info.isLast  ? '10%' : 0,
+                      height:      30,
+                      left:        info.isFirst ? '8%' : 0,
+                      right:       info.isLast  ? '8%' : 0,
                       background:  info.color.bar,
-                      borderRadius: info.isFirst && info.isLast ? 13
-                                  : info.isFirst ? '13px 0 0 13px'
-                                  : info.isLast  ? '0 13px 13px 0'
+                      borderRadius: info.isFirst && info.isLast ? 15
+                                  : info.isFirst ? '15px 0 0 15px'
+                                  : info.isLast  ? '0 15px 15px 0'
                                   : 0,
-                      opacity: 0.90,
+                      opacity: 0.92,
                     }} />
                   )}
 
@@ -203,8 +204,8 @@ export default function GuestCard({ expenses = [] }) {
                     display:    'flex',
                     alignItems: 'center',
                     justifyContent: 'center',
-                    fontSize:   12,
-                    fontWeight: isToday ? 700 : info ? 600 : 400,
+                    fontSize:   13,
+                    fontWeight: isToday ? 800 : info ? 600 : 400,
                     color:      info ? info.color.text
                                      : isToday ? 'var(--accent)'
                                      : 'var(--text)',
@@ -220,7 +221,7 @@ export default function GuestCard({ expenses = [] }) {
 
         {/* ── Booking list for visible month ────────────────────────────── */}
         {!loading && visibleBookings.length > 0 && (
-          <div style={{ borderTop: '0.5px solid var(--border)' }}>
+          <div style={{ borderTop: '1px solid var(--border)' }}>
             {visibleBookings.map((b, i) => {
               const color   = colorMap[b.checkIn] ?? BOOKING_COLORS[0]
               const revenue = matchRevenue(b, incomeEntries)
@@ -228,20 +229,20 @@ export default function GuestCard({ expenses = [] }) {
                 <div key={b.checkIn} style={{
                   display:     'flex',
                   alignItems:  'center',
-                  gap:         12,
-                  padding:     '12px 16px',
-                  borderBottom: i < visibleBookings.length - 1 ? '0.5px solid var(--border)' : 'none',
+                  gap:         14,
+                  padding:     '16px 20px',
+                  borderBottom: i < visibleBookings.length - 1 ? '1px solid var(--border)' : 'none',
                 }}>
-                  {/* Color swatch */}
-                  <div style={{ width: 10, height: 10, borderRadius: '50%', background: color.bar, flexShrink: 0 }} />
+                  {/* Color swatch — slightly larger */}
+                  <div style={{ width: 12, height: 12, borderRadius: '50%', background: color.bar, flexShrink: 0 }} />
 
                   {/* Name + dates */}
                   <div style={{ flex: 1, minWidth: 0 }}>
-                    <p style={{ fontSize: 14, fontWeight: 600, color: 'var(--text)',
+                    <p style={{ fontSize: 15, fontWeight: 700, color: 'var(--text)',
                       whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
                       {b.name}
                     </p>
-                    <p style={{ fontSize: 11, color: 'var(--text3)', marginTop: 1 }}>
+                    <p style={{ fontSize: 12, color: 'var(--text3)', marginTop: 2 }}>
                       {fmt(b.checkIn)} – {fmt(b.checkOut)} · {b.nights} night{b.nights !== 1 ? 's' : ''}
                     </p>
                   </div>
@@ -250,10 +251,10 @@ export default function GuestCard({ expenses = [] }) {
                   <div style={{ textAlign: 'right', flexShrink: 0 }}>
                     {revenue !== null ? (
                       <>
-                        <p style={{ fontSize: 14, fontWeight: 600, color: 'var(--green)' }}>
+                        <p style={{ fontSize: 16, fontWeight: 700, color: 'var(--green)' }}>
                           ${revenue.toLocaleString('en-US', { maximumFractionDigits: 0 })}
                         </p>
-                        <p style={{ fontSize: 10, color: 'var(--text3)', marginTop: 1 }}>
+                        <p style={{ fontSize: 11, color: 'var(--text3)', marginTop: 1 }}>
                           ${Math.round(revenue / b.nights)}/night
                         </p>
                       </>
@@ -268,8 +269,8 @@ export default function GuestCard({ expenses = [] }) {
         )}
 
         {!loading && visibleBookings.length === 0 && (
-          <div style={{ padding: '16px', textAlign: 'center', borderTop: '0.5px solid var(--border)' }}>
-            <p style={{ fontSize: 13, color: 'var(--text3)' }}>No bookings this month</p>
+          <div style={{ padding: '24px 20px', textAlign: 'center', borderTop: '1px solid var(--border)' }}>
+            <p style={{ fontSize: 14, color: 'var(--text3)' }}>No bookings this month</p>
           </div>
         )}
       </div>
