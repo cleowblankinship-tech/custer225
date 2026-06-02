@@ -112,7 +112,7 @@ export default function HouseAnchor({ message, mood, themeMode, onThemeToggle })
       </button>
 
       {/* ── Inline message — no container, lives on the page ───────────── */}
-      {open ? (
+      {open && (
         <div style={{ flex: 1, minWidth: 0, paddingTop: 8 }}>
           <p style={{
             fontSize:      17,
@@ -159,19 +159,6 @@ export default function HouseAnchor({ message, mood, themeMode, onThemeToggle })
             </button>
           )}
         </div>
-      ) : (
-        // Very quiet affordance when closed — the house speaks for itself
-        <p style={{
-          paddingTop:    52,
-          fontSize:      10,
-          fontWeight:    600,
-          letterSpacing: '0.12em',
-          textTransform: 'uppercase',
-          color:         mood === 'urgent' ? 'var(--accent)' : 'var(--text3)',
-          opacity:       0.6,
-        }}>
-          {mood === 'urgent' ? '! tap' : 'tap →'}
-        </p>
       )}
     </div>
   )
