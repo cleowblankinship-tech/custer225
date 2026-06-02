@@ -12,7 +12,7 @@ import { INITIAL_ITEMS, computeSpinUpStats } from './lib/spinupData'
 import IntroSplash from './components/IntroSplash'
 import HouseToday from './components/HouseToday'
 import DebtDashboard from './components/DebtDashboard'
-import HeroSection from './components/HeroSection'
+import HouseWidget from './components/HouseWidget'
 import { getActiveUpdates, getHouseMood, getCalmMessage, getCompositeMessage } from './lib/houseUpdates'
 import { fetchWeather } from './lib/weather'
 import { getRecurringRemindersForDate, getUserRules, saveUserRule } from './lib/recurringRules'
@@ -379,7 +379,8 @@ export default function App() {
         top:            0,
         zIndex:         200,
         background:     'var(--header-bg)',
-        borderBottom:   '1px solid var(--header-sub)',
+        borderBottom:   '1px solid var(--border-mid)',
+        boxShadow:      '0 1px 0 var(--border-mid)',
         padding:        '0 32px',
         height:         56,
         alignItems:     'center',
@@ -440,25 +441,8 @@ export default function App() {
         </div>
       </nav>
 
-      {/* ── Mobile / home header ─────────────────────────────────────────── */}
-      {view === 'home' ? (
-        <HeroSection
-          moodStyle={moodStyle}
-          message={bubbleMessage}
-          extraCount={activeUpdates.length > 1 ? activeUpdates.length - 1 : 0}
-          onOpen={() => setHousePanelOpen(true)}
-          weatherBlurb={bubbleWeatherSubtitle}
-          setupStats={setupStats}
-          totalRevenue={totalRevenue}
-          themeMode={themeMode}
-          onThemeToggle={() => {
-            const CYCLE = ['auto', 'day', 'evening', 'night']
-            const m = CYCLE[(CYCLE.indexOf(themeMode) + 1) % CYCLE.length]
-            setThemeMode(m)
-            localStorage.setItem('custer225_theme_v2', m)
-          }}
-        />
-      ) : (
+      {/* ── Non-home view header (mobile + desktop sub-nav) ─────────────── */}
+      {view !== 'home' && (
         <div className="view-header" style={{
           padding:      '48px 20px 18px',
           borderBottom: '0.5px solid var(--border)',
@@ -467,13 +451,13 @@ export default function App() {
           justifyContent: 'space-between',
         }}>
           <div>
-            <p style={{ fontSize: 11, color: 'var(--text2)', letterSpacing: '0.1em', textTransform: 'uppercase', marginBottom: 2 }}>
+            <p style={{ fontSize: 11, color: 'var(--text3)', letterSpacing: '0.1em', textTransform: 'uppercase', marginBottom: 2 }}>
               225 Custer
             </p>
-            <p style={{ fontSize: 22, fontWeight: 500 }}>{viewTitle[view]}</p>
+            <p style={{ fontSize: 22, fontWeight: 700 }}>{viewTitle[view]}</p>
           </div>
           {view === 'pl' && (
-            <button onClick={() => setView('home')} style={{ fontSize: 13, color: 'var(--text2)' }}>
+            <button onClick={() => setView('home')} style={{ fontSize: 13, color: 'var(--text3)' }}>
               ← Back
             </button>
           )}
@@ -503,9 +487,27 @@ export default function App() {
               <GuestCard expenses={expenses} />
             </div>
 
-            {/* ── Left column: metrics + quick actions ─────────────────── */}
+            {/* ── Left column: house widget + financials ────────────────── */}
             <div className="home-left">
-              <div style={{ padding: '28px 20px 12px' }}>
+              {/* ── House: large interactive dashboard object ─────────── */}
+              <div style={{ paddingTop: 28 }}>
+                <HouseWidget
+                  message={bubbleMessage}
+                  moodStyle={moodStyle}
+                  extraCount={activeUpdates.length > 1 ? activeUpdates.length - 1 : 0}
+                  onOpen={() => setHousePanelOpen(true)}
+                  themeMode={themeMode}
+                  onThemeToggle={() => {
+                    const CYCLE = ['auto', 'day', 'evening', 'night']
+                    const m = CYCLE[(CYCLE.indexOf(themeMode) + 1) % CYCLE.length]
+                    setThemeMode(m)
+                    localStorage.setItem('custer225_theme_v2', m)
+                  }}
+                />
+              </div>
+
+              {/* Spacer + section label */}
+              <div style={{ padding: '20px 20px 10px' }}>
                 <p style={{
                   fontSize: 11, fontWeight: 700, letterSpacing: '0.12em',
                   textTransform: 'uppercase', color: 'var(--text3)',
@@ -513,6 +515,7 @@ export default function App() {
                   Financials
                 </p>
               </div>
+
               <PLSummary
                 expenses={expenses}
                 onNavigate={navigateToList}

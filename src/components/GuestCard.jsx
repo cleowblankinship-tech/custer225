@@ -1,13 +1,18 @@
 import { useState, useEffect, useMemo } from 'react'
 
-// ── Palette — one color per booking slot (cycles if > 6 in a year) ────────────
+// ── Booking color palette ──────────────────────────────────────────────────────
+//
+// Inspired by the property's visual identity: terracotta, gold, coral sand,
+// warm charcoal, honey, and slate. Avoids generic calendar primaries.
+// All bars use white text. Tested on both light (day) and dark (night) surfaces.
+//
 const BOOKING_COLORS = [
-  { bar: '#C05538', text: '#fff' },  // terracotta
-  { bar: '#185FA5', text: '#fff' },  // blue
-  { bar: '#3B6D11', text: '#fff' },  // green
-  { bar: '#A0720A', text: '#fff' },  // gold
-  { bar: '#7B3FA0', text: '#fff' },  // purple
-  { bar: '#1A7A78', text: '#fff' },  // teal
+  { bar: '#C4614A', text: '#fff' },  // terracotta
+  { bar: '#C8920A', text: '#fff' },  // amber gold
+  { bar: '#C97860', text: '#fff' },  // coral sand
+  { bar: '#9A8070', text: '#fff' },  // warm charcoal
+  { bar: '#D4A450', text: '#fff' },  // honey / sand
+  { bar: '#5A7888', text: '#fff' },  // slate blue
 ]
 
 const MONTH_NAMES = ['January','February','March','April','May','June',
@@ -30,7 +35,7 @@ function fmt(iso) {
   return `${MONTH_NAMES[d.getMonth()].slice(0,3)} ${d.getDate()}`
 }
 
-// Short weekday name for a date string: "Fri Jun 14"
+// "Fri Jun 14"
 function fmtFull(iso) {
   const d = ymd(toMTDateStr(iso))
   const days = ['Sun','Mon','Tue','Wed','Thu','Fri','Sat']
@@ -56,7 +61,7 @@ export default function GuestCard({ expenses = [] }) {
   const [data,    setData]    = useState(null)
   const [loading, setLoading] = useState(true)
 
-  const today = new Date()
+  const today   = new Date()
   const todayStr = today.toLocaleDateString('en-CA')
   const todayMT  = today.toLocaleDateString('en-CA', { timeZone: 'America/Denver' })
 
@@ -116,11 +121,10 @@ export default function GuestCard({ expenses = [] }) {
     return map
   }, [data, colorMap])
 
-  // ── Occupancy + operational stats for the viewed month ────────────────────
+  // ── Occupancy + operational stats ─────────────────────────────────────────
   const monthStats = useMemo(() => {
     if (!data?.all) return null
 
-    // Count booked nights in the viewed month from dayMap
     const nightsBooked = Object.keys(dayMap).filter(dateStr => {
       const [y, m] = dateStr.split('-').map(Number)
       return y === viewYear && (m - 1) === viewMonth
@@ -129,16 +133,12 @@ export default function GuestCard({ expenses = [] }) {
     const daysInViewMonth = new Date(viewYear, viewMonth + 1, 0).getDate()
     const occupancyPct    = Math.round((nightsBooked / daysInViewMonth) * 100)
 
-    // Next arrival from today (Mountain Time)
-    const sorted = [...data.all].sort((a, b) =>
-      toMTDateStr(a.checkIn).localeCompare(toMTDateStr(b.checkIn))
-    )
+    const sorted       = [...data.all].sort((a, b) => toMTDateStr(a.checkIn).localeCompare(toMTDateStr(b.checkIn)))
     const nextArrival  = sorted.find(b => toMTDateStr(b.checkIn) >= todayMT) ?? null
     const nextCheckout = [...data.all]
       .sort((a, b) => toMTDateStr(a.checkOut).localeCompare(toMTDateStr(b.checkOut)))
       .find(b => toMTDateStr(b.checkOut) > todayMT) ?? null
 
-    // Revenue booked this viewed month
     const monthRevenue = visibleBookings.reduce((sum, b) => {
       const r = matchRevenue(b, incomeEntries)
       return sum + (r ?? 0)
@@ -207,11 +207,10 @@ export default function GuestCard({ expenses = [] }) {
                 <div key={day} style={{ position: 'relative', height: 44 }}>
                   {info && (
                     <div style={{
-                      position:  'absolute',
-                      top: '50%', transform: 'translateY(-50%)',
-                      height:    32,
-                      left:      info.isFirst ? '8%' : 0,
-                      right:     info.isLast  ? '8%' : 0,
+                      position: 'absolute', top: '50%', transform: 'translateY(-50%)',
+                      height: 32,
+                      left:   info.isFirst ? '8%' : 0,
+                      right:  info.isLast  ? '8%' : 0,
                       background: info.color.bar,
                       borderRadius: info.isFirst && info.isLast ? 16
                                   : info.isFirst ? '16px 0 0 16px'
@@ -237,52 +236,94 @@ export default function GuestCard({ expenses = [] }) {
           </div>
         )}
 
-        {/* ── Occupancy stats panel — the operational heartbeat ─────────── */}
+        {/* ── Occupancy stats — the operational heartbeat ───────────────── */}
+        {/*
+          Design intent: one dominant number (occupancy %) that is so large
+          it reads before you consciously look. Supporting stats are present
+          but quiet — they're there when you need them, invisible when you don't.
+
+          Color coding: green ≥70% (performing), yellow ≥40% (moderate), dim <40%.
+        */}
         {!loading && monthStats && (
-          <div style={{ background: 'var(--surface-strong)', borderTop: '1px solid rgba(255,255,255,0.06)' }}>
+          <div style={{ background: 'var(--surface-strong)', borderTop: '1px solid rgba(255,255,255,0.05)' }}>
 
-            {/* Hero row: occupancy % + nights + revenue */}
-            <div style={{ padding: '24px 24px 20px', display: 'flex', alignItems: 'flex-end', gap: 0 }}>
+            {/* ── Hero row ─────────────────────────────────────────────── */}
+            <div style={{ padding: '28px 24px 22px', display: 'flex', alignItems: 'flex-end' }}>
 
-              {/* Occupancy — the hero number */}
-              <div style={{ flex: '0 0 auto', marginRight: 28 }}>
+              {/* Occupancy % — the number that matters most */}
+              <div style={{ flex: '0 0 auto', marginRight: 32 }}>
                 <p style={{
-                  fontSize: 64, fontWeight: 800, lineHeight: 1,
-                  letterSpacing: '-0.05em',
+                  fontSize:      80,
+                  fontWeight:    800,
+                  lineHeight:    1,
+                  letterSpacing: '-0.06em',
                   color: monthStats.occupancyPct >= 70 ? '#7DC140'
                        : monthStats.occupancyPct >= 40 ? '#F5D800'
-                       : 'rgba(255,255,255,0.6)',
+                       :                                 'rgba(255,255,255,0.45)',
                 }}>
                   {monthStats.occupancyPct}%
                 </p>
                 <p style={{
-                  fontSize: 10, fontWeight: 600, letterSpacing: '0.12em',
-                  textTransform: 'uppercase', color: 'rgba(255,255,255,0.35)',
-                  marginTop: 4,
+                  fontSize:      9,
+                  fontWeight:    700,
+                  letterSpacing: '0.12em',
+                  textTransform: 'uppercase',
+                  color:         'rgba(255,255,255,0.28)',
+                  marginTop:     6,
                 }}>
-                  Occupancy
+                  {MONTH_NAMES[viewMonth].slice(0,3).toUpperCase()} {viewYear}
                 </p>
               </div>
 
-              {/* Nights + Revenue — stacked secondary stats */}
-              <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+              {/* Secondary: nights + revenue */}
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 16, paddingBottom: 4 }}>
+
+                {/* Nights booked */}
                 <div>
-                  <p style={{ fontSize: 22, fontWeight: 700, color: 'rgba(255,255,255,0.85)', lineHeight: 1, letterSpacing: '-0.02em' }}>
+                  <p style={{
+                    fontSize:      28,
+                    fontWeight:    800,
+                    lineHeight:    1,
+                    letterSpacing: '-0.03em',
+                    color:         'rgba(255,255,255,0.80)',
+                  }}>
                     {monthStats.nightsBooked}
-                    <span style={{ fontSize: 14, fontWeight: 400, color: 'rgba(255,255,255,0.35)', marginLeft: 4 }}>
-                      / {monthStats.daysInViewMonth} nights
+                    <span style={{ fontSize: 13, fontWeight: 400, color: 'rgba(255,255,255,0.25)', marginLeft: 2 }}>
+                      /{monthStats.daysInViewMonth}
                     </span>
                   </p>
-                  <p style={{ fontSize: 10, fontWeight: 600, letterSpacing: '0.1em', textTransform: 'uppercase', color: 'rgba(255,255,255,0.35)', marginTop: 3 }}>
-                    Booked
+                  <p style={{
+                    fontSize:      8,
+                    fontWeight:    700,
+                    letterSpacing: '0.14em',
+                    textTransform: 'uppercase',
+                    color:         'rgba(255,255,255,0.25)',
+                    marginTop:     4,
+                  }}>
+                    Nights
                   </p>
                 </div>
+
+                {/* Revenue — only if data present */}
                 {monthStats.monthRevenue > 0 && (
                   <div>
-                    <p style={{ fontSize: 22, fontWeight: 700, color: '#7DC140', lineHeight: 1, letterSpacing: '-0.02em' }}>
+                    <p style={{
+                      fontSize:      28,
+                      fontWeight:    800,
+                      lineHeight:    1,
+                      letterSpacing: '-0.03em',
+                      color:         '#7DC140',
+                    }}>
                       ${monthStats.monthRevenue.toLocaleString('en-US', { maximumFractionDigits: 0 })}
                     </p>
-                    <p style={{ fontSize: 10, fontWeight: 600, letterSpacing: '0.1em', textTransform: 'uppercase', color: 'rgba(255,255,255,0.35)', marginTop: 3 }}>
+                    <p style={{
+                      fontSize:      8,
+                      fontWeight:    700,
+                      letterSpacing: '0.14em',
+                      textTransform: 'uppercase',
+                      color:         'rgba(255,255,255,0.25)',
+                      marginTop:     4,
+                    }}>
                       Revenue
                     </p>
                   </div>
@@ -290,43 +331,54 @@ export default function GuestCard({ expenses = [] }) {
               </div>
             </div>
 
-            {/* Divider */}
-            <div style={{ height: 1, background: 'rgba(255,255,255,0.07)', margin: '0 24px' }} />
-
-            {/* Next arrival + checkout */}
-            <div style={{ display: 'flex', padding: '18px 24px 22px', gap: 24 }}>
+            {/* ── Arrivals / Departures ─────────────────────────────────── */}
+            {/*
+              Stripped to essentials: direction label (In / Out), date, name.
+              No headers — the labels are the headers.
+            */}
+            <div style={{
+              borderTop: '1px solid rgba(255,255,255,0.06)',
+              padding:   '16px 24px 22px',
+              display:   'flex',
+              flexDirection: 'column',
+              gap:       10,
+            }}>
               {monthStats.nextArrival ? (
-                <div style={{ flex: 1 }}>
-                  <p style={{ fontSize: 10, fontWeight: 600, letterSpacing: '0.12em', textTransform: 'uppercase', color: 'rgba(255,255,255,0.30)', marginBottom: 6 }}>
-                    Next Arrival
-                  </p>
-                  <p style={{ fontSize: 15, fontWeight: 700, color: 'rgba(255,255,255,0.90)', lineHeight: 1.2 }}>
+                <div style={{ display: 'flex', alignItems: 'baseline', gap: 10 }}>
+                  <span style={{
+                    fontSize: 9, fontWeight: 800, letterSpacing: '0.14em',
+                    textTransform: 'uppercase', color: 'rgba(255,255,255,0.25)',
+                    width: 22, flexShrink: 0,
+                  }}>
+                    In
+                  </span>
+                  <span style={{ fontSize: 15, fontWeight: 700, color: 'rgba(255,255,255,0.85)' }}>
                     {fmtFull(monthStats.nextArrival.checkIn)}
-                  </p>
-                  <p style={{ fontSize: 12, color: 'rgba(255,255,255,0.45)', marginTop: 3 }}>
+                  </span>
+                  <span style={{ fontSize: 12, color: 'rgba(255,255,255,0.38)', marginLeft: 2 }}>
                     {monthStats.nextArrival.name}
-                  </p>
+                  </span>
                 </div>
               ) : (
-                <div style={{ flex: 1 }}>
-                  <p style={{ fontSize: 10, fontWeight: 600, letterSpacing: '0.12em', textTransform: 'uppercase', color: 'rgba(255,255,255,0.30)', marginBottom: 6 }}>
-                    Next Arrival
-                  </p>
-                  <p style={{ fontSize: 13, color: 'rgba(255,255,255,0.35)' }}>None upcoming</p>
-                </div>
+                <p style={{ fontSize: 11, color: 'rgba(255,255,255,0.22)' }}>No upcoming arrivals</p>
               )}
 
-              {monthStats.nextCheckout && monthStats.nextCheckout.checkIn !== monthStats.nextArrival?.checkIn && (
-                <div style={{ flex: 1 }}>
-                  <p style={{ fontSize: 10, fontWeight: 600, letterSpacing: '0.12em', textTransform: 'uppercase', color: 'rgba(255,255,255,0.30)', marginBottom: 6 }}>
-                    Next Checkout
-                  </p>
-                  <p style={{ fontSize: 15, fontWeight: 700, color: 'rgba(255,255,255,0.90)', lineHeight: 1.2 }}>
+              {monthStats.nextCheckout &&
+               monthStats.nextCheckout.checkIn !== monthStats.nextArrival?.checkIn && (
+                <div style={{ display: 'flex', alignItems: 'baseline', gap: 10 }}>
+                  <span style={{
+                    fontSize: 9, fontWeight: 800, letterSpacing: '0.14em',
+                    textTransform: 'uppercase', color: 'rgba(255,255,255,0.25)',
+                    width: 22, flexShrink: 0,
+                  }}>
+                    Out
+                  </span>
+                  <span style={{ fontSize: 15, fontWeight: 700, color: 'rgba(255,255,255,0.85)' }}>
                     {fmtFull(monthStats.nextCheckout.checkOut)}
-                  </p>
-                  <p style={{ fontSize: 12, color: 'rgba(255,255,255,0.45)', marginTop: 3 }}>
+                  </span>
+                  <span style={{ fontSize: 12, color: 'rgba(255,255,255,0.38)', marginLeft: 2 }}>
                     {monthStats.nextCheckout.name}
-                  </p>
+                  </span>
                 </div>
               )}
             </div>
@@ -345,16 +397,24 @@ export default function GuestCard({ expenses = [] }) {
                   padding: '16px 20px',
                   borderBottom: i < visibleBookings.length - 1 ? '1px solid var(--border)' : 'none',
                 }}>
-                  <div style={{ width: 10, height: 32, borderRadius: 3, background: color.bar, flexShrink: 0 }} />
+                  {/* Vertical bar swatch — stronger visual rhythm than dots */}
+                  <div style={{
+                    width: 3, height: 36, borderRadius: 2,
+                    background: color.bar, flexShrink: 0,
+                  }} />
+
                   <div style={{ flex: 1, minWidth: 0 }}>
-                    <p style={{ fontSize: 15, fontWeight: 700, color: 'var(--text)',
-                      whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                    <p style={{
+                      fontSize: 15, fontWeight: 700, color: 'var(--text)',
+                      whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis',
+                    }}>
                       {b.name}
                     </p>
                     <p style={{ fontSize: 12, color: 'var(--text3)', marginTop: 2 }}>
                       {fmt(b.checkIn)} – {fmt(b.checkOut)} · {b.nights} night{b.nights !== 1 ? 's' : ''}
                     </p>
                   </div>
+
                   <div style={{ textAlign: 'right', flexShrink: 0 }}>
                     {revenue !== null ? (
                       <>
@@ -375,7 +435,7 @@ export default function GuestCard({ expenses = [] }) {
           </div>
         )}
 
-        {!loading && visibleBookings.length === 0 && (
+        {!loading && visibleBookings.length === 0 && !loading && (
           <div style={{ padding: '28px 20px', textAlign: 'center', borderTop: '1px solid var(--border)' }}>
             <p style={{ fontSize: 14, color: 'var(--text3)' }}>No bookings this month</p>
           </div>
