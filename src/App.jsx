@@ -436,7 +436,7 @@ export default function App() {
             </div>
 
             {/* Guest / booking status */}
-            <GuestCard />
+            <GuestCard expenses={expenses} />
 
             {/* P&L link */}
             <div style={{ padding: '0 20px 24px' }}>

@@ -114,7 +114,8 @@ export default async function handler(req, res) {
     res.json({
       current:    serialize(current),
       next:       serialize(next),
-      upcoming:   upcoming.slice(0, 3).map(serialize),
+      all:        events.map(serialize),       // full list for calendar rendering
+      upcoming:   upcoming.map(serialize),
       monthCount,
       fetchedAt:  new Date().toISOString(),
     })
