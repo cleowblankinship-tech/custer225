@@ -113,12 +113,21 @@ input, select, textarea {
 input:focus, select:focus, textarea:focus { border-color: var(--accent); }
 input::placeholder, textarea::placeholder { color: var(--text3); }
 
-/* ── Speech bubble animation ─────────────────────────────────────────────── */
+/* ── Animations ──────────────────────────────────────────────────────────── */
 
 @keyframes heroBubbleIn {
   from { opacity: 0; transform: translateY(-6px) scale(0.97); }
   to   { opacity: 1; transform: translateY(0)    scale(1);    }
 }
+
+/* Typewriter cursor — used by HouseAnchor */
+@keyframes cursorBlink {
+  0%, 100% { opacity: 1; }
+  50%       { opacity: 0; }
+}
+
+/* Mobile-only elements — visible on phones, hidden on desktop */
+.mobile-only { display: block; }
 
 /* ── Desktop nav: hidden on mobile, shown via JS className on ≥768px ─────── */
 .desktop-nav { display: none; }
@@ -162,4 +171,7 @@ input::placeholder, textarea::placeholder { color: var(--text3); }
 
   /* No bottom nav on desktop — remove the nav-height reservation */
   .content-main { padding-bottom: 40px !important; }
+
+  /* Mobile-only elements are hidden on desktop */
+  .mobile-only { display: none !important; }
 }

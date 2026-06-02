@@ -10,9 +10,10 @@ import SetupCard from './components/SetupCard'
 import { getExpenses, addExpense, deleteExpense, getTasks, addTask, deleteTask, toggleTask, getSetupItems } from './lib/supabase'
 import { INITIAL_ITEMS, computeSpinUpStats } from './lib/spinupData'
 import IntroSplash from './components/IntroSplash'
-import HouseToday from './components/HouseToday'
+// HouseToday panel removed — house now communicates inline (see HouseAnchor)
+// import HouseToday from './components/HouseToday'
 import DebtDashboard from './components/DebtDashboard'
-import HouseWidget from './components/HouseWidget'
+import HouseAnchor from './components/HouseAnchor'
 import { getActiveUpdates, getHouseMood, getCalmMessage, getCompositeMessage } from './lib/houseUpdates'
 import { fetchWeather } from './lib/weather'
 import { getRecurringRemindersForDate, getUserRules, saveUserRule } from './lib/recurringRules'
@@ -98,7 +99,6 @@ export default function App() {
   // themeMode: 'auto' = follows time + weather; 'day' / 'night' = forced
   const [themeMode, setThemeMode] = useState(() => localStorage.getItem('custer225_theme_v2') || 'night')
   const [showIntro, setShowIntro] = useState(true) // true on every cold load
-  const [housePanelOpen, setHousePanelOpen] = useState(false)
   const [userRules, setUserRules] = useState(() => getUserRules())
   const [setupStats, setSetupStats] = useState(null) // launch readiness snapshot
 
@@ -473,41 +473,30 @@ export default function App() {
         {!loading && view === 'home' && (
           <div className="home-grid">
 
-            {/* ── Right column: calendar — first in markup = top on mobile ─ */}
+            {/* ── Right column — first in markup = top on mobile ───────── */}
+            {/*   Order: house illustration → calendar → occupancy panel   */}
             <div className="home-right">
-              {/* Section header: bold, editorial, no subtitle clutter */}
-              <div style={{ padding: '28px 20px 12px' }}>
-                <p style={{
-                  fontSize: 11, fontWeight: 700, letterSpacing: '0.12em',
-                  textTransform: 'uppercase', color: 'var(--text3)',
-                }}>
-                  Bookings &amp; Occupancy
-                </p>
-              </div>
+
+              {/* House — free-standing illustration, voice of the property */}
+              <HouseAnchor
+                message={bubbleMessage}
+                mood={mood}
+                themeMode={themeMode}
+                onThemeToggle={() => {
+                  const CYCLE = ['auto', 'day', 'evening', 'night']
+                  const m = CYCLE[(CYCLE.indexOf(themeMode) + 1) % CYCLE.length]
+                  setThemeMode(m)
+                  localStorage.setItem('custer225_theme_v2', m)
+                }}
+              />
+
+              {/* Calendar + occupancy */}
               <GuestCard expenses={expenses} />
             </div>
 
-            {/* ── Left column: house widget + financials ────────────────── */}
+            {/* ── Left column: financials ───────────────────────────────── */}
             <div className="home-left">
-              {/* ── House: large interactive dashboard object ─────────── */}
-              <div style={{ paddingTop: 28 }}>
-                <HouseWidget
-                  message={bubbleMessage}
-                  moodStyle={moodStyle}
-                  extraCount={activeUpdates.length > 1 ? activeUpdates.length - 1 : 0}
-                  onOpen={() => setHousePanelOpen(true)}
-                  themeMode={themeMode}
-                  onThemeToggle={() => {
-                    const CYCLE = ['auto', 'day', 'evening', 'night']
-                    const m = CYCLE[(CYCLE.indexOf(themeMode) + 1) % CYCLE.length]
-                    setThemeMode(m)
-                    localStorage.setItem('custer225_theme_v2', m)
-                  }}
-                />
-              </div>
-
-              {/* Spacer + section label */}
-              <div style={{ padding: '20px 20px 10px' }}>
+              <div style={{ padding: '28px 20px 10px' }}>
                 <p style={{
                   fontSize: 11, fontWeight: 700, letterSpacing: '0.12em',
                   textTransform: 'uppercase', color: 'var(--text3)',
@@ -627,14 +616,6 @@ export default function App() {
           <PLReport expenses={expenses} />
         )}
       </div>
-
-      {/* House Today panel — fixed overlay, slides up from bottom */}
-      {housePanelOpen && (
-        <HouseToday
-          updates={activeUpdates}
-          onClose={() => setHousePanelOpen(false)}
-        />
-      )}
 
       {/* ── Mobile bottom nav — hidden on desktop via CSS ────────────────── */}
       <div className="mobile-nav" style={{
