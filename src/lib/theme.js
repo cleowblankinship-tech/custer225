@@ -1,22 +1,17 @@
 // ── theme.js — Dynamic color system ───────────────────────────────────────────
 //
-// Time-of-day × weather condition → CSS variable map.
+// Time-of-day → CSS variable map.
 // Applied to document.documentElement so every var(--token) auto-updates.
 //
 // Time bands:
-//   morning  5am – 10am   warm off-white, terracotta accent
-//   day     10am –  5pm   neutral off-white (default / design-system baseline)
-//   evening  5pm –  9pm   golden amber, slightly deeper accent
-//   night    9pm –  5am   deep charcoal, cream text
-//
-// Weather modifiers are partial overrides merged over the base palette.
-// Only tokens that actually change are listed — the rest inherit from base.
+//   morning  5am – 10am   warm amber header, pale yellow background
+//   day     10am –  5pm   bright yellow header, warm cream background
+//   evening  5pm –  9pm   coral/pink header, deep purple background
+//   night    9pm –  5am   deep navy, yellow accent
 //
 // Usage:
 //   import { getTimeOfDay, getTheme, applyTheme } from './theme'
-//   applyTheme(getTheme({ timeOfDay: getTimeOfDay(), weatherCondition }))
-
-// ── Time bands ────────────────────────────────────────────────────────────────
+//   applyTheme(getTheme({ timeOfDay: getTimeOfDay() }))
 
 export function getTimeOfDay() {
   const h = new Date().getHours()
@@ -30,135 +25,102 @@ export function getTimeOfDay() {
 
 const BASE = {
   morning: {
-    '--bg':             '#F6EFE4',
-    '--bg2':            '#EDE3D2',
-    '--text':           '#1A1208',
-    '--text2':          '#504030',
-    '--text3':          '#857060',
-    '--accent':         '#C84E18',
-    '--accent-light':   '#F5E0D4',
-    '--border':         'rgba(0,0,0,0.09)',
-    '--border-mid':     'rgba(0,0,0,0.14)',
-    '--surface-strong': '#2B1810',
-    '--bubble-bg':      '#FDFAF5',          // near-white with warm tint
-    '--bubble-border':  'rgba(0,0,0,0.10)',
-    '--bubble-sub':     '#6E5840',          // readable warm brown on light bubble
+    '--bg':             '#FEF6E0',
+    '--bg2':            '#F5EBCC',
+    '--text':           '#0F0A00',
+    '--text2':          '#5A4620',
+    '--text3':          '#9A8460',
+    '--accent':         '#D04010',
+    '--accent-light':   '#FDECD4',
+    '--border':         'rgba(15,10,0,0.08)',
+    '--border-mid':     'rgba(15,10,0,0.14)',
+    '--surface-strong': '#1A0C00',
+    '--bubble-bg':      '#FFFDF0',
+    '--bubble-border':  'rgba(15,10,0,0.10)',
+    '--bubble-sub':     '#7A6040',
+    '--header-bg':      '#F5A020',
+    '--header-text':    '#0F0A00',
+    '--header-sub':     'rgba(15,10,0,0.52)',
   },
   day: {
-    '--bg':             '#FAFAF8',
-    '--bg2':            '#EEECEA',
-    '--text':           '#1A1A1A',
-    '--text2':          '#6E6E68',
-    '--text3':          '#ABABAB',
-    '--accent':         '#C05538',
-    '--accent-light':   '#F5E8E4',
-    '--border':         'rgba(0,0,0,0.09)',
-    '--border-mid':     'rgba(0,0,0,0.13)',
-    '--surface-strong': '#2B1F1A',
+    '--bg':             '#F5F3EE',
+    '--bg2':            '#ECEAE2',
+    '--text':           '#0A0A08',
+    '--text2':          '#4A4840',
+    '--text3':          '#8A8878',
+    '--accent':         '#D93020',
+    '--accent-light':   '#FDE8E4',
+    '--border':         'rgba(10,10,8,0.08)',
+    '--border-mid':     'rgba(10,10,8,0.14)',
+    '--surface-strong': '#1A1A12',
     '--bubble-bg':      '#FFFFFF',
-    '--bubble-border':  'rgba(0,0,0,0.09)',
-    '--bubble-sub':     '#888880',
+    '--bubble-border':  'rgba(10,10,8,0.09)',
+    '--bubble-sub':     '#6A6860',
+    '--header-bg':      '#F5D800',
+    '--header-text':    '#0A0A08',
+    '--header-sub':     'rgba(10,10,8,0.48)',
   },
   evening: {
-    '--bg':             '#EFE0C6',
-    '--bg2':            '#E4D2B0',
-    '--text':           '#1A1208',
-    '--text2':          '#6A5030',
-    '--text3':          '#A88060',
-    '--accent':         '#B84C18',
-    '--accent-light':   '#F0D8C8',
-    '--border':         'rgba(0,0,0,0.11)',
-    '--border-mid':     'rgba(0,0,0,0.16)',
-    '--surface-strong': '#2A180E',
-    '--bubble-bg':      '#FBF5EC',          // warm ivory
-    '--bubble-border':  'rgba(0,0,0,0.11)',
-    '--bubble-sub':     '#78603A',
-  },
-  night: {
-    '--bg':             '#261A16',
-    '--bg2':            '#3D2C25',
-    '--text':           '#F7F0E5',
-    '--text2':          '#C9A996',
-    '--text3':          '#9A7060',
-    '--accent':         '#E8622C',
-    '--accent-light':   '#5C2E20',
-    '--border':         'rgba(247,240,229,0.12)',
-    '--border-mid':     'rgba(247,240,229,0.20)',
-    '--surface-strong': '#150D09',
-    '--bubble-bg':      '#E8E0D5',          // warm parchment — contrasts dark bg, not stark white
-    '--bubble-border':  'rgba(160,138,118,0.32)',
-    '--bubble-sub':     '#6A5848',          // dark warm brown — readable on parchment
-    // Semantic data colors — lighter for readability on dark bg
+    '--bg':             '#18082A',
+    '--bg2':            '#261040',
+    '--text':           '#F0E8FF',
+    '--text2':          '#C0A8D8',
+    '--text3':          '#907898',
+    '--accent':         '#F040A0',
+    '--accent-light':   '#4A0830',
+    '--border':         'rgba(240,232,255,0.10)',
+    '--border-mid':     'rgba(240,232,255,0.18)',
+    '--surface-strong': '#0A0218',
+    '--bubble-bg':      '#EEE0FF',
+    '--bubble-border':  'rgba(180,140,200,0.30)',
+    '--bubble-sub':     '#705880',
+    '--header-bg':      '#F040A0',
+    '--header-text':    '#FFF0F8',
+    '--header-sub':     'rgba(255,240,248,0.55)',
     '--green':          '#7DC140',
     '--green-bg':       '#1C3010',
     '--blue':           '#68AAE0',
     '--blue-bg':        '#182840',
     '--gold':           '#D4A02A',
     '--gold-bg':        '#2E2010',
+    '--red':            '#E05050',
+    '--red-bg':         '#3A1010',
   },
-}
-
-// ── Weather overrides ─────────────────────────────────────────────────────────
-//
-// Partial objects — only tokens that change are listed.
-// Merged over the base palette for the current time-of-day.
-
-const WEATHER = {
-  clear: {},
-
-  cloudy: {
-    morning: { '--bg': '#F2EDE4', '--bg2': '#E8E0D0' },
-    day:     { '--bg': '#F4F4F0', '--bg2': '#EAEAE6' },
-    evening: { '--bg': '#EAD8C0', '--bg2': '#DFD0AC' },
-    night:   { '--bg': '#2D2220', '--bg2': '#3D2E28' },
-  },
-
-  rain: {
-    morning: { '--bg': '#EDE8E2', '--bg2': '#E2DBD2' },
-    day:     { '--bg': '#F3F2F0', '--bg2': '#EAEAE8' },
-    evening: { '--bg': '#EAD8C2', '--bg2': '#DFCFAC' },
-    night:   { '--bg': '#2A2020', '--bg2': '#382A24' },
-  },
-
-  snow: {
-    morning: { '--bg': '#F2F2F4', '--bg2': '#E8E8EE', '--text2': '#686878', '--text3': '#9898A8' },
-    day:     { '--bg': '#F6F6FA', '--bg2': '#EEEEF4', '--text2': '#78787E', '--text3': '#A0A0AA' },
-    evening: { '--bg': '#EAE0D5', '--bg2': '#DED6CA', '--text2': '#7A6858' },
-    night:   { '--bg': '#272330', '--bg2': '#332E3C' },
-  },
-
-  cold: {
-    morning: { '--bg': '#F2EDE2', '--bg2': '#E8E0D0' },
-    day:     { '--bg': '#F6F5F2', '--bg2': '#EEECE8' },
-    evening: { '--bg': '#EAD8BC', '--bg2': '#DFCEA8' },
-    night:   { '--bg': '#282020', '--bg2': '#382A28' },
-  },
-
-  storm: {
-    morning: { '--bg': '#EAE2D8', '--bg2': '#DFDAD0' },
-    day:     { '--bg': '#F1EEE8', '--bg2': '#E8E4DC' },
-    evening: { '--bg': '#E0D0B4', '--bg2': '#D8C8A4', '--accent': '#A83C10' },
-    night:   { '--bg': '#221A18', '--bg2': '#302420', '--accent': '#CC4818' },
+  night: {
+    '--bg':             '#0D1117',
+    '--bg2':            '#161C2A',
+    '--text':           '#F0ECD8',
+    '--text2':          '#A09880',
+    '--text3':          '#605848',
+    '--accent':         '#F5D800',
+    '--accent-light':   '#353000',
+    '--border':         'rgba(240,236,216,0.10)',
+    '--border-mid':     'rgba(240,236,216,0.18)',
+    '--surface-strong': '#06080E',
+    '--bubble-bg':      '#F0ECD8',
+    '--bubble-border':  'rgba(180,160,120,0.28)',
+    '--bubble-sub':     '#6A6050',
+    '--header-bg':      '#0D1117',
+    '--header-text':    '#F5D800',
+    '--header-sub':     'rgba(245,216,0,0.52)',
+    '--green':          '#7DC140',
+    '--green-bg':       '#1A3010',
+    '--blue':           '#68AAE0',
+    '--blue-bg':        '#162840',
+    '--gold':           '#F5D800',
+    '--gold-bg':        '#2A2200',
+    '--red':            '#E05050',
+    '--red-bg':         '#3A1010',
   },
 }
 
 // ── Public API ────────────────────────────────────────────────────────────────
 
-/**
- * Returns a complete CSS-variable map for the given time+weather combination.
- * @param {{ timeOfDay?: string, weatherCondition?: string }} options
- */
-export function getTheme({ timeOfDay, weatherCondition = 'clear' } = {}) {
-  const tod      = timeOfDay ?? getTimeOfDay()
-  const base     = { ...BASE[tod] ?? BASE.day }
-  const override = WEATHER[weatherCondition]?.[tod] ?? {}
-  return { ...base, ...override }
+export function getTheme({ timeOfDay } = {}) {
+  const tod = timeOfDay ?? getTimeOfDay()
+  return { ...BASE[tod] ?? BASE.day }
 }
 
-/**
- * Stamps the theme onto document.documentElement as inline custom properties.
- * @property declarations in index.css enable CSS transitions between calls.
- */
 export function applyTheme(theme) {
   const root = document.documentElement
   for (const [key, value] of Object.entries(theme)) {

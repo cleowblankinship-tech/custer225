@@ -1,40 +1,42 @@
 *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
-/* ── @property — typed custom properties enable CSS transitions ────────────────
-   Supported: Chrome 85+, Safari 15.4+, Firefox 128+.
-   Falls back gracefully (no transition) on older browsers.                    */
+/* ── @property — typed custom properties enable CSS transitions ────────────── */
 
-@property --bg             { syntax: '<color>'; inherits: true; initial-value: #FAFAF8; }
-@property --bg2            { syntax: '<color>'; inherits: true; initial-value: #EEECEA; }
-@property --text           { syntax: '<color>'; inherits: true; initial-value: #1A1A1A; }
-@property --text2          { syntax: '<color>'; inherits: true; initial-value: #6E6E68; }
-@property --text3          { syntax: '<color>'; inherits: true; initial-value: #ABABAB; }
-@property --accent         { syntax: '<color>'; inherits: true; initial-value: #C05538; }
-@property --accent-light   { syntax: '<color>'; inherits: true; initial-value: #F5E8E4; }
-@property --border         { syntax: '<color>'; inherits: true; initial-value: rgba(0,0,0,0.08); }
-@property --border-mid     { syntax: '<color>'; inherits: true; initial-value: rgba(0,0,0,0.13); }
-@property --surface-strong { syntax: '<color>'; inherits: true; initial-value: #2B1F1A; }
+@property --bg             { syntax: '<color>'; inherits: true; initial-value: #F5F3EE; }
+@property --bg2            { syntax: '<color>'; inherits: true; initial-value: #ECEAE2; }
+@property --text           { syntax: '<color>'; inherits: true; initial-value: #0A0A08; }
+@property --text2          { syntax: '<color>'; inherits: true; initial-value: #4A4840; }
+@property --text3          { syntax: '<color>'; inherits: true; initial-value: #8A8878; }
+@property --accent         { syntax: '<color>'; inherits: true; initial-value: #D93020; }
+@property --accent-light   { syntax: '<color>'; inherits: true; initial-value: #FDE8E4; }
+@property --border         { syntax: '<color>'; inherits: true; initial-value: rgba(10,10,8,0.08); }
+@property --border-mid     { syntax: '<color>'; inherits: true; initial-value: rgba(10,10,8,0.14); }
+@property --surface-strong { syntax: '<color>'; inherits: true; initial-value: #1A1A12; }
 @property --bubble-bg      { syntax: '<color>'; inherits: true; initial-value: #FFFFFF; }
-@property --bubble-border  { syntax: '<color>'; inherits: true; initial-value: rgba(0,0,0,0.09); }
-@property --bubble-sub     { syntax: '<color>'; inherits: true; initial-value: #888880; }
+@property --bubble-border  { syntax: '<color>'; inherits: true; initial-value: rgba(10,10,8,0.09); }
+@property --bubble-sub     { syntax: '<color>'; inherits: true; initial-value: #6A6860; }
+@property --header-bg      { syntax: '<color>'; inherits: true; initial-value: #F5D800; }
+@property --header-text    { syntax: '<color>'; inherits: true; initial-value: #0A0A08; }
+@property --header-sub     { syntax: '<color>'; inherits: true; initial-value: rgba(10,10,8,0.48); }
 
 :root {
-  /* Color tokens — overwritten at runtime by theme.js */
-  --bg: #FAFAF8;
-  --bg2: #EEECEA;
-  --text: #1A1A1A;
-  --text2: #6E6E68;
-  --text3: #ABABAB;
-  --accent: #C05538;
-  --accent-light: #F5E8E4;
-  --border: rgba(0,0,0,0.08);
-  --border-mid: rgba(0,0,0,0.13);
-  --surface-strong: #2B1F1A;
+  --bg:             #F5F3EE;
+  --bg2:            #ECEAE2;
+  --text:           #0A0A08;
+  --text2:          #4A4840;
+  --text3:          #8A8878;
+  --accent:         #D93020;
+  --accent-light:   #FDE8E4;
+  --border:         rgba(10,10,8,0.08);
+  --border-mid:     rgba(10,10,8,0.14);
+  --surface-strong: #1A1A12;
   --bubble-bg:      #FFFFFF;
-  --bubble-border:  rgba(0,0,0,0.09);
-  --bubble-sub:     #888880;
+  --bubble-border:  rgba(10,10,8,0.09);
+  --bubble-sub:     #6A6860;
+  --header-bg:      #F5D800;
+  --header-text:    #0A0A08;
+  --header-sub:     rgba(10,10,8,0.48);
 
-  /* Semantic transitions — smooth cross-fades when theme switches */
   transition:
     --bg             350ms ease,
     --bg2            350ms ease,
@@ -48,22 +50,24 @@
     --surface-strong 350ms ease,
     --bubble-bg      350ms ease,
     --bubble-border  350ms ease,
-    --bubble-sub     250ms ease;
+    --bubble-sub     250ms ease,
+    --header-bg      350ms ease,
+    --header-text    250ms ease,
+    --header-sub     250ms ease;
 
-  /* Layout / radius tokens — static */
-  --radius: 12px;     /* cards, panels */
-  --radius-sm: 8px;   /* smaller cards, inputs, chips */
-  --radius-bar: 2px;  /* progress bar fills — intentionally blocky/geometric */
+  --radius:     12px;
+  --radius-sm:  8px;
+  --radius-bar: 2px;
 
-  /* Semantic accent colors — not theme-shifted, used for data labels */
-  --green: #3B6D11;
+  /* Semantic data colors */
+  --green:    #3B6D11;
   --green-bg: #EAF3DE;
-  --blue: #185FA5;
-  --blue-bg: #E6F1FB;
-  --red: #A32D2D;
-  --red-bg: #FCEBEB;
-  --gold: #A0720A;
-  --gold-bg: #FDF4E3;
+  --blue:     #185FA5;
+  --blue-bg:  #E6F1FB;
+  --red:      #A32D2D;
+  --red-bg:   #FCEBEB;
+  --gold:     #A0720A;
+  --gold-bg:  #FDF4E3;
 }
 
 html, body { height: 100%; }
@@ -97,7 +101,7 @@ input, select, textarea {
   font-family: inherit;
   font-size: 15px;
   color: var(--text);
-  background: var(--bg2);   /* lifted off page bg — visible in both light and dark modes */
+  background: var(--bg2);
   border: 1px solid var(--border-mid);
   border-radius: var(--radius-sm);
   padding: 10px 14px;
@@ -106,25 +110,51 @@ input, select, textarea {
   transition: border-color 0.15s;
 }
 
-input:focus, select:focus, textarea:focus {
-  border-color: var(--accent);
-}
+input:focus, select:focus, textarea:focus { border-color: var(--accent); }
+input::placeholder, textarea::placeholder { color: var(--text3); }
 
-input::placeholder, textarea::placeholder {
-  color: var(--text3);
-}
+/* ── Speech bubble animation ─────────────────────────────────────────────── */
 
-/* ── Hero section animations ──────────────────────────────────────────────── */
-
-/* Speech bubble fade-in + subtle upward slide when revealed by house tap.
-   Used by HeroSection's bubble div via `animation: heroBubbleIn ...`.        */
 @keyframes heroBubbleIn {
-  from {
-    opacity:   0;
-    transform: translateY(-8px) scale(0.97);
+  from { opacity: 0; transform: translateY(-6px) scale(0.97); }
+  to   { opacity: 1; transform: translateY(0)    scale(1);    }
+}
+
+/* ── Desktop nav: hidden on mobile, shown via JS className on ≥768px ─────── */
+.desktop-nav { display: none; }
+
+/* ── Desktop layout ──────────────────────────────────────────────────────────
+   At ≥ 768px the 480px phone column expands into a real dashboard.
+   A fixed top nav replaces the bottom nav. Home uses a 2-column grid.      */
+
+@media (min-width: 768px) {
+
+  #root {
+    max-width: 100%;
   }
-  to {
-    opacity:   1;
-    transform: translateY(0)    scale(1);
+
+  .desktop-nav {
+    display: flex !important;
   }
+
+  .mobile-nav {
+    display: none !important;
+  }
+
+  .view-header {
+    padding-top: 28px !important;
+  }
+
+  /* Home grid: 2 equal columns, cards left / calendar right */
+  .home-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    align-items: start;
+    max-width: 1160px;
+    margin: 0 auto;
+    width: 100%;
+  }
+
+  .home-left  { grid-column: 1; }
+  .home-right { grid-column: 2; grid-row: 1 / 10; }
 }

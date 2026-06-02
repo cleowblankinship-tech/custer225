@@ -361,17 +361,87 @@ export default function App() {
 
   const viewTitle = { home: 'Overview', list: 'Ledger', debt: 'Debt', spinup: 'Spin-Up', import: 'Import', pl: 'P&L Report' }
 
+  // ── Shared nav handler ────────────────────────────────────────────────────
+  function handleNavClick(key) {
+    if (key === 'list') { setListFilter('all'); setListMonth(null) }
+    setView(key)
+  }
+
   return (
     <div style={{ display: 'flex', flexDirection: 'column', minHeight: '100dvh' }}>
 
       {/* Intro splash — fixed overlay, only on cold load */}
       {showIntro && <IntroSplash onComplete={() => setShowIntro(false)} />}
 
-      {/* Header */}
+      {/* ── Desktop top nav — hidden on mobile via CSS ───────────────────── */}
+      <nav className="desktop-nav" style={{
+        position:       'sticky',
+        top:            0,
+        zIndex:         200,
+        background:     'var(--header-bg)',
+        borderBottom:   '1px solid var(--header-sub)',
+        padding:        '0 32px',
+        height:         56,
+        alignItems:     'center',
+        justifyContent: 'space-between',
+        gap:            8,
+        transition:     'background 350ms ease',
+      }}>
+        {/* Brand */}
+        <div style={{ display: 'flex', alignItems: 'baseline', gap: 8 }}>
+          <span style={{ fontSize: 18, fontWeight: 800, color: 'var(--header-text)', letterSpacing: '-0.02em' }}>
+            225 Custer
+          </span>
+          <span style={{ fontSize: 10, fontWeight: 600, color: 'var(--header-sub)', letterSpacing: '0.08em', textTransform: 'uppercase' }}>
+            Colorado Springs · STR
+          </span>
+        </div>
+
+        {/* Nav links */}
+        <div style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
+          {navItems.map(item => (
+            <button
+              key={item.key}
+              onClick={() => handleNavClick(item.key)}
+              style={{
+                padding:      '6px 14px',
+                borderRadius: 'var(--radius-sm)',
+                background:   view === item.key ? 'rgba(0,0,0,0.14)' : 'transparent',
+                fontSize:     13,
+                fontWeight:   view === item.key ? 600 : 400,
+                color:        'var(--header-text)',
+                transition:   'background 150ms ease, color 350ms ease',
+              }}
+            >
+              {item.label}
+            </button>
+          ))}
+
+          {/* Theme toggle */}
+          <button
+            onClick={() => {
+              const CYCLE = ['auto', 'day', 'evening', 'night']
+              const m = CYCLE[(CYCLE.indexOf(themeMode) + 1) % CYCLE.length]
+              setThemeMode(m)
+              localStorage.setItem('custer225_theme_v2', m)
+            }}
+            style={{
+              marginLeft:   12,
+              fontSize:     14,
+              color:        'var(--header-sub)',
+              padding:      '5px 10px',
+              background:   'rgba(128,128,128,0.14)',
+              borderRadius: 'var(--radius-sm)',
+            }}
+            title={`Theme: ${themeMode}`}
+          >
+            {{ auto: '◐', day: '☀', evening: '◑', night: '☾' }[themeMode]}
+          </button>
+        </div>
+      </nav>
+
+      {/* ── Mobile / home header ─────────────────────────────────────────── */}
       {view === 'home' ? (
-        // ── Hero landscape section ─────────────────────────────────────────
-        // Replaces the old house-icon + speech-bubble header on the home view.
-        // Painting background, house embedded in scene, bubble revealed on tap.
         <HeroSection
           moodStyle={moodStyle}
           message={bubbleMessage}
@@ -389,10 +459,12 @@ export default function App() {
           }}
         />
       ) : (
-        <div style={{
-          padding: '48px 20px 18px',
+        <div className="view-header" style={{
+          padding:      '48px 20px 18px',
           borderBottom: '0.5px solid var(--border)',
-          display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+          display:      'flex',
+          alignItems:   'center',
+          justifyContent: 'space-between',
         }}>
           <div>
             <p style={{ fontSize: 11, color: 'var(--text2)', letterSpacing: '0.1em', textTransform: 'uppercase', marginBottom: 2 }}>
@@ -408,119 +480,111 @@ export default function App() {
         </div>
       )}
 
-      {/* Content — bottom padding reserves space for the fixed nav */}
-      {/* paddingTop: 0 on home — the hero fade + card overlap handles separation.
-          paddingTop: 20 on all other views — normal header gap.              */}
+      {/* ── Main content ─────────────────────────────────────────────────── */}
       <div style={{ flex: 1, paddingTop: view === 'home' ? 0 : 20, paddingBottom: 'calc(64px + env(safe-area-inset-bottom))' }}>
         {loading && (
           <p style={{ textAlign: 'center', color: 'var(--text3)', fontSize: 14, padding: 40 }}>Loading...</p>
         )}
 
         {!loading && view === 'home' && (
-          <>
-            {/*
-              Negative marginTop pulls PLSummary up 55px into the hero's
-              gradient fade zone, creating a card-overlap effect.
-              zIndex: 2 ensures cards render above the gradient (z:1) and
-              overlay, but below the house (z:5) and bubble (z:10).
-              The section header ("The House So Far") appears ~47px above the
-              hero bottom edge — floating in the soft fade, bridging hero and
-              dashboard visually.
-            */}
-            <div style={{ position: 'relative', zIndex: 2, marginTop: -55 }}>
+          <div className="home-grid">
+
+            {/* ── Left column: metrics + quick actions ─────────────────── */}
+            <div className="home-left">
               <PLSummary
                 expenses={expenses}
                 onNavigate={navigateToList}
                 isPreLaunch={!setupStats || setupStats.pct < 100}
               />
-            </div>
 
-            {/* Guest / booking status */}
-            <GuestCard expenses={expenses} />
+              {/* P&L link */}
+              <div style={{ padding: '0 20px 24px' }}>
+                <button
+                  onClick={() => setView('pl')}
+                  style={{
+                    width: '100%', padding: '13px 16px',
+                    borderRadius: 'var(--radius-sm)', background: 'var(--bg2)',
+                    display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+                    fontSize: 14, fontWeight: 500, color: 'var(--text)',
+                  }}
+                >
+                  <span>View full P&amp;L report</span>
+                  <span style={{ color: 'var(--text3)' }}>→</span>
+                </button>
+              </div>
 
-            {/* P&L link */}
-            <div style={{ padding: '0 20px 24px' }}>
-              <button
-                onClick={() => setView('pl')}
-                style={{
-                  width: '100%', padding: '13px 16px',
-                  borderRadius: 'var(--radius-sm)', background: 'var(--bg2)',
-                  display: 'flex', alignItems: 'center', justifyContent: 'space-between',
-                  fontSize: 14, fontWeight: 500, color: 'var(--text)',
-                }}
-              >
-                <span>View full P&amp;L report</span>
-                <span style={{ color: 'var(--text3)' }}>→</span>
-              </button>
-            </div>
-
-            {/* ── Next Best Action ─────────────────────────────────────── */}
-            {/* Computed from: launch % → revenue → fallback              */}
-            {(() => {
-              let msg, sub, onClick
-              if (!setupStats) {
-                // Data unavailable or still loading
-                msg     = 'Review launch checklist'
-                sub     = 'View launch list'
-                onClick = () => setView('spinup')
-              } else if (setupStats.pct < 100) {
-                const { remaining, done } = setupStats
-                if (done === 0) {
-                  msg = 'Start the launch checklist'
-                  sub = `${setupStats.total} tasks to go`
-                } else if (remaining <= 10) {
-                  msg = remaining === 1 ? 'Finish the last launch task' : `Finish the last ${remaining} launch tasks`
-                  sub = 'View launch list'
+              {/* ── Next Best Action ──────────────────────────────────── */}
+              {(() => {
+                let msg, sub, onClick
+                if (!setupStats) {
+                  msg     = 'Review launch checklist'
+                  sub     = 'View launch list'
+                  onClick = () => setView('spinup')
+                } else if (setupStats.pct < 100) {
+                  const { remaining, done } = setupStats
+                  if (done === 0) {
+                    msg = 'Start the launch checklist'
+                    sub = `${setupStats.total} tasks to go`
+                  } else if (remaining <= 10) {
+                    msg = remaining === 1 ? 'Finish the last launch task' : `Finish the last ${remaining} launch tasks`
+                    sub = 'View launch list'
+                  } else {
+                    msg = 'Work through the launch checklist'
+                    sub = `${remaining} tasks remaining`
+                  }
+                  onClick = () => setView('spinup')
+                } else if (totalRevenue === 0) {
+                  msg     = 'Add your first Airbnb booking when it comes in'
+                  sub     = 'Tap to log income'
+                  onClick = () => navigateToList('income', null)
                 } else {
-                  msg = 'Work through the launch checklist'
-                  sub = `${remaining} tasks remaining`
+                  msg     = "Review this month's house spending"
+                  sub     = 'View full P&L'
+                  onClick = () => setView('pl')
                 }
-                onClick = () => setView('spinup')
-              } else if (totalRevenue === 0) {
-                msg     = 'Add your first Airbnb booking when it comes in'
-                sub     = 'Tap to log income'
-                onClick = () => navigateToList('income', null)
-              } else {
-                msg     = "Review this month's house spending"
-                sub     = 'View full P&L'
-                onClick = () => setView('pl')
-              }
-              return (
-                <div style={{ padding: '0 20px 24px' }}>
-                  <p style={{ fontSize: 11, fontWeight: 500, color: 'var(--text2)', letterSpacing: '0.07em', textTransform: 'uppercase', marginBottom: 8 }}>
-                    Next Best Action
-                  </p>
-                  <button
-                    onClick={onClick}
-                    style={{
-                      width: '100%', padding: '13px 16px',
-                      borderRadius: 'var(--radius-sm)', background: 'var(--bg2)',
-                      display: 'flex', alignItems: 'center', justifyContent: 'space-between',
-                      textAlign: 'left',
-                    }}
-                  >
-                    <span style={{ flex: 1 }}>
-                      <span style={{ display: 'block', fontSize: 14, fontWeight: 500, color: 'var(--text)' }}>{msg}</span>
-                      {sub && <span style={{ display: 'block', fontSize: 11, color: 'var(--text3)', marginTop: 2 }}>{sub}</span>}
-                    </span>
-                    <span style={{ fontSize: 13, color: 'var(--accent)', flexShrink: 0, marginLeft: 8 }}>→</span>
-                  </button>
-                </div>
-              )
-            })()}
+                return (
+                  <div style={{ padding: '0 20px 24px' }}>
+                    <p style={{ fontSize: 11, fontWeight: 500, color: 'var(--text2)', letterSpacing: '0.07em', textTransform: 'uppercase', marginBottom: 8 }}>
+                      Next Best Action
+                    </p>
+                    <button
+                      onClick={onClick}
+                      style={{
+                        width: '100%', padding: '13px 16px',
+                        borderRadius: 'var(--radius-sm)', background: 'var(--bg2)',
+                        display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+                        textAlign: 'left',
+                      }}
+                    >
+                      <span style={{ flex: 1 }}>
+                        <span style={{ display: 'block', fontSize: 14, fontWeight: 500, color: 'var(--text)' }}>{msg}</span>
+                        {sub && <span style={{ display: 'block', fontSize: 11, color: 'var(--text3)', marginTop: 2 }}>{sub}</span>}
+                      </span>
+                      <span style={{ fontSize: 13, color: 'var(--accent)', flexShrink: 0, marginLeft: 8 }}>→</span>
+                    </button>
+                  </div>
+                )
+              })()}
 
-            {/* Launch readiness card */}
-            <div style={{ padding: '0 20px 24px' }}>
-              <SetupCard onNavigate={() => setView('spinup')} />
+              {/* Launch readiness card */}
+              <div style={{ padding: '0 20px 24px' }}>
+                <SetupCard onNavigate={() => setView('spinup')} />
+              </div>
+
+              <div style={{ padding: '0 20px 16px' }}>
+                <p style={{ fontSize: 11, fontWeight: 500, color: 'var(--text2)', letterSpacing: '0.07em', textTransform: 'uppercase', marginBottom: 12 }}>
+                  Quick add
+                </p>
+              </div>
+              <QuickAdd onAdd={handleAdd} />
             </div>
 
-            <div style={{ padding: '0 20px 16px' }}>
-              <p style={{ fontSize: 11, fontWeight: 500, color: 'var(--text2)', letterSpacing: '0.07em', textTransform: 'uppercase', marginBottom: 12 }}>
-                Quick add
-              </p>
+            {/* ── Right column: calendar / bookings ────────────────────── */}
+            <div className="home-right" style={{ paddingTop: 20 }}>
+              <GuestCard expenses={expenses} />
             </div>
-            <QuickAdd onAdd={handleAdd} />
-          </>
+
+          </div>
         )}
 
         {!loading && view === 'list' && (
@@ -557,8 +621,8 @@ export default function App() {
         />
       )}
 
-      {/* Bottom nav — fixed, background spans viewport, tabs constrained to content width */}
-      <div style={{
+      {/* ── Mobile bottom nav — hidden on desktop via CSS ────────────────── */}
+      <div className="mobile-nav" style={{
         position: 'fixed', bottom: 0, left: 0, right: 0, zIndex: 100,
         borderTop: '0.5px solid var(--border)',
         background: 'var(--bg)',
@@ -568,23 +632,20 @@ export default function App() {
           display: 'flex',
           paddingBottom: 'env(safe-area-inset-bottom)',
         }}>
-        {navItems.map(item => (
-          <button
-            key={item.key}
-            onClick={() => {
-              if (item.key === 'list') { setListFilter('all'); setListMonth(null) }
-              setView(item.key)
-            }}
-            style={{
-              flex: 1, padding: '12px 0', display: 'flex', flexDirection: 'column',
-              alignItems: 'center', gap: 3,
-              color: view === item.key ? 'var(--accent)' : 'var(--text3)',
-            }}
-          >
-            <span style={{ fontSize: 18 }}>{item.icon}</span>
-            <span style={{ fontSize: 10, fontWeight: view === item.key ? 500 : 400 }}>{item.label}</span>
-          </button>
-        ))}
+          {navItems.map(item => (
+            <button
+              key={item.key}
+              onClick={() => handleNavClick(item.key)}
+              style={{
+                flex: 1, padding: '12px 0', display: 'flex', flexDirection: 'column',
+                alignItems: 'center', gap: 3,
+                color: view === item.key ? 'var(--accent)' : 'var(--text3)',
+              }}
+            >
+              <span style={{ fontSize: 18 }}>{item.icon}</span>
+              <span style={{ fontSize: 10, fontWeight: view === item.key ? 500 : 400 }}>{item.label}</span>
+            </button>
+          ))}
         </div>
       </div>
     </div>
