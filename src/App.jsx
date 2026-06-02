@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react'
 import PLSummary from './components/PLSummary'
+import GuestCard from './components/GuestCard'
 import PLReport from './components/PLReport'
 import QuickAdd from './components/QuickAdd'
 import ExpenseList from './components/ExpenseList'
@@ -433,6 +434,9 @@ export default function App() {
                 isPreLaunch={!setupStats || setupStats.pct < 100}
               />
             </div>
+
+            {/* Guest / booking status */}
+            <GuestCard />
 
             {/* P&L link */}
             <div style={{ padding: '0 20px 24px' }}>
