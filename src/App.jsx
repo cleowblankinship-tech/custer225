@@ -491,15 +491,13 @@ export default function App() {
 
             {/* ── Right column: calendar — first in markup = top on mobile ─ */}
             <div className="home-right">
-              <div style={{ padding: '24px 20px 10px' }}>
+              {/* Section header: bold, editorial, no subtitle clutter */}
+              <div style={{ padding: '28px 20px 12px' }}>
                 <p style={{
-                  fontSize: 22, fontWeight: 800, color: 'var(--text)',
-                  letterSpacing: '-0.02em', lineHeight: 1,
+                  fontSize: 11, fontWeight: 700, letterSpacing: '0.12em',
+                  textTransform: 'uppercase', color: 'var(--text3)',
                 }}>
-                  Bookings
-                </p>
-                <p style={{ fontSize: 12, color: 'var(--text3)', marginTop: 4 }}>
-                  Tap the house to open status
+                  Bookings &amp; Occupancy
                 </p>
               </div>
               <GuestCard expenses={expenses} />
@@ -507,10 +505,10 @@ export default function App() {
 
             {/* ── Left column: metrics + quick actions ─────────────────── */}
             <div className="home-left">
-              <div style={{ padding: '24px 20px 10px' }}>
+              <div style={{ padding: '28px 20px 12px' }}>
                 <p style={{
-                  fontSize: 22, fontWeight: 800, color: 'var(--text)',
-                  letterSpacing: '-0.02em', lineHeight: 1,
+                  fontSize: 11, fontWeight: 700, letterSpacing: '0.12em',
+                  textTransform: 'uppercase', color: 'var(--text3)',
                 }}>
                   Financials
                 </p>
@@ -595,11 +593,6 @@ export default function App() {
                 <SetupCard onNavigate={() => setView('spinup')} />
               </div>
 
-              <div style={{ padding: '0 20px 16px' }}>
-                <p style={{ fontSize: 11, fontWeight: 500, color: 'var(--text2)', letterSpacing: '0.07em', textTransform: 'uppercase', marginBottom: 12 }}>
-                  Quick add
-                </p>
-              </div>
               <QuickAdd onAdd={handleAdd} />
             </div>
 

@@ -145,12 +145,12 @@ input::placeholder, textarea::placeholder { color: var(--text3); }
     padding-top: 28px !important;
   }
 
-  /* Home grid: narrow metrics left, wide calendar right */
+  /* Home grid: compact metrics left, dominant calendar right */
   .home-grid {
     display: grid;
-    grid-template-columns: 1fr 1.5fr;
+    grid-template-columns: 1fr 1.75fr;
     align-items: start;
-    max-width: 1200px;
+    max-width: 1280px;
     margin: 0 auto;
     width: 100%;
   }
