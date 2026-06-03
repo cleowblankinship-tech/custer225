@@ -160,7 +160,7 @@ export default function GuestCard({ expenses = [] }) {
   const firstWeekDay = new Date(viewYear, viewMonth, 1).getDay()
 
   return (
-    <div style={{ padding: '0 20px 24px' }}>
+    <div style={{ padding: '20px 20px 24px' }}>
       <div style={{ background: 'var(--bg2)', borderRadius: 'var(--radius)', overflow: 'hidden' }}>
 
         {/* ── Month nav ─────────────────────────────────────────────────── */}
