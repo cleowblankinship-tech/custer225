@@ -473,16 +473,9 @@ export default function App() {
         {!loading && view === 'home' && (
           <div className="home-grid">
 
-            {/* ── Right column — calendar ──────────────────────────────── */}
-            <div className="home-right">
-              {/* Calendar + occupancy */}
-              <GuestCard expenses={expenses} />
-            </div>
-
-            {/* ── Left column: house icon + financials ─────────────────── */}
-            <div className="home-left">
-
-              {/* House — sits above financials, to the left of the calendar */}
+            {/* ── House icon — first in markup so it's top on mobile ──────── */}
+            {/* On desktop CSS pins this to col 1 row 1 above financials    */}
+            <div className="house-slot">
               <HouseAnchor
                 message={bubbleMessage}
                 mood={mood}
@@ -494,6 +487,15 @@ export default function App() {
                   localStorage.setItem('custer225_theme_v2', m)
                 }}
               />
+            </div>
+
+            {/* ── Right column — calendar ──────────────────────────────── */}
+            <div className="home-right">
+              <GuestCard expenses={expenses} />
+            </div>
+
+            {/* ── Left column: financials ───────────────────────────────── */}
+            <div className="home-left">
 
               <div style={{ padding: '28px 20px 10px' }}>
                 <p style={{

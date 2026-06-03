@@ -166,7 +166,8 @@ input::placeholder, textarea::placeholder { color: var(--text3); }
 
   /* On desktop the calendar column is defined first in markup (mobile-first),
      but grid-column pins each to the right visual slot regardless of order. */
-  .home-left  { grid-column: 1; }
+  .house-slot { grid-column: 1; grid-row: 1; }
+  .home-left  { grid-column: 1; grid-row: 2 / 20; }
   .home-right { grid-column: 2; grid-row: 1 / 20; }
 
   /* No bottom nav on desktop — remove the nav-height reservation */
