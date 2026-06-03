@@ -473,11 +473,16 @@ export default function App() {
         {!loading && view === 'home' && (
           <div className="home-grid">
 
-            {/* ── Right column — first in markup = top on mobile ───────── */}
-            {/*   Order: house illustration → calendar → occupancy panel   */}
+            {/* ── Right column — calendar ──────────────────────────────── */}
             <div className="home-right">
+              {/* Calendar + occupancy */}
+              <GuestCard expenses={expenses} />
+            </div>
 
-              {/* House — free-standing illustration, voice of the property */}
+            {/* ── Left column: house icon + financials ─────────────────── */}
+            <div className="home-left">
+
+              {/* House — sits above financials, to the left of the calendar */}
               <HouseAnchor
                 message={bubbleMessage}
                 mood={mood}
@@ -490,12 +495,6 @@ export default function App() {
                 }}
               />
 
-              {/* Calendar + occupancy */}
-              <GuestCard expenses={expenses} />
-            </div>
-
-            {/* ── Left column: financials ───────────────────────────────── */}
-            <div className="home-left">
               <div style={{ padding: '28px 20px 10px' }}>
                 <p style={{
                   fontSize: 11, fontWeight: 700, letterSpacing: '0.12em',
