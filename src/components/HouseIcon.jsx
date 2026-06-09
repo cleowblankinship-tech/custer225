@@ -16,7 +16,7 @@
 // Display size: 46×46 px (slightly smaller than the 56px logo — less weight)
 // strokeWidth bumped from 1.8 → 2.0 → 2.45 (progressively heavier for hero protagonist weight)
 
-export default function HouseIcon({ size = 46, style }) {
+export default function HouseIcon({ size = 46, style, windowOpacity = 1 }) {
   return (
     <svg
       viewBox="0 0 40 40"
@@ -30,25 +30,22 @@ export default function HouseIcon({ size = 46, style }) {
       style={{ display: 'block', flexShrink: 0, ...style }}
       aria-hidden="true"
     >
-      {/*
-        Roof — two slopes meeting at a slightly left-of-center peak.
-        Left eave sits 0.5px lower than the right for subtle asymmetry.
-      */}
+      {/* Chimney — left of peak, adds asymmetric personality */}
+      <path d="M 26 15.5 L 26 9 L 30 9 L 30 13" />
+
+      {/* Roof */}
       <path d="M 1 22 L 19.5 4.5 L 39 21.5" />
 
-      {/*
-        Body — four corners are intentionally not perfectly square.
-        Left wall leans inward 0.5px; right wall leans outward 0.5px.
-        Bottom rail runs 4.5→35.5 (not 5→35) to echo the lean.
-      */}
+      {/* Body */}
       <path d="M 5 22 L 4.5 37.5 L 35.5 37.5 L 35 22" />
 
-      {/*
-        Door — arched top using two quadratic beziers.
-        Peak at (19.5, 26). Straight sides from y=30.5 down to the floor.
-      */}
-      <path d="M 15.5 37.5 L 15.5 30.5 Q 15.5 26 19.5 26 Q 23.5 26 23.5 30.5 L 23.5 37.5" />
+      {/* Windows — filled "eyes", blink via windowOpacity */}
+      <rect x="7"  y="24.5" width="6.5" height="5.5" rx="1.2" fill="currentColor" stroke="none" opacity={windowOpacity} />
+      <rect x="26.5" y="24.5" width="6.5" height="5.5" rx="1.2" fill="currentColor" stroke="none" opacity={windowOpacity} />
 
+      {/* Door — arched */}
+      <path d="M 15.5 37.5 L 15.5 30.5 Q 15.5 26 19.5 26 Q 23.5 26 23.5 30.5 L 23.5 37.5" />
     </svg>
   )
 }
+
