@@ -243,8 +243,8 @@ export default function GuestCard({ expenses = [], calendarData: propData }) {
                 <div style={{
                   position: 'absolute', inset: 0,
                   display: 'flex', alignItems: 'center', justifyContent: 'center',
-                  fontSize:   12,
-                  fontWeight: isToday ? 800 : info ? 600 : 400,
+                  fontSize:   15,
+                  fontWeight: isToday ? 900 : info ? 700 : 600,
                   color:      info    ? info.color.text
                             : isToday ? 'var(--accent)'
                             :           'var(--text2)',
