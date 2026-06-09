@@ -166,200 +166,159 @@ export default function GuestCard({ expenses = [], calendarData: propData }) {
   const firstWeekDay = new Date(viewYear, viewMonth, 1).getDay()
 
   return (
-    <div style={{ padding: '20px 20px 24px' }}>
-      <div style={{ background: 'var(--bg2)', borderRadius: 'var(--radius)', overflow: 'hidden' }}>
+    <div style={{ padding: '24px 24px 20px' }}>
 
-        {/* ── Month nav ──────────────────────────────────────────────────────── */}
-        <div style={{
-          display: 'flex', alignItems: 'center', justifyContent: 'space-between',
-          padding: '18px 20px 14px',
-          borderBottom: '1px solid var(--border)',
-        }}>
-          <button onClick={prevMonth} style={{ fontSize: 24, color: 'var(--text2)', padding: '0 2px', lineHeight: 1 }}>‹</button>
-          <p style={{ fontSize: 20, fontWeight: 800, color: 'var(--text)', letterSpacing: '-0.03em' }}>
-            {MONTH_NAMES[viewMonth]} {viewYear}
-          </p>
-          <button onClick={nextMonth} style={{ fontSize: 24, color: 'var(--text2)', padding: '0 2px', lineHeight: 1 }}>›</button>
-        </div>
-
-        {/* ── Day labels ─────────────────────────────────────────────────────── */}
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(7, 1fr)', padding: '10px 14px 2px' }}>
-          {DAY_LABELS.map(l => (
-            <div key={l} style={{
-              textAlign: 'center', fontSize: 11, fontWeight: 700,
-              color: 'var(--text3)', letterSpacing: '0.06em', paddingBottom: 2,
-            }}>
-              {l}
-            </div>
-          ))}
-        </div>
-
-        {/* ── Calendar grid ──────────────────────────────────────────────────── */}
-        {loading && !data ? (
-          <div style={{ padding: '40px 16px', textAlign: 'center', fontSize: 13, color: 'var(--text3)' }}>
-            Loading…
-          </div>
-        ) : (
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(7, 1fr)', padding: '0 14px 6px', rowGap: 2 }}>
-            {Array.from({ length: firstWeekDay }).map((_, i) => <div key={`e${i}`} />)}
-
-            {Array.from({ length: daysInMonth }).map((_, i) => {
-              const day     = i + 1
-              const dateStr = `${viewYear}-${String(viewMonth + 1).padStart(2,'0')}-${String(day).padStart(2,'0')}`
-              const info    = dayMap[dateStr]
-              const isToday = dateStr === todayStr
-              const isActive = info && activeBooking === info.booking.checkIn
-
-              return (
-                <div
-                  key={day}
-                  style={{ position: 'relative', height: 52 }}
-                  onClick={() => handleDayClick(info)}
-                >
-                  {info && (
-                    <div style={{
-                      position: 'absolute', top: '50%', transform: 'translateY(-50%)',
-                      height: 38,
-                      left:   info.isFirst ? '6%' : 0,
-                      right:  info.isLast  ? '6%' : 0,
-                      background: info.color.bar,
-                      borderRadius: info.isFirst && info.isLast ? 19
-                                  : info.isFirst ? '19px 0 0 19px'
-                                  : info.isLast  ? '0 19px 19px 0' : 0,
-                      opacity:    isActive ? 1 : 0.85,
-                      outline:    isActive ? `2px solid ${info.color.bar}` : 'none',
-                      outlineOffset: 2,
-                      cursor: 'pointer',
-                      transition: 'opacity 120ms ease',
-                    }} />
-                  )}
-                  <div style={{
-                    position: 'absolute', inset: 0,
-                    display: 'flex', alignItems: 'center', justifyContent: 'center',
-                    fontSize:   14,
-                    fontWeight: isToday ? 800 : info ? 700 : 400,
-                    color:      info    ? info.color.text
-                              : isToday ? 'var(--accent)'
-                              :           'var(--text)',
-                    zIndex: 1,
-                    cursor: info ? 'pointer' : 'default',
-                  }}>
-                    {day}
-                  </div>
-                </div>
-              )
-            })}
-          </div>
-        )}
-
-        {/* ── Selected booking info bar ──────────────────────────────────────── */}
-        {!loading && activeBooking && (() => {
-          const b = data?.all?.find(b => b.checkIn === activeBooking)
-          if (!b) return null
-          const color = colorMap[b.checkIn] ?? BOOKING_COLORS[0]
-          return (
-            <div style={{
-              margin: '0 14px 10px',
-              padding: '10px 16px',
-              borderRadius: 10,
-              background: color.bar,
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'space-between',
-              gap: 12,
-            }}>
-              <div>
-                <span style={{ fontSize: 14, fontWeight: 800, color: '#fff' }}>{b.name}</span>
-                <span style={{ fontSize: 12, color: 'rgba(255,255,255,0.72)', marginLeft: 10 }}>
-                  {fmt(b.checkIn)} – {fmt(b.checkOut)} · {b.nights} night{b.nights !== 1 ? 's' : ''}
-                </span>
-              </div>
-              <button
-                onClick={() => setActiveBooking(null)}
-                style={{ fontSize: 16, color: 'rgba(255,255,255,0.7)', lineHeight: 1, padding: '0 2px' }}
-              >
-                ×
-              </button>
-            </div>
-          )
-        })()}
-
-        {/* Separator before stats — only needed when no info bar */}
-        {(loading || !activeBooking) && <div style={{ borderTop: '1px solid var(--border)' }} />}
-
-        {/* ── Occupancy stats ─────────────────────────────────────────────────── */}
-        {!loading && monthStats && (
-          <div style={{
-            borderTop: activeBooking ? '1px solid var(--border)' : 'none',
-            padding:    '16px 24px 18px',
-            display:    'flex',
-            alignItems: 'baseline',
-            gap:        28,
-            flexWrap:   'wrap',
-          }}>
-
-            {/* Occupancy */}
-            <div>
-              <span style={{
-                fontSize:      36,
-                fontWeight:    800,
-                letterSpacing: '-0.04em',
-                color: monthStats.occupancyPct >= 70 ? 'var(--green, #5A9A30)'
-                     : monthStats.occupancyPct >= 40 ? 'var(--text)'
-                     :                                 'var(--text3)',
-              }}>
-                {monthStats.occupancyPct}%
-              </span>
-              <span style={{ fontSize: 11, color: 'var(--text3)', marginLeft: 6 }}>occupancy</span>
-            </div>
-
-            {/* Nights */}
-            <div>
-              <span style={{ fontSize: 20, fontWeight: 700, color: 'var(--text)', letterSpacing: '-0.02em' }}>
-                {monthStats.nightsBooked}
-              </span>
-              <span style={{ fontSize: 11, color: 'var(--text3)', marginLeft: 4 }}>
-                / {monthStats.daysInViewMonth} nights
-              </span>
-            </div>
-
-            {/* Revenue — only if tracked */}
-            {monthStats.monthRevenue > 0 && (
-              <div>
-                <span style={{ fontSize: 20, fontWeight: 700, color: 'var(--green, #5A9A30)', letterSpacing: '-0.02em' }}>
-                  ${monthStats.monthRevenue.toLocaleString('en-US', { maximumFractionDigits: 0 })}
-                </span>
-                <span style={{ fontSize: 11, color: 'var(--text3)', marginLeft: 4 }}>revenue</span>
-              </div>
-            )}
-
-            {/* Next arrival / departure — inline, quiet */}
-            {(monthStats.nextArrival || monthStats.nextCheckout) && (
-              <div style={{ marginLeft: 'auto', textAlign: 'right', fontSize: 12, color: 'var(--text3)', lineHeight: 1.6 }}>
-                {monthStats.nextArrival && (
-                  <div>
-                    <span style={{ fontWeight: 600, color: 'var(--text2)' }}>In </span>
-                    {fmtFull(monthStats.nextArrival.checkIn)}
-                  </div>
-                )}
-                {monthStats.nextCheckout &&
-                 monthStats.nextCheckout.checkIn !== monthStats.nextArrival?.checkIn && (
-                  <div>
-                    <span style={{ fontWeight: 600, color: 'var(--text2)' }}>Out </span>
-                    {fmtFull(monthStats.nextCheckout.checkOut)}
-                  </div>
-                )}
-              </div>
-            )}
-          </div>
-        )}
-
-        {!loading && !data && (
-          <div style={{ padding: '28px 20px', textAlign: 'center', borderTop: '1px solid var(--border)' }}>
-            <p style={{ fontSize: 14, color: 'var(--text3)' }}>No calendar connected</p>
-          </div>
-        )}
+      {/* ── Month nav ──────────────────────────────────────────────────────── */}
+      <div style={{
+        display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+        marginBottom: 14,
+      }}>
+        <button onClick={prevMonth} style={{ fontSize: 20, color: 'var(--text3)', padding: '0 4px', lineHeight: 1 }}>‹</button>
+        <p style={{ fontSize: 13, fontWeight: 700, color: 'var(--text2)', letterSpacing: '0.08em', textTransform: 'uppercase' }}>
+          {MONTH_NAMES[viewMonth]} {viewYear}
+        </p>
+        <button onClick={nextMonth} style={{ fontSize: 20, color: 'var(--text3)', padding: '0 4px', lineHeight: 1 }}>›</button>
       </div>
+
+      {/* ── Day labels ─────────────────────────────────────────────────────── */}
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(7, 1fr)', marginBottom: 2 }}>
+        {DAY_LABELS.map(l => (
+          <div key={l} style={{
+            textAlign: 'center', fontSize: 10, fontWeight: 600,
+            color: 'var(--text3)', letterSpacing: '0.08em', paddingBottom: 4,
+          }}>
+            {l}
+          </div>
+        ))}
+      </div>
+
+      {/* ── Calendar grid ──────────────────────────────────────────────────── */}
+      {loading && !data ? (
+        <div style={{ padding: '32px 0', textAlign: 'center', fontSize: 13, color: 'var(--text3)' }}>
+          Loading…
+        </div>
+      ) : (
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(7, 1fr)', rowGap: 1 }}>
+          {Array.from({ length: firstWeekDay }).map((_, i) => <div key={`e${i}`} />)}
+
+          {Array.from({ length: daysInMonth }).map((_, i) => {
+            const day     = i + 1
+            const dateStr = `${viewYear}-${String(viewMonth + 1).padStart(2,'0')}-${String(day).padStart(2,'0')}`
+            const info    = dayMap[dateStr]
+            const isToday = dateStr === todayStr
+            const isActive = info && activeBooking === info.booking.checkIn
+
+            return (
+              <div
+                key={day}
+                style={{ position: 'relative', height: 38 }}
+                onClick={() => handleDayClick(info)}
+              >
+                {info && (
+                  <div style={{
+                    position: 'absolute', top: '50%', transform: 'translateY(-50%)',
+                    height: 26,
+                    left:   info.isFirst ? '8%' : 0,
+                    right:  info.isLast  ? '8%' : 0,
+                    background: info.color.bar,
+                    borderRadius: info.isFirst && info.isLast ? 13
+                                : info.isFirst ? '13px 0 0 13px'
+                                : info.isLast  ? '0 13px 13px 0' : 0,
+                    opacity:    isActive ? 1 : 0.78,
+                    cursor: 'pointer',
+                    transition: 'opacity 120ms ease',
+                  }} />
+                )}
+                <div style={{
+                  position: 'absolute', inset: 0,
+                  display: 'flex', alignItems: 'center', justifyContent: 'center',
+                  fontSize:   12,
+                  fontWeight: isToday ? 800 : info ? 600 : 400,
+                  color:      info    ? info.color.text
+                            : isToday ? 'var(--accent)'
+                            :           'var(--text2)',
+                  zIndex: 1,
+                  cursor: info ? 'pointer' : 'default',
+                }}>
+                  {day}
+                </div>
+              </div>
+            )
+          })}
+        </div>
+      )}
+
+      {/* ── Selected booking — plain text row, colored accent ─────────────── */}
+      {!loading && activeBooking && (() => {
+        const b = data?.all?.find(b => b.checkIn === activeBooking)
+        if (!b) return null
+        const color = colorMap[b.checkIn] ?? BOOKING_COLORS[0]
+        return (
+          <div style={{
+            marginTop: 12,
+            paddingLeft: 10,
+            borderLeft: `3px solid ${color.bar}`,
+            display: 'flex', alignItems: 'baseline',
+            justifyContent: 'space-between', gap: 8,
+          }}>
+            <div style={{ fontSize: 12, color: 'var(--text2)', lineHeight: 1.5 }}>
+              <span style={{ fontWeight: 700, color: 'var(--text)' }}>{b.name}</span>
+              <span style={{ color: 'var(--text3)', marginLeft: 8 }}>
+                {fmt(b.checkIn)} – {fmt(b.checkOut)} · {b.nights} night{b.nights !== 1 ? 's' : ''}
+              </span>
+            </div>
+            <button onClick={() => setActiveBooking(null)}
+              style={{ fontSize: 14, color: 'var(--text3)', flexShrink: 0 }}>×</button>
+          </div>
+        )
+      })()}
+
+      {/* ── Stats — quiet text line ────────────────────────────────────────── */}
+      {!loading && monthStats && (
+        <div style={{
+          marginTop: 16,
+          paddingTop: 12,
+          borderTop: '1px solid var(--border)',
+          display: 'flex', alignItems: 'baseline', gap: 20, flexWrap: 'wrap',
+        }}>
+          <div>
+            <span style={{
+              fontSize: 22, fontWeight: 800, letterSpacing: '-0.03em',
+              color: monthStats.occupancyPct >= 70 ? 'var(--green, #5A9A30)'
+                   : monthStats.occupancyPct >= 40 ? 'var(--text)'
+                   :                                 'var(--text3)',
+            }}>
+              {monthStats.occupancyPct}%
+            </span>
+            <span style={{ fontSize: 10, color: 'var(--text3)', marginLeft: 4 }}>occ.</span>
+          </div>
+
+          <div style={{ fontSize: 11, color: 'var(--text3)' }}>
+            {monthStats.nightsBooked} / {monthStats.daysInViewMonth} nights
+          </div>
+
+          {monthStats.monthRevenue > 0 && (
+            <div style={{ fontSize: 11, fontWeight: 600, color: 'var(--text2)' }}>
+              ${monthStats.monthRevenue.toLocaleString('en-US', { maximumFractionDigits: 0 })}
+            </div>
+          )}
+
+          {(monthStats.nextArrival || monthStats.nextCheckout) && (
+            <div style={{ marginLeft: 'auto', textAlign: 'right', fontSize: 11, color: 'var(--text3)', lineHeight: 1.7 }}>
+              {monthStats.nextArrival && (
+                <div><span style={{ fontWeight: 600, color: 'var(--text2)' }}>In </span>{fmtFull(monthStats.nextArrival.checkIn)}</div>
+              )}
+              {monthStats.nextCheckout && monthStats.nextCheckout.checkIn !== monthStats.nextArrival?.checkIn && (
+                <div><span style={{ fontWeight: 600, color: 'var(--text2)' }}>Out </span>{fmtFull(monthStats.nextCheckout.checkOut)}</div>
+              )}
+            </div>
+          )}
+        </div>
+      )}
+
+      {!loading && !data && (
+        <p style={{ marginTop: 20, fontSize: 13, color: 'var(--text3)' }}>No calendar connected</p>
+      )}
     </div>
   )
 }
