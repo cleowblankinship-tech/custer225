@@ -128,7 +128,7 @@ export default function HouseAnchor({ message, mood, themeMode, onThemeToggle, n
               : 'drop-shadow(0 4px 16px rgba(0,0,0,0.20))',
           }}
         >
-          <HouseIcon size={130} windowOpacity={winOpacity} />
+          <HouseIcon size={130} windowOpacity={winOpacity} mood={mood} />
         </button>
       </div>
 
