@@ -94,15 +94,11 @@ export default function HouseAnchor({ message, mood, themeMode, onThemeToggle, n
           style={{
             color:   'var(--accent)',
             padding: 0,
-            // Pressed: squash + tilt. Open: lift + lean forward. Rest: natural.
-            transform: pressed
-              ? 'scale(0.86) rotate(-3deg)'
-              : open
-              ? 'scale(1.07) translateY(-10px) rotate(2deg)'
-              : 'scale(1)',
+            // Pressed: slight squash only. Open/rest: no movement.
+            transform: pressed ? 'scale(0.93)' : 'scale(1)',
             transition: pressed
               ? 'transform 65ms ease-in, filter 200ms ease'
-              : 'transform 430ms cubic-bezier(0.34, 1.56, 0.64, 1), filter 350ms ease',
+              : 'transform 200ms ease-out, filter 350ms ease',
             filter: open
               ? 'drop-shadow(0 14px 36px rgba(0,0,0,0.42))'
               : mood === 'urgent'

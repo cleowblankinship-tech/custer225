@@ -1,12 +1,12 @@
 import { useState, useEffect, useMemo } from 'react'
 
 const BOOKING_COLORS = [
-  { bar: '#C4614A', text: '#fff' },  // terracotta
-  { bar: '#C8920A', text: '#fff' },  // amber gold
-  { bar: '#C97860', text: '#fff' },  // coral sand
-  { bar: '#9A8070', text: '#fff' },  // warm charcoal
-  { bar: '#D4A450', text: '#fff' },  // honey / sand
-  { bar: '#5A7888', text: '#fff' },  // slate blue
+  { bar: '#8C7B6E', text: '#fff' },  // warm stone
+  { bar: '#7A8A7C', text: '#fff' },  // sage
+  { bar: '#7B8FA1', text: '#fff' },  // slate
+  { bar: '#A0907E', text: '#fff' },  // sand
+  { bar: '#8A8070', text: '#fff' },  // greige
+  { bar: '#6E7E8A', text: '#fff' },  // blue-grey
 ]
 
 const MONTH_NAMES = ['January','February','March','April','May','June',
