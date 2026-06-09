@@ -165,6 +165,17 @@ export default function GuestCard({ expenses = [], calendarData: propData }) {
   const daysInMonth  = new Date(viewYear, viewMonth + 1, 0).getDate()
   const firstWeekDay = new Date(viewYear, viewMonth, 1).getDay()
 
+  // First day of a booking visible in the current month view — used to
+  // position the guest name label inside the strip without overflow clipping.
+  function isFirstVisibleDay(dateStr, booking) {
+    const d    = ymd(dateStr)
+    const prev = new Date(d)
+    prev.setDate(prev.getDate() - 1)
+    const prevStr  = prev.toLocaleDateString('en-CA')
+    const prevInfo = dayMap[prevStr]
+    return !prevInfo || prevInfo.booking.checkIn !== booking.checkIn
+  }
+
   return (
     <div style={{ padding: '20px 20px 24px' }}>
       <div style={{ background: 'var(--bg2)', borderRadius: 'var(--radius)', overflow: 'hidden' }}>
@@ -208,59 +219,72 @@ export default function GuestCard({ expenses = [], calendarData: propData }) {
               const dateStr = `${viewYear}-${String(viewMonth + 1).padStart(2,'0')}-${String(day).padStart(2,'0')}`
               const info    = dayMap[dateStr]
               const isToday = dateStr === todayStr
-              const isActive = info && activeBooking === info.booking.checkIn
+              const isActive   = info && activeBooking === info.booking.checkIn
+              const showLabel  = isActive && isFirstVisibleDay(dateStr, info.booking)
 
               return (
                 <div
                   key={day}
-                  style={{ position: 'relative', height: 44 }}
+                  style={{ position: 'relative', height: 52 }}
                   onClick={() => handleDayClick(info)}
                 >
+                  {/* Booking strip */}
                   {info && (
                     <div style={{
                       position: 'absolute', top: '50%', transform: 'translateY(-50%)',
-                      height: 32,
-                      left:   info.isFirst ? '8%' : 0,
-                      right:  info.isLast  ? '8%' : 0,
+                      height: 38,
+                      left:   info.isFirst ? '6%' : 0,
+                      right:  info.isLast  ? '6%' : 0,
                       background: info.color.bar,
-                      borderRadius: info.isFirst && info.isLast ? 16
-                                  : info.isFirst ? '16px 0 0 16px'
-                                  : info.isLast  ? '0 16px 16px 0' : 0,
+                      borderRadius: info.isFirst && info.isLast ? 19
+                                  : info.isFirst ? '19px 0 0 19px'
+                                  : info.isLast  ? '0 19px 19px 0' : 0,
                       opacity: isActive ? 1 : 0.88,
                       cursor: 'pointer',
                       transition: 'opacity 120ms ease',
-                    }} />
-                  )}
-
-                  {/* Guest name tooltip — floats above the strip on the first visible day */}
-                  {isActive && info.isFirst && (
-                    <div style={{
-                      position:    'absolute',
-                      bottom:      '100%',
-                      left:        '50%',
-                      transform:   'translateX(-50%)',
-                      marginBottom: 6,
-                      background:  info.color.bar,
-                      color:       '#fff',
-                      fontSize:    11,
-                      fontWeight:  700,
-                      whiteSpace:  'nowrap',
-                      padding:     '4px 9px',
-                      borderRadius: 8,
-                      zIndex:      10,
-                      pointerEvents: 'none',
-                      boxShadow:   '0 2px 8px rgba(0,0,0,0.22)',
+                      overflow: 'visible',
                     }}>
-                      {info.booking.name}
-                      <span style={{ fontWeight: 400, opacity: 0.8, marginLeft: 5 }}>
-                        {fmt(info.booking.checkIn)}–{fmt(info.booking.checkOut)}
-                      </span>
+                      {/* Guest name — rendered INSIDE the strip starting at first visible day.
+                          No overflow clipping since it's contained within the strip bounds. */}
+                      {showLabel && (
+                        <div style={{
+                          position:   'absolute',
+                          top: '50%', transform: 'translateY(-50%)',
+                          left: info.isFirst ? 10 : 6,
+                          right: 0,
+                          display:    'flex',
+                          alignItems: 'center',
+                          gap:        5,
+                          pointerEvents: 'none',
+                          overflow: 'hidden',
+                          whiteSpace: 'nowrap',
+                        }}>
+                          <span style={{
+                            fontSize:   11,
+                            fontWeight: 800,
+                            color:      '#fff',
+                            letterSpacing: '-0.01em',
+                          }}>
+                            {info.booking.name}
+                          </span>
+                          <span style={{
+                            fontSize:  10,
+                            fontWeight: 400,
+                            color:     'rgba(255,255,255,0.72)',
+                          }}>
+                            {fmt(info.booking.checkIn)}–{fmt(info.booking.checkOut)}
+                          </span>
+                        </div>
+                      )}
                     </div>
                   )}
 
+                  {/* Day number */}
                   <div style={{
                     position: 'absolute', inset: 0,
-                    display: 'flex', alignItems: 'center', justifyContent: 'center',
+                    display: 'flex', alignItems: 'center',
+                    justifyContent: showLabel ? 'flex-end' : 'center',
+                    paddingRight: showLabel ? 6 : 0,
                     fontSize:   14,
                     fontWeight: isToday ? 800 : info ? 700 : 400,
                     color:      info    ? info.color.text

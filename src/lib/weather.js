@@ -147,29 +147,32 @@ export async function fetchWeather() {
     const w = await res.json()
 
     const alerts  = []
-    const low     = Math.round(w.main.temp_min)
+    // Use current temp rather than temp_min — OWM's temp_min is the current
+    // observed range across stations, not tonight's forecasted low, and fires
+    // false positives during warm weather.
+    const currentTemp = Math.round(w.main.temp)
     const windMph = Math.round(w.wind.speed)
 
-    // ── Freeze warning ────────────────────────────────────────────────────
-    if (low <= FREEZE_LIGHT_F) {
-      const isHard = low <= FREEZE_HARD_F
+    // ── Freeze warning — only fires when it's actually cold right now ─────
+    if (currentTemp <= FREEZE_LIGHT_F) {
+      const isHard = currentTemp <= FREEZE_HARD_F
       alerts.push({
         id:       'owm-freeze',
         type:     'alert',
         priority: isHard ? 'high' : 'normal',
         title:    isHard
           ? pickRandom([
-              'Hard freeze tonight. Sprinklers need attention.',
-              'Freeze warning. Pipes would prefer preparation.',
-              `Below ${low}°F tonight. Worth preparing for.`,
+              'Hard freeze right now. Pipes and sprinklers need attention.',
+              `${currentTemp}°F outside. Protect the pipes.`,
+              'Freezing temps. Drain the sprinkler lines.',
             ])
           : pickRandom([
-              `Light freeze possible. ${low}°F tonight.`,
-              'Cold enough to matter tonight.',
-              `${low}°F low tonight. Worth a look outside.`,
+              `It's ${currentTemp}°F outside. Bring the plants in.`,
+              'Cold enough to matter. Check porch plants.',
+              `${currentTemp}°F right now. Worth a look outside.`,
             ]),
         detail:   isHard
-          ? 'Drain the sprinkler lines and bring in porch plants before dark.'
+          ? 'Drain the sprinkler lines and bring in porch plants.'
           : 'Cover sensitive plants if you have them.',
       })
     }
