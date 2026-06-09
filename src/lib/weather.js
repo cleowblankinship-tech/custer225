@@ -148,8 +148,7 @@ export async function fetchWeather() {
 
     const alerts  = []
     // Use current temp rather than temp_min — OWM's temp_min is the current
-    // observed range across stations, not tonight's forecasted low, and fires
-    // false positives during warm weather.
+    // observed range across stations, not tonight's forecasted low.
     const currentTemp = Math.round(w.main.temp)
     const windMph = Math.round(w.wind.speed)
 
