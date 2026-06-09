@@ -142,9 +142,13 @@ export default function App() {
   //   updates present → show top update title; weather is the subtitle
   //   nothing active  → composite message weaves weather + readiness + revenue
   const guestMessage = getGuestMessage(calendarData)
-  const bubbleMessage = topUpdate
-    ? topUpdate.title
+  // High-priority alerts (hard freeze, storm) override everything.
+  // Normal-priority alerts (breezy, light freeze, rain) yield to guest context.
+  const highAlert = activeUpdates.find(u => u.type === 'alert' && u.priority === 'high')
+  const bubbleMessage = highAlert
+    ? highAlert.title
     : guestMessage
+    ?? topUpdate?.title
     ?? getCompositeMessage({
         weatherBlurb,
         setupPct:       setupStats?.pct       ?? 100,
