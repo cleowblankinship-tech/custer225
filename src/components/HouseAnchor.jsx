@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef } from 'react'
+// blinkTimer removed — window opacity is now fixed
 import HouseIcon from './HouseIcon'
 
 const THEME_ICONS = { auto: '◐', day: '☀', evening: '◑', night: '☾' }
@@ -20,12 +21,10 @@ function useTypewriter(target, msPerChar = 22) {
 }
 
 export default function HouseAnchor({ message, mood, themeMode, onThemeToggle, notifPermission, onEnableNotifications }) {
-  const [open,       setOpen]       = useState(false)
-  const [pressed,    setPressed]    = useState(false)
-  const [nudging,    setNudging]    = useState(false)
-  const [winOpacity, setWinOpacity] = useState(1)
-  const nudgeTimer  = useRef(null)
-  const blinkTimer  = useRef(null)
+  const [open,    setOpen]    = useState(false)
+  const [pressed, setPressed] = useState(false)
+  const [nudging, setNudging] = useState(false)
+  const nudgeTimer = useRef(null)
 
   const displayedText = useTypewriter(open ? message : null)
   const isTyping      = open && displayedText.length < (message?.length ?? 0)
@@ -54,28 +53,11 @@ export default function HouseAnchor({ message, mood, themeMode, onThemeToggle, n
     return () => { clearTimeout(nudgeTimer.current); clearInterval(nudgeTimer.current) }
   }, [open, message])
 
-  // Window blink: house "eyes" flutter shut every 4–11 seconds
-  useEffect(() => {
-    let id
-    function scheduleBlink() {
-      const delay = 4000 + Math.random() * 7000
-      id = setTimeout(() => {
-        setWinOpacity(0.06)
-        setTimeout(() => { setWinOpacity(1); scheduleBlink() }, 130)
-      }, delay)
-    }
-    scheduleBlink()
-    return () => clearTimeout(id)
-  }, [])
-
-  // Idle animation: wrapper div carries it so press/open transforms on the
-  // button layer compose cleanly on top without fighting the animation.
+  // Wrapper animation: only for urgent shake and nudge — no idle bounce
   let wrapperAnimation = ''
   if (!open && !pressed) {
-    if (nudging)                  wrapperAnimation = 'houseNudge 0.55s ease-in-out'
-    else if (mood === 'urgent')   wrapperAnimation = 'houseShake 0.5s ease-in-out infinite'
-    else if (mood === 'attention') wrapperAnimation = 'housePulse 2.2s ease-in-out infinite'
-    else                          wrapperAnimation = 'houseFloat 3.8s ease-in-out infinite'
+    if (nudging)                wrapperAnimation = 'houseNudge 0.55s ease-in-out'
+    else if (mood === 'urgent') wrapperAnimation = 'houseShake 0.5s ease-in-out infinite'
   }
 
   return (
@@ -128,7 +110,7 @@ export default function HouseAnchor({ message, mood, themeMode, onThemeToggle, n
               : 'drop-shadow(0 4px 16px rgba(0,0,0,0.20))',
           }}
         >
-          <HouseIcon size={130} windowOpacity={winOpacity} mood={mood} />
+          <HouseIcon size={130} windowOpacity={1} mood={mood} />
         </button>
       </div>
 
