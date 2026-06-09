@@ -1,15 +1,10 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import HouseIcon from './HouseIcon'
 
-// ── Theme toggle config ────────────────────────────────────────────────────────
 const THEME_ICONS = { auto: '◐', day: '☀', evening: '◑', night: '☾' }
 
-// ── Typewriter hook ────────────────────────────────────────────────────────────
-// Reveals `target` one character at a time. Returns '' when target is null.
-// Restarts from '' whenever target changes.
 function useTypewriter(target, msPerChar = 22) {
   const [output, setOutput] = useState('')
-
   useEffect(() => {
     if (!target) { setOutput(''); return }
     setOutput('')
@@ -21,38 +16,66 @@ function useTypewriter(target, msPerChar = 22) {
     }, msPerChar)
     return () => clearInterval(id)
   }, [target, msPerChar])
-
   return output
 }
 
-// ─────────────────────────────────────────────────────────────────────────────
-//
-// HouseAnchor — the house as a free-standing illustration.
-//
-// Not a card. Not a widget. The house floats at the top of the layout,
-// large, anchoring the composition. When tapped, it speaks: a single
-// message appears inline beside it with a typewriter animation. Tap again
-// to close. No modal. No sheet. The house is the voice of the property.
-//
-// Design notes:
-//   — house is colored var(--accent) so it adapts to the active theme:
-//     yellow at night, red in day, hot pink in evening, coral in morning.
-//   — message text is uncontained — it lives directly on the page bg.
-//   — the blinking cursor is the only animation artifact; remove it post-type.
-//   — theme toggle is present for mobile (desktop uses the nav toggle).
-//
-// ─────────────────────────────────────────────────────────────────────────────
-
 export default function HouseAnchor({ message, mood, themeMode, onThemeToggle, notifPermission, onEnableNotifications }) {
-  const [open,    setOpen]    = useState(false)
-  const [pressed, setPressed] = useState(false)
+  const [open,       setOpen]       = useState(false)
+  const [pressed,    setPressed]    = useState(false)
+  const [nudging,    setNudging]    = useState(false)
+  const [winOpacity, setWinOpacity] = useState(1)
+  const nudgeTimer  = useRef(null)
+  const blinkTimer  = useRef(null)
 
   const displayedText = useTypewriter(open ? message : null)
   const isTyping      = open && displayedText.length < (message?.length ?? 0)
 
   function toggle() {
     setPressed(false)
+    setNudging(false)
     setOpen(o => !o)
+  }
+
+  // Attention-nudge: wiggle once after 8s of unread message, then every 20s
+  useEffect(() => {
+    clearTimeout(nudgeTimer.current)
+    clearInterval(nudgeTimer.current)
+    if (open || !message) return
+
+    nudgeTimer.current = setTimeout(() => {
+      const fire = () => {
+        setNudging(true)
+        setTimeout(() => setNudging(false), 550)
+      }
+      fire()
+      nudgeTimer.current = setInterval(fire, 20000)
+    }, 8000)
+
+    return () => { clearTimeout(nudgeTimer.current); clearInterval(nudgeTimer.current) }
+  }, [open, message])
+
+  // Window blink: house "eyes" flutter shut every 4–11 seconds
+  useEffect(() => {
+    let id
+    function scheduleBlink() {
+      const delay = 4000 + Math.random() * 7000
+      id = setTimeout(() => {
+        setWinOpacity(0.06)
+        setTimeout(() => { setWinOpacity(1); scheduleBlink() }, 130)
+      }, delay)
+    }
+    scheduleBlink()
+    return () => clearTimeout(id)
+  }, [])
+
+  // Idle animation: wrapper div carries it so press/open transforms on the
+  // button layer compose cleanly on top without fighting the animation.
+  let wrapperAnimation = ''
+  if (!open && !pressed) {
+    if (nudging)                  wrapperAnimation = 'houseNudge 0.55s ease-in-out'
+    else if (mood === 'urgent')   wrapperAnimation = 'houseShake 0.5s ease-in-out infinite'
+    else if (mood === 'attention') wrapperAnimation = 'housePulse 2.2s ease-in-out infinite'
+    else                          wrapperAnimation = 'houseFloat 3.8s ease-in-out infinite'
   }
 
   return (
@@ -64,118 +87,83 @@ export default function HouseAnchor({ message, mood, themeMode, onThemeToggle, n
       position:   'relative',
     }}>
 
-      {/* Theme toggle — top right; mobile only (desktop uses the nav) ────── */}
+      {/* Theme toggle — mobile only */}
       <button
         className="mobile-only"
         onClick={onThemeToggle}
         title={`Theme: ${themeMode}`}
         style={{
-          position:     'absolute',
-          top:          20,
-          right:        20,
-          fontSize:     14,
-          color:        'var(--text3)',
-          padding:      '4px 8px',
-          background:   'var(--bg2)',
-          borderRadius: 'var(--radius-sm)',
-          lineHeight:   1,
+          position: 'absolute', top: 20, right: 20,
+          fontSize: 14, color: 'var(--text3)',
+          padding: '4px 8px', background: 'var(--bg2)',
+          borderRadius: 'var(--radius-sm)', lineHeight: 1,
         }}
       >
         {THEME_ICONS[themeMode]}
       </button>
 
-      {/* ── House — the primary object ──────────────────────────────────── */}
-      <button
-        onPointerDown={() => setPressed(true)}
-        onPointerUp={toggle}
-        onPointerLeave={() => setPressed(false)}
-        aria-label={open ? 'Close house message' : 'Open house status'}
-        style={{
-          color:      'var(--accent)',
-          padding:    0,
-          flexShrink: 0,
-          // Pressed: squash. Open: lift and enlarge. Rest: natural.
-          transform: pressed
-            ? 'scale(0.88)'
-            : open
-            ? 'scale(1.06) translateY(-6px)'
-            : 'scale(1)',
-          transition: pressed
-            ? 'transform 70ms ease-in, color 350ms ease, filter 350ms ease'
-            : 'transform 420ms cubic-bezier(0.34, 1.56, 0.64, 1), color 350ms ease, filter 350ms ease',
-          filter: open
-            ? 'drop-shadow(0 10px 28px rgba(0,0,0,0.40))'
-            : 'drop-shadow(0 4px 16px rgba(0,0,0,0.24))',
-        }}
-      >
-        <HouseIcon size={130} />
-      </button>
+      {/* Idle animation wrapper — keeps keyframe transforms separate from press/open */}
+      <div style={{ flexShrink: 0, animation: wrapperAnimation }}>
+        <button
+          onPointerDown={() => setPressed(true)}
+          onPointerUp={toggle}
+          onPointerLeave={() => setPressed(false)}
+          aria-label={open ? 'Close house message' : 'Open house status'}
+          style={{
+            color:   'var(--accent)',
+            padding: 0,
+            // Pressed: squash + tilt. Open: lift + lean forward. Rest: natural.
+            transform: pressed
+              ? 'scale(0.86) rotate(-3deg)'
+              : open
+              ? 'scale(1.07) translateY(-10px) rotate(2deg)'
+              : 'scale(1)',
+            transition: pressed
+              ? 'transform 65ms ease-in, filter 200ms ease'
+              : 'transform 430ms cubic-bezier(0.34, 1.56, 0.64, 1), filter 350ms ease',
+            filter: open
+              ? 'drop-shadow(0 14px 36px rgba(0,0,0,0.42))'
+              : mood === 'urgent'
+              ? 'drop-shadow(0 4px 18px rgba(192,85,56,0.45))'
+              : 'drop-shadow(0 4px 16px rgba(0,0,0,0.20))',
+          }}
+        >
+          <HouseIcon size={130} windowOpacity={winOpacity} />
+        </button>
+      </div>
 
-      {/* ── Inline message — no container, lives on the page ───────────── */}
+      {/* Inline message */}
       {open && (
         <div style={{ flex: 1, minWidth: 0, paddingTop: 8 }}>
           <p style={{
-            fontSize:      17,
-            fontWeight:    400,
-            lineHeight:    1.6,
-            letterSpacing: '-0.01em',
-            color:         'var(--text)',
+            fontSize: 17, fontWeight: 400, lineHeight: 1.6,
+            letterSpacing: '-0.01em', color: 'var(--text)',
           }}>
             {displayedText}
-
-            {/* Blinking cursor — only while typing */}
             {isTyping && (
-              <span
-                aria-hidden="true"
-                style={{
-                  display:       'inline-block',
-                  width:         2,
-                  height:        '0.82em',
-                  background:    'var(--accent)',
-                  marginLeft:    3,
-                  verticalAlign: 'middle',
-                  borderRadius:  1,
-                  animation:     'cursorBlink 0.65s step-end infinite',
-                }}
-              />
+              <span aria-hidden="true" style={{
+                display: 'inline-block', width: 2, height: '0.82em',
+                background: 'var(--accent)', marginLeft: 3,
+                verticalAlign: 'middle', borderRadius: 1,
+                animation: 'cursorBlink 0.65s step-end infinite',
+              }} />
             )}
           </p>
 
-          {/* Dismiss affordance — appears once typing finishes */}
-          {!isTyping && (
-            <div style={{ marginTop: 18, display: 'flex', alignItems: 'center', gap: 16, flexWrap: 'wrap' }}>
-              <button
-                onClick={() => setOpen(false)}
-                style={{
-                  fontSize:      10,
-                  fontWeight:    700,
-                  letterSpacing: '0.12em',
-                  textTransform: 'uppercase',
-                  color:         'var(--text3)',
-                }}
-              >
-                — close
-              </button>
-
-              {/* Notification enable prompt — only when permission is not yet granted */}
-              {notifPermission === 'default' && onEnableNotifications && (
-                <button
-                  onClick={onEnableNotifications}
-                  style={{
-                    fontSize:      10,
-                    fontWeight:    700,
-                    letterSpacing: '0.12em',
-                    textTransform: 'uppercase',
-                    color:         'var(--accent)',
-                    background:    'var(--bg2)',
-                    padding:       '4px 8px',
-                    borderRadius:  'var(--radius-sm)',
-                  }}
-                >
-                  Enable booking alerts
-                </button>
-              )}
-            </div>
+          {/* Notification prompt — once typing finishes, if not yet enabled */}
+          {!isTyping && notifPermission === 'default' && onEnableNotifications && (
+            <button
+              onClick={onEnableNotifications}
+              style={{
+                display: 'block', marginTop: 18,
+                fontSize: 10, fontWeight: 700,
+                letterSpacing: '0.12em', textTransform: 'uppercase',
+                color: 'var(--accent)', background: 'var(--bg2)',
+                padding: '4px 8px', borderRadius: 'var(--radius-sm)',
+              }}
+            >
+              Enable booking alerts
+            </button>
           )}
         </div>
       )}
