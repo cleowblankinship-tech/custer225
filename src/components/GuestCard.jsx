@@ -211,7 +211,7 @@ export default function GuestCard({ expenses = [], calendarData: propData }) {
             Loading…
           </div>
         ) : (
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(7, 1fr)', padding: '0 14px 14px', rowGap: 2 }}>
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(7, 1fr)', padding: '0 14px 6px', rowGap: 2 }}>
             {Array.from({ length: firstWeekDay }).map((_, i) => <div key={`e${i}`} />)}
 
             {Array.from({ length: daysInMonth }).map((_, i) => {
@@ -239,47 +239,13 @@ export default function GuestCard({ expenses = [], calendarData: propData }) {
                       borderRadius: info.isFirst && info.isLast ? 19
                                   : info.isFirst ? '19px 0 0 19px'
                                   : info.isLast  ? '0 19px 19px 0' : 0,
-                      opacity: isActive ? 1 : 0.88,
+                      opacity:    isActive ? 1 : 0.85,
+                      outline:    isActive ? `2px solid ${info.color.bar}` : 'none',
+                      outlineOffset: 2,
                       cursor: 'pointer',
                       transition: 'opacity 120ms ease',
-                      overflow: 'visible',
-                    }}>
-                      {/* Guest name — rendered INSIDE the strip starting at first visible day.
-                          No overflow clipping since it's contained within the strip bounds. */}
-                      {showLabel && (
-                        <div style={{
-                          position:   'absolute',
-                          top: '50%', transform: 'translateY(-50%)',
-                          left: info.isFirst ? 10 : 6,
-                          right: 0,
-                          display:    'flex',
-                          alignItems: 'center',
-                          gap:        5,
-                          pointerEvents: 'none',
-                          overflow: 'hidden',
-                          whiteSpace: 'nowrap',
-                        }}>
-                          <span style={{
-                            fontSize:   11,
-                            fontWeight: 800,
-                            color:      '#fff',
-                            letterSpacing: '-0.01em',
-                          }}>
-                            {info.booking.name}
-                          </span>
-                          <span style={{
-                            fontSize:  10,
-                            fontWeight: 400,
-                            color:     'rgba(255,255,255,0.72)',
-                          }}>
-                            {fmt(info.booking.checkIn)}–{fmt(info.booking.checkOut)}
-                          </span>
-                        </div>
-                      )}
-                    </div>
+                    }} />
                   )}
-
-                  {/* Day number */}
                   <div style={{
                     position: 'absolute', inset: 0,
                     display: 'flex', alignItems: 'center',
@@ -301,10 +267,45 @@ export default function GuestCard({ expenses = [], calendarData: propData }) {
           </div>
         )}
 
-        {/* ── Occupancy stats — lighter, doesn't compete with the calendar ──── */}
+        {/* ── Selected booking info bar ──────────────────────────────────────── */}
+        {!loading && activeBooking && (() => {
+          const b = data?.all?.find(b => b.checkIn === activeBooking)
+          if (!b) return null
+          const color = colorMap[b.checkIn] ?? BOOKING_COLORS[0]
+          return (
+            <div style={{
+              margin: '0 14px 10px',
+              padding: '10px 16px',
+              borderRadius: 10,
+              background: color.bar,
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'space-between',
+              gap: 12,
+            }}>
+              <div>
+                <span style={{ fontSize: 14, fontWeight: 800, color: '#fff' }}>{b.name}</span>
+                <span style={{ fontSize: 12, color: 'rgba(255,255,255,0.72)', marginLeft: 10 }}>
+                  {fmt(b.checkIn)} – {fmt(b.checkOut)} · {b.nights} night{b.nights !== 1 ? 's' : ''}
+                </span>
+              </div>
+              <button
+                onClick={() => setActiveBooking(null)}
+                style={{ fontSize: 16, color: 'rgba(255,255,255,0.7)', lineHeight: 1, padding: '0 2px' }}
+              >
+                ×
+              </button>
+            </div>
+          )
+        })()}
+
+        {/* Separator before stats — only needed when no info bar */}
+        {(loading || !activeBooking) && <div style={{ borderTop: '1px solid var(--border)' }} />}
+
+        {/* ── Occupancy stats ─────────────────────────────────────────────────── */}
         {!loading && monthStats && (
           <div style={{
-            borderTop:  '1px solid var(--border)',
+            borderTop: activeBooking ? '1px solid var(--border)' : 'none',
             padding:    '16px 24px 18px',
             display:    'flex',
             alignItems: 'baseline',
