@@ -43,7 +43,7 @@ function useTypewriter(target, msPerChar = 22) {
 //
 // ─────────────────────────────────────────────────────────────────────────────
 
-export default function HouseAnchor({ message, mood, themeMode, onThemeToggle }) {
+export default function HouseAnchor({ message, mood, themeMode, onThemeToggle, notifPermission, onEnableNotifications }) {
   const [open,    setOpen]    = useState(false)
   const [pressed, setPressed] = useState(false)
 
@@ -143,20 +143,39 @@ export default function HouseAnchor({ message, mood, themeMode, onThemeToggle })
 
           {/* Dismiss affordance — appears once typing finishes */}
           {!isTyping && (
-            <button
-              onClick={() => setOpen(false)}
-              style={{
-                display:       'block',
-                marginTop:     18,
-                fontSize:      10,
-                fontWeight:    700,
-                letterSpacing: '0.12em',
-                textTransform: 'uppercase',
-                color:         'var(--text3)',
-              }}
-            >
-              — close
-            </button>
+            <div style={{ marginTop: 18, display: 'flex', alignItems: 'center', gap: 16, flexWrap: 'wrap' }}>
+              <button
+                onClick={() => setOpen(false)}
+                style={{
+                  fontSize:      10,
+                  fontWeight:    700,
+                  letterSpacing: '0.12em',
+                  textTransform: 'uppercase',
+                  color:         'var(--text3)',
+                }}
+              >
+                — close
+              </button>
+
+              {/* Notification enable prompt — only when permission is not yet granted */}
+              {notifPermission === 'default' && onEnableNotifications && (
+                <button
+                  onClick={onEnableNotifications}
+                  style={{
+                    fontSize:      10,
+                    fontWeight:    700,
+                    letterSpacing: '0.12em',
+                    textTransform: 'uppercase',
+                    color:         'var(--accent)',
+                    background:    'var(--bg2)',
+                    padding:       '4px 8px',
+                    borderRadius:  'var(--radius-sm)',
+                  }}
+                >
+                  Enable booking alerts
+                </button>
+              )}
+            </div>
           )}
         </div>
       )}

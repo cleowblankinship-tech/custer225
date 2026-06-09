@@ -18,6 +18,13 @@ import { getActiveUpdates, getHouseMood, getCalmMessage, getCompositeMessage } f
 import { fetchWeather } from './lib/weather'
 import { getRecurringRemindersForDate, getUserRules, saveUserRule } from './lib/recurringRules'
 import { getTimeOfDay, getTheme, applyTheme } from './lib/theme'
+import {
+  checkForNewBookings,
+  sendBookingNotification,
+  buildBookingUpdate,
+  requestNotificationPermission,
+  getNotificationPermission,
+} from './lib/bookingNotifications'
 
 // ── Mood → bubble visual config ───────────────────────────────────────────────
 //
@@ -101,6 +108,8 @@ export default function App() {
   const [showIntro, setShowIntro] = useState(true) // true on every cold load
   const [userRules, setUserRules] = useState(() => getUserRules())
   const [setupStats, setSetupStats] = useState(null) // launch readiness snapshot
+  const [bookingUpdates, setBookingUpdates] = useState([])      // new-booking house items
+  const [notifPermission, setNotifPermission] = useState(() => getNotificationPermission())
 
   // ── Derive today's reminders from the tasks system ────────────────────────
   const todayStr = new Date().toISOString().split('T')[0]
@@ -118,7 +127,7 @@ export default function App() {
   const recurringReminders = getRecurringRemindersForDate(todayStr, userRules)
 
   // ── Merge all update sources + derive mood ────────────────────────────────
-  const activeUpdates  = getActiveUpdates([...weatherConditions, ...taskReminders, ...recurringReminders])
+  const activeUpdates  = getActiveUpdates([...weatherConditions, ...taskReminders, ...recurringReminders, ...bookingUpdates])
   const topUpdate      = activeUpdates[0] ?? null
   const mood           = getHouseMood(activeUpdates)
   const moodStyle      = MOOD_BUBBLE[mood]
@@ -164,6 +173,41 @@ export default function App() {
     refresh()
     const id = setInterval(refresh, 30 * 60 * 1000)
     return () => clearInterval(id)
+  }, [])
+
+  // ── Booking change detection ──────────────────────────────────────────────
+  // Polls /api/calendar every 15 min. On first load seeds the seen-cache so
+  // existing bookings don't fire as "new". On subsequent polls any booking
+  // not yet cached appears in the house bubble and triggers a push notification.
+  useEffect(() => {
+    let timeoutId = null
+
+    async function poll() {
+      try {
+        const res = await fetch('/api/calendar')
+        if (!res.ok) return
+        const data = await res.json()
+        const newBookings = checkForNewBookings(data.all ?? [])
+
+        if (newBookings.length > 0) {
+          const updates = newBookings.map(buildBookingUpdate)
+          setBookingUpdates(prev => {
+            // Merge: replace any existing item with the same id, then prepend new ones
+            const existing = prev.filter(p => !updates.some(u => u.id === p.id))
+            return [...updates, ...existing]
+          })
+          for (const b of newBookings) sendBookingNotification(b)
+        }
+
+        // Auto-expire old booking update items
+        setBookingUpdates(prev => prev.filter(u => !u.expiresAt || u.expiresAt > Date.now()))
+      } catch {}
+
+      timeoutId = setTimeout(poll, 15 * 60 * 1000)
+    }
+
+    poll()
+    return () => { if (timeoutId) clearTimeout(timeoutId) }
   }, [])
 
   // ── Apply theme ───────────────────────────────────────────────────────────
@@ -487,6 +531,11 @@ export default function App() {
                 message={bubbleMessage}
                 mood={mood}
                 themeMode={themeMode}
+                notifPermission={notifPermission}
+                onEnableNotifications={async () => {
+                  const result = await requestNotificationPermission()
+                  setNotifPermission(result)
+                }}
                 onThemeToggle={() => {
                   const CYCLE = ['auto', 'day', 'evening', 'night']
                   const m = CYCLE[(CYCLE.indexOf(themeMode) + 1) % CYCLE.length]
