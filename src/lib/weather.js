@@ -20,7 +20,7 @@ function isConfigured() {
 // ── Thresholds ────────────────────────────────────────────────────────────────
 
 const FREEZE_HARD_F  = 28   // hard freeze  → high priority
-const FREEZE_LIGHT_F = 36   // light freeze → normal priority
+const FREEZE_LIGHT_F = 32   // at/below freezing → normal priority
 const WIND_HIGH_MPH  = 40   // damaging wind → high priority
 const WIND_BREEZY_MPH = 25  // breezy → normal priority
 
