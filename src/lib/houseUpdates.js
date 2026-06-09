@@ -179,6 +179,55 @@ export function getCompositeMessage({
   return w ?? getCalmMessage()
 }
 
+// ── Guest-aware speech ────────────────────────────────────────────────────────
+//
+// Returns a message about the current or next guest when calendar data is live.
+// Called before the composite message so guest context takes priority.
+
+/**
+ * @param {{ current, next }} calendarData — from /api/calendar
+ * @returns {string|null} message, or null if no relevant guest context
+ */
+export function getGuestMessage(calendarData) {
+  if (!calendarData) return null
+
+  const now = new Date()
+
+  if (calendarData.current) {
+    const g = calendarData.current
+    const checkout = new Date(g.checkOut)
+    const checkoutDateStr = checkout.toLocaleDateString('en-US', {
+      timeZone: 'America/Denver', month: 'short', day: 'numeric',
+    })
+    const isCheckoutToday = checkout.toLocaleDateString('en-CA', { timeZone: 'America/Denver' })
+      === now.toLocaleDateString('en-CA', { timeZone: 'America/Denver' })
+    if (isCheckoutToday) {
+      return `${g.firstName} checks out today.`
+    }
+    const msLeft    = checkout - now
+    const daysLeft  = Math.ceil(msLeft / (1000 * 60 * 60 * 24))
+    if (daysLeft === 1) return `${g.firstName} checks out tomorrow.`
+    return `${g.firstName} is staying for ${daysLeft} more night${daysLeft !== 1 ? 's' : ''}.`
+  }
+
+  if (calendarData.next) {
+    const g = calendarData.next
+    const checkin = new Date(g.checkIn)
+    const msAway  = checkin - now
+    const daysAway = Math.ceil(msAway / (1000 * 60 * 60 * 24))
+    const checkinDateStr = checkin.toLocaleDateString('en-US', {
+      timeZone: 'America/Denver', weekday: 'short', month: 'short', day: 'numeric',
+    })
+    const isCheckinToday = checkin.toLocaleDateString('en-CA', { timeZone: 'America/Denver' })
+      === now.toLocaleDateString('en-CA', { timeZone: 'America/Denver' })
+    if (isCheckinToday) return `${g.firstName} checks in today.`
+    if (daysAway <= 2) return `${g.firstName} arrives in ${daysAway} day${daysAway !== 1 ? 's' : ''}.`
+    return `Next guest: ${g.firstName} on ${checkinDateStr}.`
+  }
+
+  return null
+}
+
 // ── API ───────────────────────────────────────────────────────────────────────
 
 /**

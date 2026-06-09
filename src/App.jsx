@@ -14,7 +14,7 @@ import IntroSplash from './components/IntroSplash'
 // import HouseToday from './components/HouseToday'
 import DebtDashboard from './components/DebtDashboard'
 import HouseAnchor from './components/HouseAnchor'
-import { getActiveUpdates, getHouseMood, getCalmMessage, getCompositeMessage } from './lib/houseUpdates'
+import { getActiveUpdates, getHouseMood, getCalmMessage, getCompositeMessage, getGuestMessage } from './lib/houseUpdates'
 import { fetchWeather } from './lib/weather'
 import { getRecurringRemindersForDate, getUserRules, saveUserRule } from './lib/recurringRules'
 import { getTimeOfDay, getTheme, applyTheme } from './lib/theme'
@@ -110,6 +110,7 @@ export default function App() {
   const [setupStats, setSetupStats] = useState(null) // launch readiness snapshot
   const [bookingUpdates, setBookingUpdates] = useState([])      // new-booking house items
   const [notifPermission, setNotifPermission] = useState(() => getNotificationPermission())
+  const [calendarData, setCalendarData] = useState(null)        // live calendar for house speech
 
   // ── Derive today's reminders from the tasks system ────────────────────────
   const todayStr = new Date().toISOString().split('T')[0]
@@ -140,9 +141,11 @@ export default function App() {
   // Bubble message:
   //   updates present → show top update title; weather is the subtitle
   //   nothing active  → composite message weaves weather + readiness + revenue
+  const guestMessage = getGuestMessage(calendarData)
   const bubbleMessage = topUpdate
     ? topUpdate.title
-    : getCompositeMessage({
+    : guestMessage
+    ?? getCompositeMessage({
         weatherBlurb,
         setupPct:       setupStats?.pct       ?? 100,
         setupRemaining: setupStats?.remaining ?? 0,
@@ -187,6 +190,7 @@ export default function App() {
         const res = await fetch('/api/calendar')
         if (!res.ok) return
         const data = await res.json()
+        setCalendarData(data)
         const newBookings = checkForNewBookings(data.all ?? [])
 
         if (newBookings.length > 0) {
@@ -520,7 +524,7 @@ export default function App() {
             {/* ── Right column — calendar ──────────────────────────────── */}
             <div className="home-right">
               {/* Calendar + occupancy */}
-              <GuestCard expenses={expenses} />
+              <GuestCard expenses={expenses} calendarData={calendarData} />
             </div>
 
             {/* ── Left column: house icon + financials ─────────────────── */}
