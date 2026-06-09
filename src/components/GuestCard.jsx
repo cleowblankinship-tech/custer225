@@ -166,7 +166,7 @@ export default function GuestCard({ expenses = [], calendarData: propData }) {
   const firstWeekDay = new Date(viewYear, viewMonth, 1).getDay()
 
   return (
-    <div style={{ padding: '24px 24px 20px' }}>
+    <div style={{ padding: '24px 24px 20px', flex: 1, display: 'flex', flexDirection: 'column' }}>
 
       {/* ── Month nav ──────────────────────────────────────────────────────── */}
       <div style={{
@@ -198,7 +198,7 @@ export default function GuestCard({ expenses = [], calendarData: propData }) {
           Loading…
         </div>
       ) : (
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(7, 1fr)', rowGap: 1 }}>
+        <div style={{ flex: 1, minHeight: 0, display: 'grid', gridTemplateColumns: 'repeat(7, 1fr)', gridAutoRows: '1fr', rowGap: 1 }}>
           {Array.from({ length: firstWeekDay }).map((_, i) => <div key={`e${i}`} />)}
 
           {Array.from({ length: daysInMonth }).map((_, i) => {
@@ -211,7 +211,7 @@ export default function GuestCard({ expenses = [], calendarData: propData }) {
             return (
               <div
                 key={day}
-                style={{ position: 'relative', height: 38 }}
+                style={{ position: 'relative' }}
                 onClick={() => handleDayClick(info)}
               >
                 {info && (
