@@ -202,10 +202,15 @@ input::placeholder, textarea::placeholder { color: var(--text3); }
   .home-grid {
     display: grid;
     grid-template-columns: 1fr 2.4fr;
-    align-items: start;
+    align-items: stretch;
     max-width: 1400px;
     margin: 0 auto;
     width: 100%;
+  }
+
+  .home-right {
+    display: flex;
+    flex-direction: column;
   }
 
   /* On desktop the calendar column is defined first in markup (mobile-first),
