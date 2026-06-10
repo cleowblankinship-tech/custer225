@@ -298,7 +298,11 @@ export default function App() {
       amount: parsed.amount,
       category: parsed.category,
       entry_type: parsed.entry_type || 'expense',
-      tax_type: parsed.entry_type === 'income' ? null : parsed.tax_type,
+      // DB has NOT NULL + CHECK ('depreciate','expense','personal') on tax_type.
+      // Income isn't a deductible cost, so it rides as 'personal' — every
+      // financial rollup filters by entry_type first, so this never leaks
+      // into expense totals.
+      tax_type: parsed.entry_type === 'income' ? 'personal' : (parsed.tax_type || 'expense'),
       recurring: parsed.recurring || false,
       recurring_frequency: parsed.recurring_frequency || null,
       recurring_day: parsed.recurring_day || null,
