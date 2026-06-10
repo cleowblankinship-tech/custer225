@@ -33,11 +33,14 @@ function fmt(iso) {
 
 // Revenue: prefer real payout data from the Hospitable API; fall back to
 // matching a manually-entered income entry by date.
-// The ledger income entry matched to a booking by date, or null
+// The ledger income entry matched to a booking — must be 'Booking revenue'
+// dated exactly to check-in (how saveRevenue writes it) so a single entry
+// never leaks into an adjacent booking's date range.
 function matchIncomeEntry(booking, incomeEntries) {
   const ci = toMTDateStr(booking.checkIn)
-  const co = toMTDateStr(booking.checkOut)
-  return incomeEntries.find(e => e.date >= ci && e.date <= co) ?? null
+  return incomeEntries.find(
+    e => e.category === 'Booking revenue' && e.date === ci
+  ) ?? null
 }
 
 function matchRevenue(booking, incomeEntries) {
