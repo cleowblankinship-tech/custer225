@@ -31,7 +31,10 @@ function fmt(iso) {
   return `${MONTH_NAMES[d.getMonth()].slice(0,3)} ${d.getDate()}`
 }
 
+// Revenue: prefer real payout data from the Hospitable API; fall back to
+// matching a manually-entered income entry by date.
 function matchRevenue(booking, incomeEntries) {
+  if (booking.revenue != null) return Number(booking.revenue)
   const ci = toMTDateStr(booking.checkIn)
   const co = toMTDateStr(booking.checkOut)
   const match = incomeEntries.find(e => e.date >= ci && e.date <= co)
@@ -443,6 +446,8 @@ export default function GuestCard({ expenses = [], calendarData: propData }) {
               <span style={{ fontWeight: 700, color: 'var(--text2)' }}>Out</span> {fmt(activeB.checkOut)}
               <span style={{ margin: '0 6px' }}>·</span>
               {activeB.nights} night{activeB.nights !== 1 ? 's' : ''}
+              {activeB.guests != null && <><span style={{ margin: '0 6px' }}>·</span>{activeB.guests} guest{activeB.guests !== 1 ? 's' : ''}</>}
+              {activeB.code && <><span style={{ margin: '0 6px' }}>·</span><span style={{ fontFamily: 'monospace' }}>{activeB.code}</span></>}
             </div>
             {revenue != null && (
               <div style={{ marginLeft: 'auto', textAlign: 'right' }}>
