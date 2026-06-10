@@ -1,6 +1,5 @@
 import { useMemo } from 'react'
 
-const fmt = (n) => '$' + Number(n).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })
 const fmtShort = (n, showSign = false) => {
   const abs = '$' + Math.abs(Number(n)).toLocaleString('en-US', { minimumFractionDigits: 0, maximumFractionDigits: 0 })
   if (showSign && n < 0) return `(${abs})`
@@ -53,7 +52,7 @@ export default function PLReport({ expenses }) {
   const netPositive = stats.netIncome >= 0
 
   return (
-    <div style={{ padding: '0 20px 60px' }}>
+    <div style={{ padding: '0 20px 60px', maxWidth: 720, margin: '0 auto', width: '100%' }}>
 
       {/* Top banner */}
       <div style={{
@@ -87,8 +86,8 @@ export default function PLReport({ expenses }) {
         title="Revenue"
         subtitle="Rental income received"
         total={stats.totalRevenue}
-        color="var(--accent)"
-        bg="var(--accent-light)"
+        color="var(--gold)"
+        bg="var(--gold-bg)"
         categories={stats.incomeCats}
         order={allIncomeCats}
         empty="No income logged yet"
@@ -125,18 +124,18 @@ export default function PLReport({ expenses }) {
         <p style={{ fontSize: 11, fontWeight: 500, color: 'var(--text2)', letterSpacing: '0.07em', textTransform: 'uppercase', marginBottom: 4 }}>
           Tax summary
         </p>
-        <Row label="Gross revenue" value={fmt(stats.totalRevenue)} color="var(--accent)" />
-        <Row label="Direct expenses (Schedule E)" value={`(${fmt(stats.totalExpenses)})`} color="var(--green)" />
+        <Row label="Gross revenue" value={fmtShort(stats.totalRevenue)} color="var(--gold)" />
+        <Row label="Direct expenses (Schedule E)" value={`(${fmtShort(stats.totalExpenses)})`} color="var(--green)" />
         <div style={{ borderTop: '0.5px solid var(--border)', paddingTop: 10, marginTop: 2 }}>
           <Row
             label="Net rental income"
-            value={stats.totalRevenue === 0 ? '—' : fmt(stats.netIncome)}
+            value={stats.totalRevenue === 0 ? '—' : fmtShort(stats.netIncome)}
             color={stats.totalRevenue === 0 ? 'var(--text3)' : (netPositive ? 'var(--green)' : 'var(--red)')}
             bold
           />
         </div>
         <div style={{ borderTop: '0.5px solid var(--border)', paddingTop: 10 }}>
-          <Row label="Depreciable asset basis (Form 4562)" value={fmt(stats.totalDepreciable)} color="var(--blue)" />
+          <Row label="Depreciable asset basis (Form 4562)" value={fmtShort(stats.totalDepreciable)} color="var(--blue)" />
         </div>
       </div>
     </div>
@@ -144,19 +143,17 @@ export default function PLReport({ expenses }) {
 }
 
 function SectionHeader({ title, subtitle, total, color, bg, positive }) {
-  const display = positive
-    ? '+$' + Number(total).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })
-    : '$' + Number(total).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })
+  const display = (positive ? '+' : '') + fmtShort(total)
   return (
     <div style={{
       background: bg, borderRadius: 'var(--radius-sm)', padding: '14px 16px',
       display: 'flex', justifyContent: 'space-between', alignItems: 'center',
     }}>
       <div>
-        <p style={{ fontSize: 13, fontWeight: 500, color }}>{title}</p>
+        <p style={{ fontSize: 14, fontWeight: 700, color }}>{title}</p>
         {subtitle && <p style={{ fontSize: 11, color: 'var(--text3)', marginTop: 2 }}>{subtitle}</p>}
       </div>
-      <p style={{ fontSize: 18, fontWeight: 600, color }}>{display}</p>
+      <p style={{ fontSize: 20, fontWeight: 800, letterSpacing: '-0.02em', fontVariantNumeric: 'tabular-nums', color }}>{display}</p>
     </div>
   )
 }
@@ -166,26 +163,33 @@ function Section({ title, subtitle, total, color, bg, categories, order, empty, 
     <div style={{ marginBottom: 24 }}>
       <SectionHeader title={title} subtitle={subtitle} total={total} color={color} bg={bg} positive={positive} />
       {order.length > 0 ? (
-        <div style={{
-          border: '0.5px solid var(--border)', borderRadius: 'var(--radius-sm)',
-          marginTop: 8, overflow: 'hidden',
-        }}>
-          {order.map((cat, i) => (
-            <div
-              key={cat}
-              style={{
-                display: 'flex', justifyContent: 'space-between', alignItems: 'center',
-                padding: '11px 16px',
-                borderBottom: i < order.length - 1 ? '0.5px solid var(--border)' : 'none',
-                background: 'var(--bg)',
-              }}
-            >
-              <p style={{ fontSize: 14, color: 'var(--text2)' }}>{cat}</p>
-              <p style={{ fontSize: 14, fontWeight: 500, color: 'var(--text)' }}>
-                {positive ? '+' : ''}${Number(categories[cat]).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
-              </p>
-            </div>
-          ))}
+        <div style={{ marginTop: 4, padding: '0 16px' }}>
+          {order.map((cat, i) => {
+            const amount = Number(categories[cat])
+            const pct    = total > 0 ? Math.round((amount / total) * 100) : 0
+            return (
+              <div
+                key={cat}
+                style={{
+                  display: 'flex', alignItems: 'center', gap: 12,
+                  padding: '9px 0',
+                  borderBottom: i < order.length - 1 ? '0.5px solid var(--border)' : 'none',
+                }}
+              >
+                <p style={{ fontSize: 13, color: 'var(--text2)', flexShrink: 0 }}>{cat}</p>
+                {/* share bar — instant visual scan of where money went */}
+                <div style={{ flex: 1, height: 3, borderRadius: 2, background: 'var(--bg2)', overflow: 'hidden' }}>
+                  <div style={{ width: `${pct}%`, height: '100%', background: color, opacity: 0.45, borderRadius: 2 }} />
+                </div>
+                <p style={{ fontSize: 11, color: 'var(--text3)', width: 34, textAlign: 'right', flexShrink: 0, fontVariantNumeric: 'tabular-nums' }}>
+                  {pct}%
+                </p>
+                <p style={{ fontSize: 14, fontWeight: 600, color: 'var(--text)', width: 84, textAlign: 'right', flexShrink: 0, fontVariantNumeric: 'tabular-nums' }}>
+                  {fmtShort(amount)}
+                </p>
+              </div>
+            )
+          })}
         </div>
       ) : empty ? (
         <p style={{ fontSize: 13, color: 'var(--text3)', padding: '12px 0 0 2px' }}>{empty}</p>
