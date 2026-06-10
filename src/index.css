@@ -171,9 +171,9 @@ input::placeholder, textarea::placeholder { color: var(--text3); }
 }
 
 /* Today's hand-drawn circle on the calendar — gentle breathing highlight */
-@keyframes todayPulse {
-  0%, 100% { box-shadow: 0 0 0 0   rgba(217,48,32, 0.25); }
-  50%       { box-shadow: 0 0 0 4px rgba(217,48,32, 0.08); }
+@keyframes sketchPulse {
+  0%, 100% { opacity: 1;    transform: rotate(0deg)  scale(1);     }
+  50%       { opacity: 0.75; transform: rotate(-3deg) scale(1.05); }
 }
 
 /* Mobile-only elements — visible on phones, hidden on desktop */

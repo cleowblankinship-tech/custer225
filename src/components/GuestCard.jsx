@@ -66,6 +66,36 @@ function MiniHouse({ size = 9, color = 'currentColor' }) {
   )
 }
 
+// Hand-drawn circle around today's date — an open, wobbly ink loop that
+// overshoots its start point, like someone circled the date with a marker.
+function SketchCircle() {
+  return (
+    <svg
+      viewBox="0 0 30 30"
+      aria-hidden="true"
+      style={{
+        position: 'absolute', inset: -5,
+        width: 'calc(100% + 10px)', height: 'calc(100% + 10px)',
+        overflow: 'visible', pointerEvents: 'none',
+        animation: 'sketchPulse 2.8s ease-in-out infinite',
+      }}
+    >
+      <path
+        d="M 21.5 4.8
+           C 14 1.5, 4.5 5, 3.2 12.5
+           C 2 19.5, 7 26.5, 15 26.8
+           C 23 27.1, 28.5 21, 27.8 13.8
+           C 27.2 7.5, 21.5 3.5, 16 4.5"
+        fill="none"
+        stroke="var(--accent)"
+        strokeWidth="1.9"
+        strokeLinecap="round"
+        opacity="0.85"
+      />
+    </svg>
+  )
+}
+
 export default function GuestCard({ expenses = [], calendarData: propData }) {
   const [fetchedData, setFetchedData] = useState(null)
   const [loading,     setLoading]     = useState(!propData)
@@ -335,14 +365,9 @@ export default function GuestCard({ expenses = [], calendarData: propData }) {
                   fontWeight: isToday ? 900 : 700,
                   color: isToday ? 'var(--accent)' : isGap ? 'var(--text3)' : 'var(--text2)',
                   zIndex: 2,
-                  ...(isToday && {
-                    border: '2px solid var(--accent)',
-                    borderRadius: '52% 46% 50% 48% / 48% 52% 46% 52%',
-                    transform: 'rotate(-4deg)',
-                    animation: 'todayPulse 2.6s ease-in-out infinite',
-                  }),
                 }}>
-                  <span style={{ transform: isToday ? 'rotate(4deg)' : 'none' }}>{day}</span>
+                  {isToday && <SketchCircle />}
+                  <span>{day}</span>
                 </div>
 
                 {/* Booking card strip — bottom of cell */}
