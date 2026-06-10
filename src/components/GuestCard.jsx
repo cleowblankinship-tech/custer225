@@ -99,7 +99,7 @@ function SketchCircle() {
   )
 }
 
-export default function GuestCard({ expenses = [], calendarData: propData }) {
+export default function GuestCard({ expenses = [], calendarData: propData, onAddIncome }) {
   const [fetchedData, setFetchedData] = useState(null)
   const [loading,     setLoading]     = useState(!propData)
   // The booking whose detail card is shown; keyed by checkIn ISO
@@ -247,6 +247,9 @@ export default function GuestCard({ expenses = [], calendarData: propData }) {
 
   const activeB = activeBooking ? data?.all?.find(b => b.checkIn === activeBooking) : null
 
+  // Reset revenue input whenever a different booking is selected
+  useEffect(() => { setRevenueInput('') }, [activeBooking])
+
   // ── Reminders → calendar ──────────────────────────────────────────────────
   // Open reminders with a due date appear on their day: a note pill when the
   // day is free, a pin dot when a booking ribbon already occupies the slot.
@@ -260,6 +263,8 @@ export default function GuestCard({ expenses = [], calendarData: propData }) {
   }, [expenses])
 
   const [activeDay, setActiveDay] = useState(null)
+  const [revenueInput, setRevenueInput] = useState('')
+  const [revenueSaving, setRevenueSaving] = useState(false)
   const activeDayReminders = activeDay ? remindersByDate[activeDay] ?? [] : []
 
   return (
@@ -501,42 +506,114 @@ export default function GuestCard({ expenses = [], calendarData: propData }) {
           upcoming: 'Upcoming', current: 'Staying now',
           checkout: 'Checks out today', past: 'Past stay',
         }
+
+        async function saveRevenue() {
+          const amt = parseFloat(revenueInput.replace(/[^0-9.]/g, ''))
+          if (!amt || !onAddIncome) return
+          setRevenueSaving(true)
+          await onAddIncome({
+            description: `${activeB.name} — ${fmt(activeB.checkIn)} to ${fmt(activeB.checkOut)}`,
+            amount: amt,
+            category: 'Booking revenue',
+            entry_type: 'income',
+            tax_type: null,
+            date: toMTDateStr(activeB.checkIn),
+          })
+          setRevenueInput('')
+          setRevenueSaving(false)
+        }
+
         return (
           <div style={{
             marginTop: 14,
             background: 'var(--bg2)',
             borderLeft: `4px solid ${color.solid}`,
             borderRadius: 10,
-            padding: '10px 14px',
-            display: 'flex', alignItems: 'center', gap: 16, flexWrap: 'wrap',
+            padding: '12px 14px',
           }}>
-            <div style={{ minWidth: 0 }}>
-              <p style={{ fontSize: 14, fontWeight: 800, letterSpacing: '-0.01em' }}>
-                {activeB.name}
-              </p>
-              <p style={{ fontSize: 11, fontWeight: 600, color: color.solid }}>
-                {STATUS_LABELS[status]}
-              </p>
+            {/* Top row: name + status + close */}
+            <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', marginBottom: 6 }}>
+              <div>
+                <p style={{ fontSize: 14, fontWeight: 800, letterSpacing: '-0.01em' }}>{activeB.name}</p>
+                <p style={{ fontSize: 11, fontWeight: 600, color: color.solid }}>{STATUS_LABELS[status]}</p>
+              </div>
+              <button onClick={() => setActiveBooking(null)}
+                style={{ fontSize: 15, color: 'var(--text3)', padding: '0 2px', flexShrink: 0 }}>×</button>
             </div>
-            <div style={{ fontSize: 11, color: 'var(--text3)', lineHeight: 1.6 }}>
+
+            {/* Dates + nights */}
+            <p style={{ fontSize: 11, color: 'var(--text3)', lineHeight: 1.7, marginBottom: 10 }}>
               <span style={{ fontWeight: 700, color: 'var(--text2)' }}>In</span> {fmt(activeB.checkIn)}
               <span style={{ margin: '0 6px' }}>→</span>
               <span style={{ fontWeight: 700, color: 'var(--text2)' }}>Out</span> {fmt(activeB.checkOut)}
               <span style={{ margin: '0 6px' }}>·</span>
               {activeB.nights} night{activeB.nights !== 1 ? 's' : ''}
               {activeB.guests != null && <><span style={{ margin: '0 6px' }}>·</span>{activeB.guests} guest{activeB.guests !== 1 ? 's' : ''}</>}
-              {activeB.code && <><span style={{ margin: '0 6px' }}>·</span><span style={{ fontFamily: 'monospace' }}>{activeB.code}</span></>}
-            </div>
-            {revenue != null && (
-              <div style={{ marginLeft: 'auto', textAlign: 'right' }}>
-                <p style={{ fontSize: 15, fontWeight: 800, letterSpacing: '-0.02em' }}>{dollars(revenue)}</p>
-                <p style={{ fontSize: 10, fontWeight: 600, color: 'var(--text3)' }}>
-                  {dollars(revenue / activeB.nights)}/night
+            </p>
+
+            {/* Revenue — show if known, otherwise inline entry form */}
+            {revenue != null ? (
+              <div style={{
+                display: 'flex', alignItems: 'baseline', gap: 10,
+                paddingTop: 8, borderTop: '1px solid var(--border)',
+              }}>
+                <p style={{ fontSize: 18, fontWeight: 800, letterSpacing: '-0.03em', color: 'var(--gold)' }}>
+                  {dollars(revenue)}
+                </p>
+                <p style={{ fontSize: 11, color: 'var(--text3)', fontWeight: 600 }}>
+                  {dollars(revenue / activeB.nights)}/night · gross revenue
                 </p>
               </div>
-            )}
-            <button onClick={() => setActiveBooking(null)}
-              style={{ fontSize: 15, color: 'var(--text3)', flexShrink: 0, padding: '0 2px' }}>×</button>
+            ) : onAddIncome ? (
+              <div style={{
+                paddingTop: 8, borderTop: '1px solid var(--border)',
+              }}>
+                <p style={{ fontSize: 10, fontWeight: 700, color: 'var(--text3)', letterSpacing: '0.08em', textTransform: 'uppercase', marginBottom: 6 }}>
+                  Gross booking revenue
+                </p>
+                <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
+                  <div style={{ position: 'relative', flex: 1 }}>
+                    <span style={{
+                      position: 'absolute', left: 10, top: '50%', transform: 'translateY(-50%)',
+                      fontSize: 14, fontWeight: 700, color: 'var(--text3)',
+                    }}>$</span>
+                    <input
+                      type="number"
+                      inputMode="decimal"
+                      placeholder="0"
+                      value={revenueInput}
+                      onChange={e => setRevenueInput(e.target.value)}
+                      onKeyDown={e => e.key === 'Enter' && saveRevenue()}
+                      style={{
+                        paddingLeft: 22, paddingRight: 10, height: 38,
+                        fontSize: 15, fontWeight: 700,
+                        borderRadius: 8, width: '100%',
+                      }}
+                    />
+                  </div>
+                  <button
+                    onClick={saveRevenue}
+                    disabled={!revenueInput || revenueSaving}
+                    style={{
+                      height: 38, padding: '0 16px', borderRadius: 8,
+                      background: revenueInput ? 'var(--gold)' : 'var(--bg)',
+                      color: revenueInput ? '#fff' : 'var(--text3)',
+                      fontSize: 13, fontWeight: 700,
+                      border: `1px solid ${revenueInput ? 'transparent' : 'var(--border-mid)'}`,
+                      transition: 'background 150ms, color 150ms',
+                      flexShrink: 0,
+                    }}
+                  >
+                    {revenueSaving ? 'Saving…' : 'Save'}
+                  </button>
+                </div>
+                {activeB.nights > 1 && revenueInput && !isNaN(parseFloat(revenueInput)) && (
+                  <p style={{ fontSize: 10, color: 'var(--text3)', marginTop: 4 }}>
+                    {dollars(parseFloat(revenueInput) / activeB.nights)}/night
+                  </p>
+                )}
+              </div>
+            ) : null}
           </div>
         )
       })()}

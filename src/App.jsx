@@ -529,7 +529,11 @@ export default function App() {
             {/* ── Right column — calendar ──────────────────────────────── */}
             <div className="home-right">
               {/* Calendar + occupancy */}
-              <GuestCard expenses={expenses} calendarData={calendarData} />
+              <GuestCard
+                expenses={expenses}
+                calendarData={calendarData}
+                onAddIncome={handleAddExpense}
+              />
             </div>
 
             {/* ── Left column: house icon + financials ─────────────────── */}
