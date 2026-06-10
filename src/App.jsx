@@ -518,21 +518,24 @@ export default function App() {
         <div className="view-header" style={{
           padding:      '48px 20px 18px',
           borderBottom: '0.5px solid var(--border)',
-          display:      'flex',
-          alignItems:   'center',
-          justifyContent: 'space-between',
         }}>
-          <div>
-            <p style={{ fontSize: 11, color: 'var(--text3)', letterSpacing: '0.1em', textTransform: 'uppercase', marginBottom: 2 }}>
-              225 Custer
-            </p>
-            <p style={{ fontSize: 22, fontWeight: 700 }}>{viewTitle[view]}</p>
+          <div className="view-col" style={{
+            display:        'flex',
+            alignItems:     'center',
+            justifyContent: 'space-between',
+          }}>
+            <div>
+              <p style={{ fontSize: 11, color: 'var(--text3)', letterSpacing: '0.1em', textTransform: 'uppercase', marginBottom: 2 }}>
+                225 Custer
+              </p>
+              <p style={{ fontSize: 22, fontWeight: 700 }}>{viewTitle[view]}</p>
+            </div>
+            {view === 'pl' && (
+              <button onClick={() => setView('home')} style={{ fontSize: 13, color: 'var(--text3)' }}>
+                ← Back
+              </button>
+            )}
           </div>
-          {view === 'pl' && (
-            <button onClick={() => setView('home')} style={{ fontSize: 13, color: 'var(--text3)' }}>
-              ← Back
-            </button>
-          )}
         </div>
       )}
 
@@ -678,25 +681,29 @@ export default function App() {
         )}
 
         {!loading && view === 'list' && (
-          <ExpenseList
-            expenses={expenses}
-            onDelete={handleDelete}
-            onEdit={handleUpdateExpense}
-            initialFilter={listFilter}
-            initialMonth={listMonth}
-            key={`${listFilter}-${listMonth}`}
-            tasks={tasks}
-            onDeleteTask={handleDeleteTask}
-            onToggleTask={handleToggleTask}
-          />
+          <div className="view-col">
+            <ExpenseList
+              expenses={expenses}
+              onDelete={handleDelete}
+              onEdit={handleUpdateExpense}
+              initialFilter={listFilter}
+              initialMonth={listMonth}
+              key={`${listFilter}-${listMonth}`}
+              tasks={tasks}
+              onDeleteTask={handleDeleteTask}
+              onToggleTask={handleToggleTask}
+            />
+          </div>
         )}
 
-        {!loading && view === 'debt' && <DebtDashboard />}
+        {!loading && view === 'debt' && <div className="view-col"><DebtDashboard /></div>}
 
-        {!loading && view === 'spinup' && <SpinUp />}
+        {!loading && view === 'spinup' && <div className="view-col"><SpinUp /></div>}
 
         {!loading && view === 'import' && (
-          <CSVImport onImport={handleImport} onClose={() => setView('home')} />
+          <div className="view-col">
+            <CSVImport onImport={handleImport} onClose={() => setView('home')} />
+          </div>
         )}
 
         {!loading && view === 'pl' && (
