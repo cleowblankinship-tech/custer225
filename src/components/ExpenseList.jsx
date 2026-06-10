@@ -1,4 +1,12 @@
 import { useState, useMemo } from 'react'
+import { CATEGORIES, INCOME_CATEGORIES } from '../lib/parser'
+
+// Cash-movement categories selectable when editing an expense entry
+const EXPENSE_EDIT_CATEGORIES = [
+  ...CATEGORIES,
+  'Debt service', 'Tax reserve', 'Maintenance reserve', 'Owner draw',
+  'Mortgage interest', 'HOA', 'Professional fees',
+]
 
 const TAX_CONFIG = {
   depreciate: { label: 'Depreciable', color: 'var(--blue)',   bg: 'var(--blue-bg)' },
@@ -103,11 +111,95 @@ function TaskRow({ task, onToggle, onDelete, isLast }) {
   )
 }
 
+// ── Inline edit form — replaces a ledger row while editing ───────────────────
+
+function EditRow({ entry, onSave, onCancel }) {
+  const isIncome = entry.entry_type === 'income'
+  const [draft, setDraft] = useState({
+    description: entry.description,
+    amount:      entry.amount,
+    date:        entry.date,
+    category:    entry.category,
+  })
+  const [saving, setSaving] = useState(false)
+
+  const categories = isIncome
+    ? [...new Set([...INCOME_CATEGORIES, entry.category])]
+    : [...new Set([...EXPENSE_EDIT_CATEGORIES, entry.category])]
+
+  async function save() {
+    if (!draft.description || !draft.amount || !draft.date) return
+    setSaving(true)
+    await onSave(entry.id, { ...draft, amount: Number(draft.amount) })
+    setSaving(false)
+  }
+
+  const inputStyle = { height: 36, fontSize: 13, padding: '6px 10px', borderRadius: 6 }
+
+  return (
+    <div style={{ padding: '12px 16px', background: 'var(--bg2)' }}>
+      <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+        <input
+          value={draft.description}
+          onChange={e => setDraft({ ...draft, description: e.target.value })}
+          placeholder="Description"
+          style={inputStyle}
+        />
+        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8 }}>
+          <input
+            type="number"
+            inputMode="decimal"
+            value={draft.amount}
+            onChange={e => setDraft({ ...draft, amount: e.target.value })}
+            placeholder="Amount"
+            style={inputStyle}
+          />
+          <input
+            type="date"
+            value={draft.date}
+            onChange={e => setDraft({ ...draft, date: e.target.value })}
+            style={inputStyle}
+          />
+        </div>
+        <select
+          value={draft.category}
+          onChange={e => setDraft({ ...draft, category: e.target.value })}
+          style={inputStyle}
+        >
+          {categories.map(c => <option key={c}>{c}</option>)}
+        </select>
+        <div style={{ display: 'flex', gap: 8 }}>
+          <button
+            onClick={onCancel}
+            style={{
+              flex: 1, height: 36, borderRadius: 6, fontSize: 13, fontWeight: 500,
+              background: 'var(--bg)', color: 'var(--text2)', border: '1px solid var(--border-mid)',
+            }}
+          >
+            Cancel
+          </button>
+          <button
+            onClick={save}
+            disabled={saving || !draft.description || !draft.amount || !draft.date}
+            style={{
+              flex: 2, height: 36, borderRadius: 6, fontSize: 13, fontWeight: 600,
+              background: 'var(--text)', color: 'var(--bg)',
+            }}
+          >
+            {saving ? 'Saving…' : 'Save changes'}
+          </button>
+        </div>
+      </div>
+    </div>
+  )
+}
+
 // ── Main component ────────────────────────────────────────────────────────────
 
 export default function ExpenseList({
   expenses,
   onDelete,
+  onEdit,
   initialFilter = 'all',
   initialMonth = null,
   tasks = [],
@@ -116,6 +208,7 @@ export default function ExpenseList({
 }) {
   const [filter, setFilter] = useState(initialFilter)
   const [activeMonth, setActiveMonth] = useState(initialMonth)
+  const [editingId, setEditingId] = useState(null)
 
   const isTaskView = filter === 'tasks'
 
@@ -270,6 +363,17 @@ export default function ExpenseList({
               {grouped[month].map((e, i) => {
                 const isIncome = e.entry_type === 'income'
                 const badge = isIncome ? TAX_CONFIG.income : (TAX_CONFIG[e.tax_type] || TAX_CONFIG.expense)
+                if (onEdit && editingId === e.id) {
+                  return (
+                    <div key={e.id} style={{ borderBottom: i < grouped[month].length - 1 ? '0.5px solid var(--border)' : 'none' }}>
+                      <EditRow
+                        entry={e}
+                        onSave={async (id, fields) => { await onEdit(id, fields); setEditingId(null) }}
+                        onCancel={() => setEditingId(null)}
+                      />
+                    </div>
+                  )
+                }
                 return (
                   <div
                     key={e.id || i}
@@ -312,6 +416,15 @@ export default function ExpenseList({
                     }}>
                       {isIncome ? '+' : ''}{fmt(e.amount)}
                     </p>
+                    {onEdit && (
+                      <button
+                        onClick={() => setEditingId(e.id)}
+                        aria-label="Edit entry"
+                        style={{ color: 'var(--text3)', fontSize: 13, padding: '0 4px', lineHeight: 1 }}
+                      >
+                        ✎
+                      </button>
+                    )}
                     {onDelete && (
                       <button
                         onClick={() => onDelete(e.id)}

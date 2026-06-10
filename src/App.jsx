@@ -8,7 +8,7 @@ import ExpenseList from './components/ExpenseList'
 import CSVImport from './components/CSVImport'
 import SpinUp from './components/SpinUp'
 import SetupCard from './components/SetupCard'
-import { getExpenses, addExpense, deleteExpense, getTasks, addTask, deleteTask, toggleTask, getSetupItems } from './lib/supabase'
+import { getExpenses, addExpense, updateExpense, deleteExpense, getTasks, addTask, deleteTask, toggleTask, getSetupItems } from './lib/supabase'
 import { INITIAL_ITEMS, computeSpinUpStats } from './lib/spinupData'
 import IntroSplash from './components/IntroSplash'
 // HouseToday panel removed — house now communicates inline (see HouseAnchor)
@@ -320,6 +320,21 @@ export default function App() {
       setExpenses(prev => [{ ...entry, id: 'local-' + Date.now() }, ...prev])
     }
     setView('home')
+  }
+
+  async function handleUpdateExpense(id, fields) {
+    if (useDB && !String(id).startsWith('local-')) {
+      try {
+        const saved = await updateExpense(id, fields)
+        setExpenses(prev => prev.map(e => e.id === id ? saved : e))
+        return
+      } catch (err) {
+        console.error('Supabase update failed:', err.message)
+        alert(`Could not update entry: ${err.message}`)
+        return
+      }
+    }
+    setExpenses(prev => prev.map(e => e.id === id ? { ...e, ...fields } : e))
   }
 
   async function handleDelete(id) {
@@ -665,6 +680,7 @@ export default function App() {
           <ExpenseList
             expenses={expenses}
             onDelete={handleDelete}
+            onEdit={handleUpdateExpense}
             initialFilter={listFilter}
             initialMonth={listMonth}
             key={`${listFilter}-${listMonth}`}
