@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react'
 import PLSummary from './components/PLSummary'
+import CashFlowCard from './components/CashFlowCard'
 import GuestCard from './components/GuestCard'
 import PLReport from './components/PLReport'
 import QuickAdd from './components/QuickAdd'
@@ -566,6 +567,11 @@ export default function App() {
                 onNavigate={navigateToList}
                 isPreLaunch={!setupStats || setupStats.pct < 100}
               />
+
+              {/* Cash flow waterfall — gross → NOI → cash flow → available */}
+              <div style={{ padding: '8px 0 16px' }}>
+                <CashFlowCard expenses={expenses} />
+              </div>
 
               {/* P&L link */}
               <div style={{ padding: '0 20px 24px' }}>

@@ -183,8 +183,20 @@ function cleanTaskTitle(text) {
   return result.replace(/\s+/g, ' ').trim()
 }
 
+// Cash-movement buckets — these are transfers, not deductible operating costs,
+// so they get tax_type 'personal' and a pinned category (see lib/finance.js)
+const BUCKET_CATEGORY_KEYWORDS = [
+  { category: 'Debt service',        keywords: ['mortgage', 'loan payment', 'debt service', 'principal', 'heloc'] },
+  { category: 'Tax reserve',         keywords: ['tax reserve', 'taxes set aside', 'set aside for tax', 'tax savings'] },
+  { category: 'Maintenance reserve', keywords: ['maintenance reserve', 'repair reserve', 'capex reserve', 'reserve fund'] },
+  { category: 'Owner draw',          keywords: ['owner draw', 'draw', 'distribution', 'paid myself', 'pay myself'] },
+]
+
 function guessCategory(text) {
   const lower = text.toLowerCase()
+  for (const { category, keywords } of BUCKET_CATEGORY_KEYWORDS) {
+    if (keywords.some(k => lower.includes(k))) return category
+  }
   for (const [cat, keywords] of Object.entries(CATEGORY_KEYWORDS)) {
     if (keywords.some(k => lower.includes(k))) return cat
   }
@@ -192,6 +204,7 @@ function guessCategory(text) {
 }
 
 function guessTaxType(text, category) {
+  if (BUCKET_CATEGORY_KEYWORDS.some(b => b.category === category)) return 'personal'
   const lower = text.toLowerCase()
   if (TAX_KEYWORDS.depreciate.some(k => lower.includes(k))) return 'depreciate'
   if (category === 'Furniture' || category === 'Appliances') return 'depreciate'

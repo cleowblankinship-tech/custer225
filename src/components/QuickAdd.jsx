@@ -14,10 +14,9 @@ const QUICK_ADD_EXAMPLES = [
 ]
 import { parseNaturalLanguage, CATEGORIES, INCOME_CATEGORIES } from '../lib/parser'
 import { nextWeekdayDate } from '../lib/recurringRules'
+import { BUCKETS, BUCKET_PRESETS, getBucket } from '../lib/finance'
 
 const WEEKDAYS = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat']
-
-const TAX_COLORS = { depreciate: 'var(--blue)', expense: 'var(--green)' }
 
 const FREQ_OPTIONS = [
   { value: 'weekly',    label: 'Weekly' },
@@ -363,25 +362,44 @@ export default function QuickAdd({ onAdd }) {
                     {INCOME_CATEGORIES.map(c => <option key={c}>{c}</option>)}
                   </select>
                 </Field>
-              ) : (
-                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10 }}>
-                  <Field label="Category">
-                    <select value={parsed.category} onChange={e => setParsed({...parsed, category: e.target.value})}>
-                      {CATEGORIES.map(c => <option key={c}>{c}</option>)}
-                    </select>
-                  </Field>
-                  <Field label="Tax treatment">
-                    <select
-                      value={parsed.tax_type}
-                      onChange={e => setParsed({...parsed, tax_type: e.target.value})}
-                      style={{ color: TAX_COLORS[parsed.tax_type] }}
-                    >
-                      <option value="expense">Direct expense</option>
-                      <option value="depreciate">Depreciable</option>
-                    </select>
-                  </Field>
-                </div>
-              )}
+              ) : (() => {
+                const bucket = getBucket(parsed)
+                // operating/startup keep a free category; cash-movement
+                // buckets pin their category, so hide the second select
+                const showCategory = bucket === 'operating' || bucket === 'startup'
+                return (
+                  <div style={{ display: 'grid', gridTemplateColumns: showCategory ? '1fr 1fr' : '1fr', gap: 10 }}>
+                    <Field label="Bucket">
+                      <select
+                        value={bucket}
+                        onChange={e => {
+                          const preset = BUCKET_PRESETS[e.target.value]
+                          setParsed({
+                            ...parsed,
+                            tax_type: preset.tax_type,
+                            category: preset.category
+                              ?? (CATEGORIES.includes(parsed.category) ? parsed.category : CATEGORIES[0]),
+                          })
+                        }}
+                      >
+                        <option value="operating">Operating Expense</option>
+                        <option value="startup">Startup/Furnishing Asset</option>
+                        <option value="debt">Debt Service</option>
+                        <option value="taxReserve">Tax Reserve</option>
+                        <option value="maintRes">Maintenance/Repairs Reserve</option>
+                        <option value="draw">Owner Draw</option>
+                      </select>
+                    </Field>
+                    {showCategory && (
+                      <Field label="Category">
+                        <select value={parsed.category} onChange={e => setParsed({...parsed, category: e.target.value})}>
+                          {CATEGORIES.map(c => <option key={c}>{c}</option>)}
+                        </select>
+                      </Field>
+                    )}
+                  </div>
+                )
+              })()}
 
               {/* Recurring toggle */}
               <div style={{
