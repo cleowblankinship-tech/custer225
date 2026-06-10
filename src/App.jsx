@@ -552,6 +552,7 @@ export default function App() {
                 expenses={expenses}
                 calendarData={calendarData}
                 onAddIncome={handleAddExpense}
+                onEditIncome={handleUpdateExpense}
               />
             </div>
 

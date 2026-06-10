@@ -33,11 +33,16 @@ function fmt(iso) {
 
 // Revenue: prefer real payout data from the Hospitable API; fall back to
 // matching a manually-entered income entry by date.
-function matchRevenue(booking, incomeEntries) {
-  if (booking.revenue != null) return Number(booking.revenue)
+// The ledger income entry matched to a booking by date, or null
+function matchIncomeEntry(booking, incomeEntries) {
   const ci = toMTDateStr(booking.checkIn)
   const co = toMTDateStr(booking.checkOut)
-  const match = incomeEntries.find(e => e.date >= ci && e.date <= co)
+  return incomeEntries.find(e => e.date >= ci && e.date <= co) ?? null
+}
+
+function matchRevenue(booking, incomeEntries) {
+  if (booking.revenue != null) return Number(booking.revenue)
+  const match = matchIncomeEntry(booking, incomeEntries)
   return match ? Number(match.amount) : null
 }
 
@@ -99,7 +104,7 @@ function SketchCircle() {
   )
 }
 
-export default function GuestCard({ expenses = [], calendarData: propData, onAddIncome }) {
+export default function GuestCard({ expenses = [], calendarData: propData, onAddIncome, onEditIncome }) {
   const [fetchedData, setFetchedData] = useState(null)
   const [loading,     setLoading]     = useState(!propData)
   // The booking whose detail card is shown; keyed by checkIn ISO
@@ -248,7 +253,7 @@ export default function GuestCard({ expenses = [], calendarData: propData, onAdd
   const activeB = activeBooking ? data?.all?.find(b => b.checkIn === activeBooking) : null
 
   // Reset revenue input whenever a different booking is selected
-  useEffect(() => { setRevenueInput('') }, [activeBooking])
+  useEffect(() => { setRevenueInput(''); setEditingRevenue(false) }, [activeBooking])
 
   // ── Reminders → calendar ──────────────────────────────────────────────────
   // Open reminders with a due date appear on their day: a note pill when the
@@ -265,6 +270,7 @@ export default function GuestCard({ expenses = [], calendarData: propData, onAdd
   const [activeDay, setActiveDay] = useState(null)
   const [revenueInput, setRevenueInput] = useState('')
   const [revenueSaving, setRevenueSaving] = useState(false)
+  const [editingRevenue, setEditingRevenue] = useState(false)
   const activeDayReminders = activeDay ? remindersByDate[activeDay] ?? [] : []
 
   return (
@@ -507,19 +513,26 @@ export default function GuestCard({ expenses = [], calendarData: propData, onAdd
           checkout: 'Checks out today', past: 'Past stay',
         }
 
+        const ledgerEntry = matchIncomeEntry(activeB, incomeEntries)
+
         async function saveRevenue() {
           const amt = parseFloat(revenueInput.replace(/[^0-9.]/g, ''))
-          if (!amt || !onAddIncome) return
+          if (!amt) return
           setRevenueSaving(true)
-          await onAddIncome({
-            description: `${activeB.name} — ${fmt(activeB.checkIn)} to ${fmt(activeB.checkOut)}`,
-            amount: amt,
-            category: 'Booking revenue',
-            entry_type: 'income',
-            tax_type: null,
-            date: toMTDateStr(activeB.checkIn),
-          })
+          if (editingRevenue && ledgerEntry && onEditIncome) {
+            await onEditIncome(ledgerEntry.id, { amount: amt })
+          } else if (onAddIncome) {
+            await onAddIncome({
+              description: `${activeB.name} — ${fmt(activeB.checkIn)} to ${fmt(activeB.checkOut)}`,
+              amount: amt,
+              category: 'Booking revenue',
+              entry_type: 'income',
+              tax_type: null,
+              date: toMTDateStr(activeB.checkIn),
+            })
+          }
           setRevenueInput('')
+          setEditingRevenue(false)
           setRevenueSaving(false)
         }
 
@@ -552,7 +565,7 @@ export default function GuestCard({ expenses = [], calendarData: propData, onAdd
             </p>
 
             {/* Revenue — show if known, otherwise inline entry form */}
-            {revenue != null ? (
+            {revenue != null && !editingRevenue ? (
               <div style={{
                 display: 'flex', alignItems: 'baseline', gap: 10,
                 paddingTop: 8, borderTop: '1px solid var(--border)',
@@ -563,8 +576,17 @@ export default function GuestCard({ expenses = [], calendarData: propData, onAdd
                 <p style={{ fontSize: 11, color: 'var(--text3)', fontWeight: 600 }}>
                   {dollars(revenue / activeB.nights)}/night · gross revenue
                 </p>
+                {ledgerEntry && onEditIncome && (
+                  <button
+                    onClick={() => { setRevenueInput(String(ledgerEntry.amount)); setEditingRevenue(true) }}
+                    aria-label="Edit revenue"
+                    style={{ marginLeft: 'auto', fontSize: 13, color: 'var(--text3)', padding: '0 4px' }}
+                  >
+                    ✎
+                  </button>
+                )}
               </div>
-            ) : onAddIncome ? (
+            ) : (onAddIncome || editingRevenue) ? (
               <div style={{
                 paddingTop: 8, borderTop: '1px solid var(--border)',
               }}>
@@ -604,8 +626,21 @@ export default function GuestCard({ expenses = [], calendarData: propData, onAdd
                       flexShrink: 0,
                     }}
                   >
-                    {revenueSaving ? 'Saving…' : 'Save'}
+                    {revenueSaving ? 'Saving…' : editingRevenue ? 'Update' : 'Save'}
                   </button>
+                  {editingRevenue && (
+                    <button
+                      onClick={() => { setEditingRevenue(false); setRevenueInput('') }}
+                      style={{
+                        height: 38, padding: '0 12px', borderRadius: 8,
+                        background: 'var(--bg)', color: 'var(--text2)',
+                        fontSize: 13, fontWeight: 600,
+                        border: '1px solid var(--border-mid)', flexShrink: 0,
+                      }}
+                    >
+                      Cancel
+                    </button>
+                  )}
                 </div>
                 {activeB.nights > 1 && revenueInput && !isNaN(parseFloat(revenueInput)) && (
                   <p style={{ fontSize: 10, color: 'var(--text3)', marginTop: 4 }}>
