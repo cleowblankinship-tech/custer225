@@ -1,13 +1,17 @@
 import { useState, useEffect, useMemo } from 'react'
 
-const BOOKING_COLORS = [
-  { bar: 'rgba(217, 81, 60, 0.55)',  text: '#fff' },  // coral
-  { bar: 'rgba(56, 142, 200, 0.52)', text: '#fff' },  // sky
-  { bar: 'rgba(90, 168, 90, 0.52)',  text: '#fff' },  // leaf
-  { bar: 'rgba(180, 100, 200, 0.50)',text: '#fff' },  // lavender
-  { bar: 'rgba(230, 150, 40, 0.52)', text: '#fff' },  // amber
-  { bar: 'rgba(60, 180, 160, 0.52)', text: '#fff' },  // teal
-]
+// ── Semantic status colors ────────────────────────────────────────────────────
+// Color communicates booking state, not arbitrary identity:
+//   upcoming      → sage green
+//   current guest → warm yellow
+//   checkout day  → coral
+//   past          → muted stone
+const STATUS_COLORS = {
+  upcoming: { bar: 'rgba(122, 155, 109, 0.82)', solid: '#7A9B6D', text: '#fff'    },
+  current:  { bar: 'rgba(232, 185, 49, 0.88)',  solid: '#C99B14', text: '#3A3208' },
+  checkout: { bar: 'rgba(224, 106, 78, 0.85)',  solid: '#E06A4E', text: '#fff'    },
+  past:     { bar: 'rgba(150, 145, 130, 0.45)', solid: '#969182', text: '#fff'    },
+}
 
 const MONTH_NAMES = ['January','February','March','April','May','June',
                      'July','August','September','October','November','December']
@@ -27,18 +31,6 @@ function fmt(iso) {
   return `${MONTH_NAMES[d.getMonth()].slice(0,3)} ${d.getDate()}`
 }
 
-function fmtFull(iso) {
-  const d = ymd(toMTDateStr(iso))
-  const days = ['Sun','Mon','Tue','Wed','Thu','Fri','Sat']
-  return `${days[d.getDay()]} ${MONTH_NAMES[d.getMonth()].slice(0,3)} ${d.getDate()}`
-}
-
-function assignColors(bookings) {
-  const map = {}
-  bookings.forEach((b, i) => { map[b.checkIn] = BOOKING_COLORS[i % BOOKING_COLORS.length] })
-  return map
-}
-
 function matchRevenue(booking, incomeEntries) {
   const ci = toMTDateStr(booking.checkIn)
   const co = toMTDateStr(booking.checkOut)
@@ -46,10 +38,38 @@ function matchRevenue(booking, incomeEntries) {
   return match ? Number(match.amount) : null
 }
 
+function bookingStatus(b, todayMT) {
+  const ci = toMTDateStr(b.checkIn)
+  const co = toMTDateStr(b.checkOut)
+  if (co === todayMT)                 return 'checkout'
+  if (ci <= todayMT && todayMT < co)  return 'current'
+  if (ci > todayMT)                   return 'upcoming'
+  return 'past'
+}
+
+function firstName(name) {
+  return (name ?? '').split(' ')[0]
+}
+
+function dollars(n) {
+  return '$' + Math.round(n).toLocaleString('en-US')
+}
+
+// Tiny house glyph — connects the calendar to the house mascot
+function MiniHouse({ size = 9, color = 'currentColor' }) {
+  return (
+    <svg viewBox="0 0 12 12" width={size} height={size} aria-hidden="true"
+      style={{ display: 'inline-block', verticalAlign: '-1px', flexShrink: 0 }}>
+      <path d="M 1 6 L 6 1.5 L 11 6 M 2.5 5.5 L 2.5 10.5 L 9.5 10.5 L 9.5 5.5"
+        fill="none" stroke={color} strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" />
+    </svg>
+  )
+}
+
 export default function GuestCard({ expenses = [], calendarData: propData }) {
   const [fetchedData, setFetchedData] = useState(null)
   const [loading,     setLoading]     = useState(!propData)
-  // The booking whose name tooltip is shown; keyed by checkIn ISO
+  // The booking whose detail card is shown; keyed by checkIn ISO
   const [activeBooking, setActiveBooking] = useState(null)
 
   const data = propData ?? fetchedData
@@ -70,7 +90,6 @@ export default function GuestCard({ expenses = [], calendarData: propData }) {
       .catch(() => setLoading(false))
   }, [propData])
 
-  // When prop data arrives, clear loading
   useEffect(() => {
     if (propData) setLoading(false)
   }, [propData])
@@ -78,11 +97,6 @@ export default function GuestCard({ expenses = [], calendarData: propData }) {
   const incomeEntries = useMemo(
     () => expenses.filter(e => e.entry_type === 'income'),
     [expenses]
-  )
-
-  const colorMap = useMemo(
-    () => data?.all ? assignColors(data.all) : {},
-    [data]
   )
 
   const monthStart = useMemo(() => new Date(viewYear, viewMonth, 1),     [viewYear, viewMonth])
@@ -97,19 +111,22 @@ export default function GuestCard({ expenses = [], calendarData: propData }) {
     })
   }, [data, monthStart, monthEnd])
 
+  // dayMap: every booked night → booking + status color + position-in-run
   const dayMap = useMemo(() => {
     const map = {}
     if (!data?.all) return map
     for (const b of data.all) {
-      const color = colorMap[b.checkIn] ?? BOOKING_COLORS[0]
-      const ciStr = toMTDateStr(b.checkIn)
-      const ci    = ymd(ciStr)
-      const co    = ymd(toMTDateStr(b.checkOut))
+      const status = bookingStatus(b, todayMT)
+      const color  = STATUS_COLORS[status]
+      const ciStr  = toMTDateStr(b.checkIn)
+      const ci     = ymd(ciStr)
+      const co     = ymd(toMTDateStr(b.checkOut))
       const cursor = new Date(ci)
       while (cursor < co) {
         const key = cursor.toLocaleDateString('en-CA')
         map[key] = {
           booking: b,
+          status,
           isFirst: key === ciStr,
           isLast:  cursor.getTime() === new Date(co - 86400000).getTime(),
           color,
@@ -118,32 +135,47 @@ export default function GuestCard({ expenses = [], calendarData: propData }) {
       }
     }
     return map
-  }, [data, colorMap])
+  }, [data, todayMT])
+
+  // gapSet: vacant nights that fall BETWEEN reservations — lost-revenue signal
+  const gapSet = useMemo(() => {
+    const set = new Set()
+    if (!data?.all || data.all.length < 2) return set
+    const sorted = [...data.all].sort((a, b) =>
+      toMTDateStr(a.checkIn).localeCompare(toMTDateStr(b.checkIn)))
+    for (let i = 0; i < sorted.length - 1; i++) {
+      const gapStart = ymd(toMTDateStr(sorted[i].checkOut))
+      const gapEnd   = ymd(toMTDateStr(sorted[i + 1].checkIn))
+      const cursor   = new Date(gapStart)
+      while (cursor < gapEnd) {
+        set.add(cursor.toLocaleDateString('en-CA'))
+        cursor.setDate(cursor.getDate() + 1)
+      }
+    }
+    return set
+  }, [data])
 
   const monthStats = useMemo(() => {
     if (!data?.all) return null
 
-    const nightsBooked = Object.keys(dayMap).filter(dateStr => {
+    const inViewMonth = dateStr => {
       const [y, m] = dateStr.split('-').map(Number)
       return y === viewYear && (m - 1) === viewMonth
-    }).length
+    }
 
+    const nightsBooked    = Object.keys(dayMap).filter(inViewMonth).length
+    const gapNights       = [...gapSet].filter(inViewMonth).length
     const daysInViewMonth = new Date(viewYear, viewMonth + 1, 0).getDate()
     const occupancyPct    = Math.round((nightsBooked / daysInViewMonth) * 100)
-
-    const sorted       = [...data.all].sort((a, b) => toMTDateStr(a.checkIn).localeCompare(toMTDateStr(b.checkIn)))
-    const nextArrival  = sorted.find(b => toMTDateStr(b.checkIn) >= todayMT) ?? null
-    const nextCheckout = [...data.all]
-      .sort((a, b) => toMTDateStr(a.checkOut).localeCompare(toMTDateStr(b.checkOut)))
-      .find(b => toMTDateStr(b.checkOut) > todayMT) ?? null
 
     const monthRevenue = visibleBookings.reduce((sum, b) => {
       const r = matchRevenue(b, incomeEntries)
       return sum + (r ?? 0)
     }, 0)
 
-    return { nightsBooked, daysInViewMonth, occupancyPct, nextArrival, nextCheckout, monthRevenue }
-  }, [data, dayMap, viewYear, viewMonth, visibleBookings, incomeEntries, todayMT])
+    return { nightsBooked, daysInViewMonth, occupancyPct, monthRevenue, gapNights,
+             bookingCount: visibleBookings.length }
+  }, [data, dayMap, gapSet, viewYear, viewMonth, visibleBookings, incomeEntries])
 
   function prevMonth() {
     setActiveBooking(null)
@@ -165,37 +197,94 @@ export default function GuestCard({ expenses = [], calendarData: propData }) {
   const daysInMonth  = new Date(viewYear, viewMonth + 1, 0).getDate()
   const firstWeekDay = new Date(viewYear, viewMonth, 1).getDay()
 
-  // First day of a booking visible in the current month view — used to
-  // position the guest name label inside the strip without overflow clipping.
+  // First day of a booking visible in the current month view — where the
+  // guest name label is anchored (handles bookings spilling in from last month)
   function isFirstVisibleDay(dateStr, booking) {
     const d    = ymd(dateStr)
+    if (d.getDate() === 1) return true
     const prev = new Date(d)
     prev.setDate(prev.getDate() - 1)
-    const prevStr  = prev.toLocaleDateString('en-CA')
-    const prevInfo = dayMap[prevStr]
+    const prevInfo = dayMap[prev.toLocaleDateString('en-CA')]
     return !prevInfo || prevInfo.booking.checkIn !== booking.checkIn
   }
 
-  return (
-    <div style={{ padding: '24px 24px 20px', flex: 1, display: 'flex', flexDirection: 'column' }}>
+  const activeB = activeBooking ? data?.all?.find(b => b.checkIn === activeBooking) : null
 
-      {/* ── Month nav ──────────────────────────────────────────────────────── */}
+  return (
+    // ── Dashboard panel container ─────────────────────────────────────────────
+    <div style={{
+      margin: '12px 16px 16px',
+      flex: 1, display: 'flex', flexDirection: 'column',
+      background: 'var(--bubble-bg)',
+      border: '1px solid var(--border)',
+      borderRadius: 16,
+      boxShadow: '0 1px 2px rgba(10,10,8,0.04), 0 8px 24px rgba(10,10,8,0.06)',
+      padding: '20px 22px 18px',
+      minWidth: 0,
+    }}>
+
+      {/* ── Premium month header ───────────────────────────────────────────── */}
       <div style={{
-        display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+        display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between',
         marginBottom: 14,
       }}>
-        <button onClick={prevMonth} style={{ fontSize: 20, color: 'var(--text3)', padding: '0 4px', lineHeight: 1 }}>‹</button>
-        <p style={{ fontSize: 13, fontWeight: 700, color: 'var(--text2)', letterSpacing: '0.08em', textTransform: 'uppercase' }}>
-          {MONTH_NAMES[viewMonth]} {viewYear}
-        </p>
-        <button onClick={nextMonth} style={{ fontSize: 20, color: 'var(--text3)', padding: '0 4px', lineHeight: 1 }}>›</button>
+        <div>
+          <p style={{ fontSize: 24, fontWeight: 800, letterSpacing: '-0.03em', lineHeight: 1.1 }}>
+            {MONTH_NAMES[viewMonth]} <span style={{ color: 'var(--text3)', fontWeight: 600 }}>{viewYear}</span>
+          </p>
+          {monthStats && (
+            <p style={{ fontSize: 12, fontWeight: 600, color: 'var(--text3)', marginTop: 3 }}>
+              {monthStats.occupancyPct}% occupancy · {monthStats.nightsBooked} of {monthStats.daysInViewMonth} nights
+            </p>
+          )}
+        </div>
+        <div style={{ display: 'flex', gap: 4 }}>
+          {[['‹', prevMonth, 'Previous month'], ['›', nextMonth, 'Next month']].map(([sym, fn, label]) => (
+            <button key={label} onClick={fn} aria-label={label} style={{
+              width: 30, height: 30, lineHeight: 1, fontSize: 18, fontWeight: 600,
+              color: 'var(--text2)', background: 'var(--bg2)',
+              border: '1px solid var(--border)', borderRadius: 8,
+            }}>
+              {sym}
+            </button>
+          ))}
+        </div>
       </div>
 
+      {/* ── Operational metrics strip ──────────────────────────────────────── */}
+      {monthStats && (
+        <div style={{
+          display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 8,
+          marginBottom: 16,
+        }}>
+          {[
+            [`${monthStats.occupancyPct}%`, 'Occupancy',
+              monthStats.occupancyPct >= 70 ? STATUS_COLORS.upcoming.solid : 'var(--text)'],
+            [monthStats.monthRevenue > 0 ? dollars(monthStats.monthRevenue) : '—', 'Revenue', 'var(--text)'],
+            [monthStats.bookingCount, `Booking${monthStats.bookingCount !== 1 ? 's' : ''}`, 'var(--text)'],
+            [monthStats.gapNights, `Gap night${monthStats.gapNights !== 1 ? 's' : ''}`,
+              monthStats.gapNights > 0 ? STATUS_COLORS.checkout.solid : 'var(--text3)'],
+          ].map(([value, label, color]) => (
+            <div key={label} style={{
+              background: 'var(--bg2)', borderRadius: 10, padding: '8px 10px',
+              minWidth: 0,
+            }}>
+              <p style={{ fontSize: 17, fontWeight: 800, letterSpacing: '-0.02em', color, lineHeight: 1.2 }}>
+                {value}
+              </p>
+              <p style={{ fontSize: 10, fontWeight: 600, color: 'var(--text3)', letterSpacing: '0.05em', textTransform: 'uppercase' }}>
+                {label}
+              </p>
+            </div>
+          ))}
+        </div>
+      )}
+
       {/* ── Day labels ─────────────────────────────────────────────────────── */}
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(7, 1fr)', marginBottom: 2 }}>
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(7, 1fr)', marginBottom: 4 }}>
         {DAY_LABELS.map(l => (
           <div key={l} style={{
-            textAlign: 'center', fontSize: 10, fontWeight: 600,
+            textAlign: 'center', fontSize: 10, fontWeight: 700,
             color: 'var(--text3)', letterSpacing: '0.08em', paddingBottom: 4,
           }}>
             {l}
@@ -209,121 +298,159 @@ export default function GuestCard({ expenses = [], calendarData: propData }) {
           Loading…
         </div>
       ) : (
-        <div style={{ flex: 1, minHeight: 0, display: 'grid', gridTemplateColumns: 'repeat(7, 1fr)', gridAutoRows: '1fr', rowGap: 1 }}>
+        <div style={{
+          flex: 1, minHeight: 0,
+          display: 'grid', gridTemplateColumns: 'repeat(7, 1fr)',
+          gridAutoRows: 'minmax(48px, 1fr)', rowGap: 2,
+        }}>
           {Array.from({ length: firstWeekDay }).map((_, i) => <div key={`e${i}`} />)}
 
           {Array.from({ length: daysInMonth }).map((_, i) => {
-            const day     = i + 1
-            const dateStr = `${viewYear}-${String(viewMonth + 1).padStart(2,'0')}-${String(day).padStart(2,'0')}`
-            const info    = dayMap[dateStr]
-            const isToday = dateStr === todayStr
+            const day      = i + 1
+            const dateStr  = `${viewYear}-${String(viewMonth + 1).padStart(2,'0')}-${String(day).padStart(2,'0')}`
+            const info     = dayMap[dateStr]
+            const isToday  = dateStr === todayStr
             const isActive = info && activeBooking === info.booking.checkIn
+            const isGap    = !info && gapSet.has(dateStr)
+            const showName = info && isFirstVisibleDay(dateStr, info.booking)
+            const isCheckInDay = info?.isFirst
 
             return (
               <div
                 key={day}
-                style={{ position: 'relative' }}
+                style={{
+                  position: 'relative',
+                  background: isGap ? 'rgba(10,10,8,0.045)' : 'transparent',
+                  borderRadius: isGap ? 8 : 0,
+                  cursor: info ? 'pointer' : 'default',
+                }}
                 onClick={() => handleDayClick(info)}
               >
+                {/* Date number — top-left; today gets a hand-drawn circle */}
+                <div style={{
+                  position: 'absolute', top: 3, left: 6,
+                  width: 22, height: 22,
+                  display: 'flex', alignItems: 'center', justifyContent: 'center',
+                  fontSize: 13,
+                  fontWeight: isToday ? 900 : 700,
+                  color: isToday ? 'var(--accent)' : isGap ? 'var(--text3)' : 'var(--text2)',
+                  zIndex: 2,
+                  ...(isToday && {
+                    border: '2px solid var(--accent)',
+                    borderRadius: '52% 46% 50% 48% / 48% 52% 46% 52%',
+                    transform: 'rotate(-4deg)',
+                    animation: 'todayPulse 2.6s ease-in-out infinite',
+                  }),
+                }}>
+                  <span style={{ transform: isToday ? 'rotate(4deg)' : 'none' }}>{day}</span>
+                </div>
+
+                {/* Booking card strip — bottom of cell */}
                 {info && (
                   <div style={{
-                    position: 'absolute', top: '50%', transform: 'translateY(-50%)',
-                    height: 26,
-                    left:   info.isFirst ? '8%' : 0,
-                    right:  info.isLast  ? '8%' : 0,
+                    position: 'absolute', bottom: 4,
+                    height: 20,
+                    left:   info.isFirst ? 3 : -1,
+                    right:  info.isLast  ? 3 : -1,
                     background: info.color.bar,
-                    borderRadius: info.isFirst && info.isLast ? 13
-                                : info.isFirst ? '13px 0 0 13px'
-                                : info.isLast  ? '0 13px 13px 0' : 0,
-                    opacity:    isActive ? 1 : 0.78,
-                    cursor: 'pointer',
-                    transition: 'opacity 120ms ease',
-                  }} />
+                    borderRadius: info.isFirst && info.isLast ? 7
+                                : info.isFirst ? '7px 0 0 7px'
+                                : info.isLast  ? '0 7px 7px 0' : 0,
+                    boxShadow: isActive
+                      ? `0 0 0 2px ${info.color.solid}, 0 2px 6px rgba(10,10,8,0.18)`
+                      : '0 1px 3px rgba(10,10,8,0.12)',
+                    transition: 'box-shadow 130ms ease',
+                    display: 'flex', alignItems: 'center',
+                    paddingLeft: showName ? 6 : 0,
+                    overflow: 'visible',
+                    zIndex: isActive ? 3 : 1,
+                  }}>
+                    {showName && (
+                      <span style={{
+                        display: 'inline-flex', alignItems: 'center', gap: 3,
+                        fontSize: 10, fontWeight: 700, color: info.color.text,
+                        whiteSpace: 'nowrap', letterSpacing: '0.01em',
+                        textShadow: '0 1px 1px rgba(10,10,8,0.12)',
+                      }}>
+                        {isCheckInDay && <MiniHouse color={info.color.text} />}
+                        {firstName(info.booking.name)}
+                      </span>
+                    )}
+                  </div>
                 )}
-                <div style={{
-                  position: 'absolute', inset: 0,
-                  display: 'flex', alignItems: 'center', justifyContent: 'center',
-                  fontSize:   15,
-                  fontWeight: isToday ? 900 : info ? 700 : 600,
-                  color:      info    ? info.color.text
-                            : isToday ? 'var(--accent)'
-                            :           'var(--text2)',
-                  zIndex: 1,
-                  cursor: info ? 'pointer' : 'default',
-                }}>
-                  {day}
-                </div>
               </div>
             )
           })}
         </div>
       )}
 
-      {/* ── Selected booking — plain text row, colored accent ─────────────── */}
-      {!loading && activeBooking && (() => {
-        const b = data?.all?.find(b => b.checkIn === activeBooking)
-        if (!b) return null
-        const color = colorMap[b.checkIn] ?? BOOKING_COLORS[0]
+      {/* ── Booking detail card ────────────────────────────────────────────── */}
+      {!loading && activeB && (() => {
+        const status  = bookingStatus(activeB, todayMT)
+        const color   = STATUS_COLORS[status]
+        const revenue = matchRevenue(activeB, incomeEntries)
+        const STATUS_LABELS = {
+          upcoming: 'Upcoming', current: 'Staying now',
+          checkout: 'Checks out today', past: 'Past stay',
+        }
         return (
           <div style={{
-            marginTop: 12,
-            paddingLeft: 10,
-            borderLeft: `3px solid ${color.bar}`,
-            display: 'flex', alignItems: 'baseline',
-            justifyContent: 'space-between', gap: 8,
+            marginTop: 14,
+            background: 'var(--bg2)',
+            borderLeft: `4px solid ${color.solid}`,
+            borderRadius: 10,
+            padding: '10px 14px',
+            display: 'flex', alignItems: 'center', gap: 16, flexWrap: 'wrap',
           }}>
-            <div style={{ fontSize: 12, color: 'var(--text2)', lineHeight: 1.5 }}>
-              <span style={{ fontWeight: 700, color: 'var(--text)' }}>{b.name}</span>
-              <span style={{ color: 'var(--text3)', marginLeft: 8 }}>
-                {fmt(b.checkIn)} – {fmt(b.checkOut)} · {b.nights} night{b.nights !== 1 ? 's' : ''}
-              </span>
+            <div style={{ minWidth: 0 }}>
+              <p style={{ fontSize: 14, fontWeight: 800, letterSpacing: '-0.01em' }}>
+                {activeB.name}
+              </p>
+              <p style={{ fontSize: 11, fontWeight: 600, color: color.solid }}>
+                {STATUS_LABELS[status]}
+              </p>
             </div>
+            <div style={{ fontSize: 11, color: 'var(--text3)', lineHeight: 1.6 }}>
+              <span style={{ fontWeight: 700, color: 'var(--text2)' }}>In</span> {fmt(activeB.checkIn)}
+              <span style={{ margin: '0 6px' }}>→</span>
+              <span style={{ fontWeight: 700, color: 'var(--text2)' }}>Out</span> {fmt(activeB.checkOut)}
+              <span style={{ margin: '0 6px' }}>·</span>
+              {activeB.nights} night{activeB.nights !== 1 ? 's' : ''}
+            </div>
+            {revenue != null && (
+              <div style={{ marginLeft: 'auto', textAlign: 'right' }}>
+                <p style={{ fontSize: 15, fontWeight: 800, letterSpacing: '-0.02em' }}>{dollars(revenue)}</p>
+                <p style={{ fontSize: 10, fontWeight: 600, color: 'var(--text3)' }}>
+                  {dollars(revenue / activeB.nights)}/night
+                </p>
+              </div>
+            )}
             <button onClick={() => setActiveBooking(null)}
-              style={{ fontSize: 14, color: 'var(--text3)', flexShrink: 0 }}>×</button>
+              style={{ fontSize: 15, color: 'var(--text3)', flexShrink: 0, padding: '0 2px' }}>×</button>
           </div>
         )
       })()}
 
-      {/* ── Stats — quiet text line ────────────────────────────────────────── */}
-      {!loading && monthStats && (
+      {/* ── Legend ─────────────────────────────────────────────────────────── */}
+      {!loading && data && (
         <div style={{
-          marginTop: 16,
-          paddingTop: 12,
-          borderTop: '1px solid var(--border)',
-          display: 'flex', alignItems: 'baseline', gap: 20, flexWrap: 'wrap',
+          marginTop: 12, paddingTop: 10, borderTop: '1px solid var(--border)',
+          display: 'flex', gap: 14, flexWrap: 'wrap',
         }}>
-          <div>
-            <span style={{
-              fontSize: 22, fontWeight: 800, letterSpacing: '-0.03em',
-              color: monthStats.occupancyPct >= 70 ? 'var(--green, #5A9A30)'
-                   : monthStats.occupancyPct >= 40 ? 'var(--text)'
-                   :                                 'var(--text3)',
+          {[
+            ['Current',  STATUS_COLORS.current.bar],
+            ['Upcoming', STATUS_COLORS.upcoming.bar],
+            ['Checkout', STATUS_COLORS.checkout.bar],
+            ['Gap night','rgba(10,10,8,0.08)'],
+          ].map(([label, swatch]) => (
+            <span key={label} style={{
+              display: 'inline-flex', alignItems: 'center', gap: 5,
+              fontSize: 10, fontWeight: 600, color: 'var(--text3)',
             }}>
-              {monthStats.occupancyPct}%
+              <span style={{ width: 10, height: 10, borderRadius: 3, background: swatch, display: 'inline-block' }} />
+              {label}
             </span>
-            <span style={{ fontSize: 10, color: 'var(--text3)', marginLeft: 4 }}>occ.</span>
-          </div>
-
-          <div style={{ fontSize: 11, color: 'var(--text3)' }}>
-            {monthStats.nightsBooked} / {monthStats.daysInViewMonth} nights
-          </div>
-
-          {monthStats.monthRevenue > 0 && (
-            <div style={{ fontSize: 11, fontWeight: 600, color: 'var(--text2)' }}>
-              ${monthStats.monthRevenue.toLocaleString('en-US', { maximumFractionDigits: 0 })}
-            </div>
-          )}
-
-          {(monthStats.nextArrival || monthStats.nextCheckout) && (
-            <div style={{ marginLeft: 'auto', textAlign: 'right', fontSize: 11, color: 'var(--text3)', lineHeight: 1.7 }}>
-              {monthStats.nextArrival && (
-                <div><span style={{ fontWeight: 600, color: 'var(--text2)' }}>In </span>{fmtFull(monthStats.nextArrival.checkIn)}</div>
-              )}
-              {monthStats.nextCheckout && monthStats.nextCheckout.checkIn !== monthStats.nextArrival?.checkIn && (
-                <div><span style={{ fontWeight: 600, color: 'var(--text2)' }}>Out </span>{fmtFull(monthStats.nextCheckout.checkOut)}</div>
-              )}
-            </div>
-          )}
+          ))}
         </div>
       )}
 
