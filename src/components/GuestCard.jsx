@@ -212,17 +212,21 @@ export default function GuestCard({ expenses = [], calendarData: propData }) {
 
   function prevMonth() {
     setActiveBooking(null)
+    setActiveDay(null)
     if (viewMonth === 0) { setViewYear(y => y - 1); setViewMonth(11) }
     else setViewMonth(m => m - 1)
   }
   function nextMonth() {
     setActiveBooking(null)
+    setActiveDay(null)
     if (viewMonth === 11) { setViewYear(y => y + 1); setViewMonth(0) }
     else setViewMonth(m => m + 1)
   }
 
-  function handleDayClick(info) {
-    if (!info) return
+  function handleDayClick(info, dateStr) {
+    const hasReminders = (remindersByDate[dateStr]?.length ?? 0) > 0
+    setActiveDay(prev => hasReminders && prev !== dateStr ? dateStr : null)
+    if (!info) { setActiveBooking(null); return }
     const key = info.booking.checkIn
     setActiveBooking(prev => prev === key ? null : key)
   }
@@ -242,6 +246,21 @@ export default function GuestCard({ expenses = [], calendarData: propData }) {
   }
 
   const activeB = activeBooking ? data?.all?.find(b => b.checkIn === activeBooking) : null
+
+  // ── Reminders → calendar ──────────────────────────────────────────────────
+  // Open reminders with a due date appear on their day: a note pill when the
+  // day is free, a pin dot when a booking ribbon already occupies the slot.
+  const remindersByDate = useMemo(() => {
+    const map = {}
+    for (const e of expenses) {
+      if (e.entry_type !== 'reminder' || !e.due_date || e.completed) continue
+      ;(map[e.due_date] ??= []).push(e)
+    }
+    return map
+  }, [expenses])
+
+  const [activeDay, setActiveDay] = useState(null)
+  const activeDayReminders = activeDay ? remindersByDate[activeDay] ?? [] : []
 
   return (
     // ── Dashboard panel container ─────────────────────────────────────────────
@@ -347,6 +366,8 @@ export default function GuestCard({ expenses = [], calendarData: propData }) {
             const isGap    = !info && gapSet.has(dateStr)
             const showName = info && isFirstVisibleDay(dateStr, info.booking)
             const isCheckInDay = info?.isFirst
+            const dayReminders = remindersByDate[dateStr] ?? []
+            const hasReminders = dayReminders.length > 0
 
             return (
               <div
@@ -355,9 +376,9 @@ export default function GuestCard({ expenses = [], calendarData: propData }) {
                   position: 'relative',
                   background: isGap ? 'rgba(10,10,8,0.045)' : 'transparent',
                   borderRadius: isGap ? 8 : 0,
-                  cursor: info ? 'pointer' : 'default',
+                  cursor: (info || hasReminders) ? 'pointer' : 'default',
                 }}
-                onClick={() => handleDayClick(info)}
+                onClick={() => handleDayClick(info, dateStr)}
               >
                 {/* Date number — top-left; today gets a hand-drawn circle */}
                 <div style={{
@@ -408,9 +429,66 @@ export default function GuestCard({ expenses = [], calendarData: propData }) {
                     )}
                   </div>
                 )}
+
+                {/* Reminder — note pill on a free day, pin dot over a booking */}
+                {hasReminders && (
+                  info ? (
+                    <span style={{
+                      position: 'absolute', top: 5, right: 5,
+                      width: 8, height: 8, borderRadius: '50%',
+                      background: 'var(--accent)',
+                      boxShadow: '0 0 0 2px var(--bubble-bg)',
+                      zIndex: 4,
+                    }} />
+                  ) : (
+                    <div style={{
+                      position: 'absolute', top: 27, left: 3, right: 3,
+                      height: 26,
+                      background: 'var(--accent-light)',
+                      border: '1px dashed var(--accent)',
+                      borderRadius: 7,
+                      display: 'flex', alignItems: 'center',
+                      padding: '0 5px', overflow: 'hidden',
+                      zIndex: 1,
+                    }}>
+                      <span style={{
+                        fontSize: 10, fontWeight: 700, color: 'var(--accent)',
+                        whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis',
+                      }}>
+                        ✎ {dayReminders[0].title}
+                        {dayReminders.length > 1 && ` +${dayReminders.length - 1}`}
+                      </span>
+                    </div>
+                  )
+                )}
               </div>
             )
           })}
+        </div>
+      )}
+
+      {/* ── Reminder detail card ───────────────────────────────────────────── */}
+      {!loading && activeDayReminders.length > 0 && (
+        <div style={{
+          marginTop: 14,
+          background: 'var(--accent-light)',
+          borderLeft: '4px solid var(--accent)',
+          borderRadius: 10,
+          padding: '10px 14px',
+          display: 'flex', alignItems: 'flex-start', gap: 12,
+        }}>
+          <div style={{ flex: 1, minWidth: 0 }}>
+            <p style={{ fontSize: 10, fontWeight: 700, color: 'var(--accent)', letterSpacing: '0.08em', textTransform: 'uppercase', marginBottom: 2 }}>
+              Reminder{activeDayReminders.length > 1 ? 's' : ''} · {MONTH_NAMES[+activeDay.slice(5,7) - 1].slice(0,3)} {+activeDay.slice(8,10)}
+            </p>
+            {activeDayReminders.map(r => (
+              <p key={r.id} style={{ fontSize: 13, fontWeight: 600, color: 'var(--text)', lineHeight: 1.5 }}>
+                {r.title}
+              </p>
+            ))}
+          </div>
+          <button onClick={() => setActiveDay(null)}
+            style={{ fontSize: 15, color: 'var(--text3)', flexShrink: 0, padding: '0 2px' }}>×</button>
         </div>
       )}
 
