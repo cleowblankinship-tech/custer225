@@ -15,7 +15,7 @@ import IntroSplash from './components/IntroSplash'
 // import HouseToday from './components/HouseToday'
 import DebtDashboard from './components/DebtDashboard'
 import HouseAnchor from './components/HouseAnchor'
-import { getActiveUpdates, getHouseMood, getCalmMessage, getCompositeMessage, getGuestMessage, getMonthPulse } from './lib/houseUpdates'
+import { getActiveUpdates, getHouseMood, getHouseNarration } from './lib/houseUpdates'
 import { fetchWeather } from './lib/weather'
 import { getRecurringRemindersForDate, getUserRules, saveUserRule } from './lib/recurringRules'
 import { getTimeOfDay, getTheme, applyTheme } from './lib/theme'
@@ -139,29 +139,25 @@ export default function App() {
     .filter(e => e.entry_type === 'income')
     .reduce((s, e) => s + Number(e.amount), 0)
 
-  // Bubble message:
-  //   updates present → show top update title; weather is the subtitle
-  //   nothing active  → composite message weaves weather + readiness + revenue
-  const guestMessage = getGuestMessage(calendarData)
-  // High-priority alerts (hard freeze, storm) override everything.
-  // Normal-priority alerts (breezy, light freeze, rain) yield to guest context.
+  // Bubble message — the house narrates the dashboard in its own voice.
+  // High-priority alerts (hard freeze, storm) still override everything;
+  // reminders/maintenance lead the narration; new-booking updates prepend it.
   const highAlert = activeUpdates.find(u => u.type === 'alert' && u.priority === 'high')
-  const baseMessage = highAlert
+  const narration = getHouseNarration({
+    calendarData,
+    expenses,
+    weatherBlurb,
+    setupPct:       setupStats?.pct       ?? 100,
+    setupRemaining: setupStats?.remaining ?? 0,
+    reminderTitle:  topUpdate && (topUpdate.type === 'reminder' || topUpdate.type === 'maintenance')
+      ? topUpdate.title
+      : null,
+  })
+  const bubbleMessage = highAlert
     ? highAlert.title
-    : guestMessage
-    ?? topUpdate?.title
-    ?? getCompositeMessage({
-        weatherBlurb,
-        setupPct:       setupStats?.pct       ?? 100,
-        setupRemaining: setupStats?.remaining ?? 0,
-        totalRevenue,
-      })
-  // Narrator mode: outside of alerts/reminders, the house also reads out how
-  // the month is shaping up on the calendar.
-  const monthPulse = getMonthPulse(calendarData)
-  const bubbleMessage = !highAlert && !topUpdate && monthPulse
-    ? `${baseMessage} ${monthPulse}`
-    : baseMessage
+    : topUpdate?.type === 'update'
+    ? `${topUpdate.title} ${narration}`
+    : narration
   const bubbleWeatherSubtitle = (weatherBlurb && topUpdate) ? weatherBlurb : null
   const [view, setView] = useState('home') // home | list | spinup | import | pl
   const [listFilter, setListFilter] = useState('all')

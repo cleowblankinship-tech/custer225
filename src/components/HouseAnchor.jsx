@@ -4,7 +4,7 @@ import HouseIcon from './HouseIcon'
 
 const THEME_ICONS = { auto: '◐', day: '☀', evening: '◑', night: '☾' }
 
-function useTypewriter(target, msPerChar = 22) {
+function useTypewriter(target, msPerChar = 14) {
   const [output, setOutput] = useState('')
   useEffect(() => {
     if (!target) { setOutput(''); return }
