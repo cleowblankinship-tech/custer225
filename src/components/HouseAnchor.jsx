@@ -110,22 +110,6 @@ export default function HouseAnchor({ messages = [], mood, themeMode, onThemeTog
             )}
           </p>
 
-          {/* Deck position dots — tap the house for the next thought */}
-          {deck.length > 1 && (
-            <div style={{ display: 'flex', alignItems: 'center', gap: 5, marginTop: 12 }}>
-              {deck.map((_, i) => (
-                <span key={i} style={{
-                  width: 6, height: 6, borderRadius: '50%',
-                  background: i === cardIdx % deck.length ? 'var(--accent)' : 'var(--border-mid)',
-                  transition: 'background 200ms ease',
-                }} />
-              ))}
-              <span style={{ fontSize: 10, fontWeight: 600, color: 'var(--text3)', marginLeft: 6, letterSpacing: '0.04em' }}>
-                tap the house for more
-              </span>
-            </div>
-          )}
-
           {/* Notification prompt — once typing finishes, if not yet enabled */}
           {!isTyping && notifPermission === 'default' && onEnableNotifications && (
             <button

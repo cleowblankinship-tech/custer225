@@ -252,11 +252,8 @@ input::placeholder, textarea::placeholder { color: var(--text3); }
   /* Mobile-only elements are hidden on desktop */
   .mobile-only { display: none !important; }
 
-  /* House narrator hugs the calendar edge: the row reverses so the house
-     sits at the right of the left column, beside the calendar panel, with
-     its narration flowing to the left. */
+  /* House narrator: house on the left, narration flowing to its right */
   .house-anchor {
-    flex-direction: row-reverse;
-    padding: 22px 2px 6px 20px !important;
+    padding: 22px 12px 6px 20px !important;
   }
 }
