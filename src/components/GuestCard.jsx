@@ -365,9 +365,8 @@ export default function GuestCard({ expenses = [], calendarData: propData, onAdd
         </div>
       ) : (
         <div style={{
-          flex: 1, minHeight: 0,
           display: 'grid', gridTemplateColumns: 'repeat(7, 1fr)',
-          gridAutoRows: 'minmax(82px, 1fr)', rowGap: 2,
+          gridAutoRows: 82, rowGap: 2,
         }}>
           {Array.from({ length: firstWeekDay }).map((_, i) => <div key={`e${i}`} />)}
 
