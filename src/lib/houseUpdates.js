@@ -276,11 +276,11 @@ export function getMonthPulse(calendarData) {
 // ── House narrator ────────────────────────────────────────────────────────────
 //
 // The house speaks in first person — a warm, slightly wry host who knows its
-// own calendar and books. getHouseNarration() weaves together up to three
-// beats: today's headline (turnovers, reminders), the guest story, and a
-// business pulse (occupancy, revenue, gap-night nudges). Phrasing rotates
-// daily via a date seed so the voice feels alive without flickering between
-// renders.
+// own calendar and books. getNarrationDeck() deals a deck of focused cards:
+// today's headline (turnovers, reminders), the guest story, a business pulse
+// (occupancy, revenue, gap-night nudges), the week ahead, and month pacing.
+// Tapping the house advances through the deck. Phrasing rotates daily via a
+// date seed so the voice feels alive without flickering between renders.
 
 
 function mtDate(iso) {
@@ -387,15 +387,15 @@ function guestStory(stays, todayMT) {
   ])
 }
 
-// ── Beat 2: the business pulse ───────────────────────────────────────────────
-function businessPulse(stays, expenses, todayMT) {
-  if (!stays.length) return null
-  const [y, m] = todayMT.split('-').map(Number)
+// ── Month rollup — shared by the pulse and pacing beats ──────────────────────
+// Mirrors the calendar's revenue matching: API payout first, then the ledger
+// income entry dated to check-in; plus any ledger income not tied to a stay.
+function computeMonth(stays, expenses, y, m) {
   const prefix = `${y}-${String(m).padStart(2, '0')}`
   const daysInMonth = new Date(y, m, 0).getDate()
-  const monthName   = MONTH_NAMES[m - 1]
 
   const incomeEntries = expenses.filter(e => e.entry_type === 'income')
+  const matchedDates  = new Set()
   const bookedNights  = new Set()
   let stayCount = 0
   let revenue   = 0
@@ -411,16 +411,32 @@ function businessPulse(stays, expenses, todayMT) {
     }
     if (!touches) continue
     stayCount++
-    // Mirror the calendar's revenue matching: API payout first, then the
-    // ledger income entry dated to check-in
-    revenue += b.revenue
-      ?? Number(incomeEntries.find(
-           e => normalizeCategory(e.category) === 'Gross Booking Revenue' && e.date === b.ci
-         )?.amount ?? 0)
+    const ledgerMatch = incomeEntries.find(
+      e => normalizeCategory(e.category) === 'Gross Booking Revenue' && e.date === b.ci
+    )
+    if (ledgerMatch) matchedDates.add(ledgerMatch.date)
+    revenue += b.revenue ?? Number(ledgerMatch?.amount ?? 0)
   }
-  if (stayCount === 0) return null
+  // Ledger income this month not already counted through a stay
+  for (const e of incomeEntries) {
+    if (e.date?.startsWith(prefix) && !matchedDates.has(e.date)) {
+      revenue += Number(e.amount)
+    }
+  }
 
   const pct = Math.round((bookedNights.size / daysInMonth) * 100)
+  return { prefix, daysInMonth, pct, stayCount, revenue, bookedNights: bookedNights.size }
+}
+
+// ── Beat 2: the business pulse ───────────────────────────────────────────────
+function businessPulse(stays, expenses, todayMT) {
+  if (!stays.length) return null
+  const [y, m] = todayMT.split('-').map(Number)
+  const monthName = MONTH_NAMES[m - 1]
+
+  const { prefix, daysInMonth, pct, stayCount, revenue, bookedNights } =
+    computeMonth(stays, expenses, y, m)
+  if (stayCount === 0) return null
   const text = revenue > 0
     ? pick([
         `${monthName} so far: ${pct}% booked, ${stayCount} stay${stayCount !== 1 ? 's' : ''}, ${dollars(revenue)} through my doors.`,
@@ -432,7 +448,7 @@ function businessPulse(stays, expenses, todayMT) {
   const flourish = pct >= 85 ? pick([' Barely a night to myself.', ' A full house suits me.'], 2)
                  : pct < 40  ? ' Plenty of room for more company.'
                  : ''
-  return { text, flourish, revenue, bookedNights: bookedNights.size, prefix, daysInMonth }
+  return { text, flourish, revenue, bookedNights, prefix, daysInMonth }
 }
 
 // ── Beat 3: the gap-night nudge ──────────────────────────────────────────────
@@ -463,52 +479,142 @@ function gapNudge(stays, pulse, todayMT) {
   return `I've got ${gaps} empty night${gaps !== 1 ? 's' : ''} between stays starting ${fmtDay(firstGap)} — worth a look.`
 }
 
+// ── Beat 4: reminders, in the house's voice ──────────────────────────────────
+//
+// Each active reminder becomes its own card. Known routines (trash, recycling,
+// plants) get bespoke house-voice lines keyed off the rule id / title keywords;
+// everything else gets a to-do-list framing.
+
+function reminderCard(update) {
+  const title = (update.title ?? '').replace(/\.+$/, '')
+  const probe = `${update.ruleId ?? ''} ${title}`.toLowerCase()
+
+  if (/trash|garbage|bins?\b/.test(probe)) return pick([
+    "Trash night tonight — the curb awaits.",
+    "It's trash night. I'd rather not smell it tomorrow.",
+    "Bins out tonight — the truck comes early.",
+  ], 3)
+  if (/recycl|blue bin/.test(probe)) return pick([
+    "Recycling night — blue bin to the curb.",
+    "The blue bin goes out tonight.",
+  ], 3)
+  if (/water|plant|garden|flower/.test(probe)) return pick([
+    "My plants are looking thirsty — watering day.",
+    "Watering day. The flowers out front will thank you.",
+  ], 3)
+  if (/filter|hvac|furnace/.test(probe)) return pick([
+    `Time to breathe easy: ${title.toLowerCase()}.`,
+    `${title} — my lungs, basically.`,
+  ], 3)
+  return pick([
+    `On my list today: ${title}.`,
+    `Before the day gets away: ${title}.`,
+    `A note from my to-do list: ${title}.`,
+  ], 4)
+}
+
+// ── Beat 5: the week ahead ───────────────────────────────────────────────────
+function weekAhead(stays, todayMT) {
+  if (!stays.length) return null
+  const horizon = new Date(todayMT)
+  horizon.setDate(horizon.getDate() + 7)
+  const horizonStr = horizon.toLocaleDateString('en-CA')
+
+  const arrivals  = stays.filter(b => b.ci > todayMT && b.ci <= horizonStr).length
+  const checkouts = stays.filter(b => b.co > todayMT && b.co <= horizonStr).length
+  if (arrivals + checkouts === 0) return null
+
+  const bits = []
+  if (arrivals)  bits.push(`${arrivals} arrival${arrivals !== 1 ? 's' : ''}`)
+  if (checkouts) bits.push(`${checkouts} checkout${checkouts !== 1 ? 's' : ''}`)
+  let st = `The week ahead: ${bits.join(' and ')}.`
+  if (arrivals + checkouts >= 3) st += pick([" I'll keep the kettle on.", ' A busy stretch for me.'], 5)
+  return st
+}
+
+// ── Beat 6: month-over-month pacing ──────────────────────────────────────────
+function revenuePacing(stays, expenses, todayMT) {
+  const [y, m] = todayMT.split('-').map(Number)
+  const prevDate = new Date(y, m - 2, 1)
+  const prevName = MONTH_NAMES[prevDate.getMonth()]
+  const curName  = MONTH_NAMES[m - 1]
+
+  const cur  = computeMonth(stays, expenses, y, m).revenue
+  const prev = computeMonth(stays, expenses, prevDate.getFullYear(), prevDate.getMonth() + 1).revenue
+  if (prev <= 0) return null
+  if (cur <= 0) return `Nothing in my books yet this ${curName} — ${prevName} closed at ${dollars(prev)}.`
+  return cur >= prev
+    ? `${dollars(cur)} so far this ${curName} — already past ${prevName}'s ${dollars(prev)}. Onward.`
+    : `${dollars(cur)} this ${curName} so far, chasing ${prevName}'s ${dollars(prev)}.`
+}
+
 /**
- * The house's full narration — up to three beats, ~2-3 sentences.
+ * The house's full narration as a DECK of cards — one focused thought each.
+ * The first card is the headline; tapping the house deals the next one.
+ * Order: alerts → launch → guest story → reminders → business pulse →
+ * gap nudge → week ahead → pacing → weather.
+ *
  * @param {object} opts
  * @param {object|null} opts.calendarData   — from /api/calendar
  * @param {Array}       opts.expenses       — ledger entries (for revenue matching)
  * @param {string|null} opts.weatherBlurb   — e.g. "Hazy and cold."
  * @param {number}      opts.setupPct       — launch readiness 0-100
  * @param {number}      opts.setupRemaining — launch tasks left
- * @param {string|null} opts.reminderTitle  — top active reminder, if any
- * @returns {string}
+ * @param {Array}       opts.updates        — active updates (reminders, alerts, bookings)
+ * @returns {string[]}  at least one card
  */
-export function getHouseNarration({
+export function getNarrationDeck({
   calendarData = null,
   expenses = [],
   weatherBlurb = null,
   setupPct = 100,
   setupRemaining = 0,
-  reminderTitle = null,
+  updates = [],
 } = {}) {
-  // Pre-launch: the house is excited to open
-  if (setupPct < 100) {
-    if (setupPct >= 85) {
-      return `${setupRemaining === 1 ? 'One task' : `${setupRemaining} tasks`} and I'm open for business. Final stretch.`
-    }
-    return `I'm ${setupPct}% ready for guests — ${setupRemaining} tasks to go. ${weatherBlurb ?? ''}`.trim()
-  }
-
   const todayMT = new Date().toLocaleDateString('en-CA', { timeZone: 'America/Denver' })
   const stays   = normalizeStays(calendarData)
-  const beats   = []
+  const cards   = []
 
-  // Reminders lead — the house keeps the to-do list
-  if (reminderTitle) beats.push(`On today's list: ${reminderTitle.replace(/\.+$/, '')}.`)
+  // Hard alerts always lead the deck
+  const highAlert = updates.find(u => u.type === 'alert' && u.priority === 'high')
+  if (highAlert) cards.push(highAlert.title)
 
-  beats.push(guestStory(stays, todayMT))
+  // Pre-launch: the house is excited to open
+  if (setupPct < 100) {
+    cards.push(setupPct >= 85
+      ? `${setupRemaining === 1 ? 'One task' : `${setupRemaining} tasks`} and I'm open for business. Final stretch.`
+      : `I'm ${setupPct}% ready for guests — ${setupRemaining} tasks to go.`)
+  }
+
+  cards.push(guestStory(stays, todayMT))
+
+  // Every reminder/booking update becomes its own card
+  for (const u of updates) {
+    if (u === highAlert) continue
+    if (u.type === 'reminder' || u.type === 'maintenance') cards.push(reminderCard(u))
+    else if (u.title) cards.push(u.title)
+  }
 
   const pulse = businessPulse(stays, expenses, todayMT)
-  const nudge = reminderTitle ? null : gapNudge(stays, pulse, todayMT)
-  if (pulse) beats.push(pulse.text + (nudge ? '' : pulse.flourish))
+  if (pulse) cards.push(pulse.text + pulse.flourish)
 
-  // Third beat only when there's room: nudge about money on the table,
-  // otherwise a touch of weather
-  if (nudge) beats.push(nudge)
-  else if (!reminderTitle && weatherBlurb) beats.unshift(weatherBlurb)
+  const nudge = gapNudge(stays, pulse, todayMT)
+  if (nudge) cards.push(nudge)
 
-  return beats.filter(Boolean).join(' ') || getCalmMessage()
+  const week = weekAhead(stays, todayMT)
+  if (week) cards.push(week)
+
+  const pacing = revenuePacing(stays, expenses, todayMT)
+  if (pacing) cards.push(pacing)
+
+  if (weatherBlurb) cards.push(weatherBlurb + pick([
+    ' A fine day to be a house.',
+    " I'll keep the lights warm.",
+    ' Cozy weather for my guests.',
+  ], 6))
+
+  const deck = cards.filter(Boolean)
+  return deck.length ? deck : [getCalmMessage()]
 }
 
 // ── API ───────────────────────────────────────────────────────────────────────

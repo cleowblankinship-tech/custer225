@@ -161,14 +161,16 @@ export function deleteUserRule(id) {
  * @param {Array}  [extraRules] Optional user-defined rules to merge in
  * @returns {Array}             Zero or more update item objects
  */
-/** Pick a random item from an array. */
-function pickRandom(arr) {
-  return arr[Math.floor(Math.random() * arr.length)]
+/** Date-stable pick — same title all day, fresh the next time the rule fires.
+    (A per-render random pick would restart the house's typewriter mid-word.) */
+function pickForDate(arr, dateStr) {
+  const seed = dateStr.split('-').reduce((a, n) => a + Number(n), 0)
+  return arr[seed % arr.length]
 }
 
 /** Resolve a rule's display title — supports both `titles[]` and plain `title`. */
-function resolveTitle(rule) {
-  if (Array.isArray(rule.titles) && rule.titles.length > 0) return pickRandom(rule.titles)
+function resolveTitle(rule, dateStr) {
+  if (Array.isArray(rule.titles) && rule.titles.length > 0) return pickForDate(rule.titles, dateStr)
   return rule.title ?? ''
 }
 
@@ -180,7 +182,7 @@ export function getRecurringRemindersForDate(dateStr, extraRules = []) {
       id:       `recurring-${rule.id}`,
       type:     'reminder',
       priority: 'normal',
-      title:    resolveTitle(rule),
+      title:    resolveTitle(rule, dateStr),
       detail:   rule.notes ?? null,
       source:   'recurring',
       ruleId:   rule.id,

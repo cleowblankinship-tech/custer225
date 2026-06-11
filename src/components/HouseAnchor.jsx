@@ -1,5 +1,4 @@
-import { useState, useEffect, useRef } from 'react'
-// blinkTimer removed — window opacity is now fixed
+import { useState, useEffect } from 'react'
 import HouseIcon from './HouseIcon'
 
 const THEME_ICONS = { auto: '◐', day: '☀', evening: '◑', night: '☾' }
@@ -20,48 +19,30 @@ function useTypewriter(target, msPerChar = 14) {
   return output
 }
 
-export default function HouseAnchor({ message, mood, themeMode, onThemeToggle, notifPermission, onEnableNotifications }) {
-  // The house is the dashboard narrator — its bubble is open by default and
-  // retells the current message; tapping the house toggles it off/on.
-  const [open,    setOpen]    = useState(true)
+export default function HouseAnchor({ messages = [], mood, themeMode, onThemeToggle, notifPermission, onEnableNotifications }) {
+  // The house is the dashboard narrator. It holds a deck of cards — one
+  // focused thought each — and every tap on the house deals the next one,
+  // wrapping back to the first.
+  const [cardIdx, setCardIdx] = useState(0)
   const [pressed, setPressed] = useState(false)
-  const [nudging, setNudging] = useState(false)
-  const nudgeTimer = useRef(null)
 
-  const displayedText = useTypewriter(open ? message : null)
-  const isTyping      = open && displayedText.length < (message?.length ?? 0)
+  const deck    = messages.length ? messages : ['']
+  const message = deck[cardIdx % deck.length]
 
-  function toggle() {
+  const displayedText = useTypewriter(message)
+  const isTyping      = displayedText.length < (message?.length ?? 0)
+
+  function dealNext() {
     setPressed(false)
-    setNudging(false)
-    setOpen(o => !o)
+    setCardIdx(i => i + 1)
   }
 
-  // Attention-nudge: wiggle once after 8s of unread message, then every 20s
-  useEffect(() => {
-    clearTimeout(nudgeTimer.current)
-    clearInterval(nudgeTimer.current)
-    if (open || !message) return
-
-    nudgeTimer.current = setTimeout(() => {
-      const fire = () => {
-        setNudging(true)
-        setTimeout(() => setNudging(false), 550)
-      }
-      fire()
-      nudgeTimer.current = setInterval(fire, 20000)
-    }, 8000)
-
-    return () => { clearTimeout(nudgeTimer.current); clearInterval(nudgeTimer.current) }
-  }, [open, message])
-
-  // Wrapper animation: urgent shake and nudge take priority; otherwise the
-  // house idles with a slow float — it's the personality of the dashboard,
+  // Wrapper animation: urgent shake takes priority; otherwise the house
+  // idles with a slow float — it's the personality of the dashboard,
   // while the financial panels around it stay still.
   let wrapperAnimation = 'houseFloat 7s ease-in-out infinite'
-  if (!pressed) {
-    if (nudging && !open)       wrapperAnimation = 'houseNudge 0.55s ease-in-out'
-    else if (mood === 'urgent') wrapperAnimation = 'houseShake 0.5s ease-in-out infinite'
+  if (!pressed && mood === 'urgent') {
+    wrapperAnimation = 'houseShake 0.5s ease-in-out infinite'
   }
 
   return (
@@ -92,9 +73,9 @@ export default function HouseAnchor({ message, mood, themeMode, onThemeToggle, n
       <div style={{ flexShrink: 0, animation: wrapperAnimation }}>
         <button
           onPointerDown={() => setPressed(true)}
-          onPointerUp={toggle}
+          onPointerUp={dealNext}
           onPointerLeave={() => setPressed(false)}
-          aria-label={open ? 'Close house message' : 'Open house status'}
+          aria-label="Next house update"
           style={{
             color:   'var(--accent)',
             padding: 0,
@@ -113,8 +94,7 @@ export default function HouseAnchor({ message, mood, themeMode, onThemeToggle, n
       </div>
 
       {/* Inline message */}
-      {open && (
-        <div style={{ flex: 1, minWidth: 0, paddingTop: 8 }}>
+      <div style={{ flex: 1, minWidth: 0, paddingTop: 8 }}>
           <p style={{
             fontSize: 17, fontWeight: 400, lineHeight: 1.6,
             letterSpacing: '-0.01em', color: 'var(--text)',
@@ -130,6 +110,22 @@ export default function HouseAnchor({ message, mood, themeMode, onThemeToggle, n
             )}
           </p>
 
+          {/* Deck position dots — tap the house for the next thought */}
+          {deck.length > 1 && (
+            <div style={{ display: 'flex', alignItems: 'center', gap: 5, marginTop: 12 }}>
+              {deck.map((_, i) => (
+                <span key={i} style={{
+                  width: 6, height: 6, borderRadius: '50%',
+                  background: i === cardIdx % deck.length ? 'var(--accent)' : 'var(--border-mid)',
+                  transition: 'background 200ms ease',
+                }} />
+              ))}
+              <span style={{ fontSize: 10, fontWeight: 600, color: 'var(--text3)', marginLeft: 6, letterSpacing: '0.04em' }}>
+                tap the house for more
+              </span>
+            </div>
+          )}
+
           {/* Notification prompt — once typing finishes, if not yet enabled */}
           {!isTyping && notifPermission === 'default' && onEnableNotifications && (
             <button
@@ -144,9 +140,8 @@ export default function HouseAnchor({ message, mood, themeMode, onThemeToggle, n
             >
               Enable booking alerts
             </button>
-          )}
-        </div>
-      )}
+        )}
+      </div>
     </div>
   )
 }

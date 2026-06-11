@@ -15,7 +15,7 @@ import IntroSplash from './components/IntroSplash'
 // import HouseToday from './components/HouseToday'
 import DebtDashboard from './components/DebtDashboard'
 import HouseAnchor from './components/HouseAnchor'
-import { getActiveUpdates, getHouseMood, getHouseNarration } from './lib/houseUpdates'
+import { getActiveUpdates, getHouseMood, getNarrationDeck } from './lib/houseUpdates'
 import { fetchWeather } from './lib/weather'
 import { getRecurringRemindersForDate, getUserRules, saveUserRule } from './lib/recurringRules'
 import { getTimeOfDay, getTheme, applyTheme } from './lib/theme'
@@ -26,63 +26,6 @@ import {
   requestNotificationPermission,
   getNotificationPermission,
 } from './lib/bookingNotifications'
-
-// ── Mood → bubble visual config ───────────────────────────────────────────────
-//
-// The bubble sits to the RIGHT of the house icon in a flex row.
-// The tail points LEFT, connecting back to the house character.
-//
-// Because the tail is now on the left edge, we do NOT use a heavy
-// borderLeft accent — that would clash with the tail junction.
-// Urgency is conveyed through background tint and border color instead.
-//
-// borderRadius: left corners (10px) are tighter at the tail attachment;
-// right corners (16-18px) are rounder, giving a natural "bubble" silhouette.
-// Bubble surfaces now use --bubble-bg / --bubble-border / --bubble-sub tokens
-// so the parchment color in night mode transitions smoothly with the rest of
-// the palette. Shadows are reduced — dark mode relies on surface + border
-// contrast rather than drop shadows.
-const MOOD_BUBBLE = {
-  urgent: {
-    bg:           'var(--accent-light)',
-    border:       '1px solid rgba(192,85,56,0.22)',
-    borderLeft:   '1px solid rgba(192,85,56,0.22)',
-    borderRadius: '10px 16px 16px 10px',
-    padding:      '11px 14px',
-    boxShadow:    '0 1px 6px rgba(92,52,26,0.10)',
-    tailBorder:   '1px solid rgba(192,85,56,0.22)',
-    tailFill:     'var(--accent-light)',
-    textColor:    'var(--text)',
-    textWeight:   600,
-    moreColor:    'var(--accent)',
-  },
-  attention: {
-    bg:           'var(--bubble-bg)',
-    border:       '1px solid var(--bubble-border)',
-    borderLeft:   '1px solid var(--bubble-border)',
-    borderRadius: '10px 16px 16px 10px',
-    padding:      '11px 14px',
-    boxShadow:    '0 1px 5px rgba(92,52,26,0.08)',
-    tailBorder:   '1px solid var(--bubble-border)',
-    tailFill:     'var(--bubble-bg)',
-    textColor:    'var(--text)',
-    textWeight:   500,
-    moreColor:    'var(--bubble-sub)',
-  },
-  calm: {
-    bg:           'var(--bubble-bg)',
-    border:       '1px solid var(--bubble-border)',
-    borderLeft:   '1px solid var(--bubble-border)',
-    borderRadius: '10px 18px 18px 10px',
-    padding:      '11px 14px',
-    boxShadow:    '0 1px 5px rgba(92,52,26,0.08)',
-    tailBorder:   '1px solid var(--bubble-border)',
-    tailFill:     'var(--bubble-bg)',
-    textColor:    'var(--text)',
-    textWeight:   500,
-    moreColor:    'var(--bubble-sub)',
-  },
-}
 
 const SEED_EXPENSES = [
   { id: 's1', date: '2026-04-07', description: 'American Furniture Warehouse — couch', category: 'Supplies', entry_type: 'expense', tax_type: 'depreciate', amount: 2162.04 },
@@ -130,35 +73,24 @@ export default function App() {
 
   // ── Merge all update sources + derive mood ────────────────────────────────
   const activeUpdates  = getActiveUpdates([...weatherConditions, ...taskReminders, ...recurringReminders, ...bookingUpdates])
-  const topUpdate      = activeUpdates[0] ?? null
   const mood           = getHouseMood(activeUpdates)
-  const moodStyle      = MOOD_BUBBLE[mood]
 
   // All-time Airbnb revenue — used for bubble message + NBA card
   const totalRevenue = expenses
     .filter(e => e.entry_type === 'income')
     .reduce((s, e) => s + Number(e.amount), 0)
 
-  // Bubble message — the house narrates the dashboard in its own voice.
-  // High-priority alerts (hard freeze, storm) still override everything;
-  // reminders/maintenance lead the narration; new-booking updates prepend it.
-  const highAlert = activeUpdates.find(u => u.type === 'alert' && u.priority === 'high')
-  const narration = getHouseNarration({
+  // Narration deck — the house deals one focused thought per tap: alerts,
+  // guest story, reminders (trash night, plants…), business pulse, gap
+  // nudges, the week ahead, month pacing, weather.
+  const narrationDeck = getNarrationDeck({
     calendarData,
     expenses,
     weatherBlurb,
     setupPct:       setupStats?.pct       ?? 100,
     setupRemaining: setupStats?.remaining ?? 0,
-    reminderTitle:  topUpdate && (topUpdate.type === 'reminder' || topUpdate.type === 'maintenance')
-      ? topUpdate.title
-      : null,
+    updates:        activeUpdates,
   })
-  const bubbleMessage = highAlert
-    ? highAlert.title
-    : topUpdate?.type === 'update'
-    ? `${topUpdate.title} ${narration}`
-    : narration
-  const bubbleWeatherSubtitle = (weatherBlurb && topUpdate) ? weatherBlurb : null
   const [view, setView] = useState('home') // home | list | spinup | import | pl
   const [listFilter, setListFilter] = useState('all')
   const [listMonth, setListMonth] = useState(null)
@@ -566,7 +498,7 @@ export default function App() {
 
               {/* House — sits above financials, to the left of the calendar */}
               <HouseAnchor
-                message={bubbleMessage}
+                messages={narrationDeck}
                 mood={mood}
                 themeMode={themeMode}
                 notifPermission={notifPermission}
