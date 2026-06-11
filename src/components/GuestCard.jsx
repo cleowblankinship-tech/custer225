@@ -367,7 +367,7 @@ export default function GuestCard({ expenses = [], calendarData: propData, onAdd
         <div style={{
           flex: 1, minHeight: 0,
           display: 'grid', gridTemplateColumns: 'repeat(7, 1fr)',
-          gridAutoRows: 'minmax(60px, 1fr)', rowGap: 2,
+          gridAutoRows: 'minmax(70px, 1fr)', rowGap: 2,
         }}>
           {Array.from({ length: firstWeekDay }).map((_, i) => <div key={`e${i}`} />)}
 
@@ -414,30 +414,30 @@ export default function GuestCard({ expenses = [], calendarData: propData, onAdd
                     // Anchored to the top so the ribbon hugs its date number
                     // even when rows stretch taller
                     position: 'absolute', top: 27,
-                    height: 26,
+                    height: 36,
                     left:   info.isFirst ? 3 : -1,
                     right:  info.isLast  ? 3 : -1,
                     background: info.color.bar,
-                    borderRadius: info.isFirst && info.isLast ? 7
-                                : info.isFirst ? '7px 0 0 7px'
-                                : info.isLast  ? '0 7px 7px 0' : 0,
+                    borderRadius: info.isFirst && info.isLast ? 9
+                                : info.isFirst ? '9px 0 0 9px'
+                                : info.isLast  ? '0 9px 9px 0' : 0,
                     boxShadow: isActive
                       ? `0 0 0 2px ${info.color.solid}, 0 2px 6px rgba(10,10,8,0.18)`
                       : '0 1px 3px rgba(10,10,8,0.12)',
                     transition: 'box-shadow 130ms ease',
                     display: 'flex', alignItems: 'center',
-                    paddingLeft: showName ? 6 : 0,
+                    paddingLeft: showName ? 8 : 0,
                     overflow: 'visible',
                     zIndex: isActive ? 3 : 1,
                   }}>
                     {showName && (
                       <span style={{
-                        display: 'inline-flex', alignItems: 'center', gap: 3,
-                        fontSize: 12, fontWeight: 700, color: info.color.text,
+                        display: 'inline-flex', alignItems: 'center', gap: 4,
+                        fontSize: 14, fontWeight: 700, color: info.color.text,
                         whiteSpace: 'nowrap', letterSpacing: '0.01em',
                         textShadow: '0 1px 1px rgba(10,10,8,0.12)',
                       }}>
-                        {isCheckInDay && <MiniHouse size={11} color={info.color.text} />}
+                        {isCheckInDay && <MiniHouse size={13} color={info.color.text} />}
                         {firstName(info.booking.name)}
                       </span>
                     )}
@@ -457,7 +457,7 @@ export default function GuestCard({ expenses = [], calendarData: propData, onAdd
                   ) : (
                     <div style={{
                       position: 'absolute', top: 27, left: 3, right: 3,
-                      height: 26,
+                      height: 36,
                       background: 'var(--accent-light)',
                       border: '1px dashed var(--accent)',
                       borderRadius: 7,
