@@ -218,26 +218,6 @@ input::placeholder, textarea::placeholder { color: var(--text3); }
     padding-top: 28px !important;
   }
 
-  /* Home grid: compact metrics left, dominant calendar right */
-  .home-grid {
-    display: grid;
-    grid-template-columns: 1fr 2.4fr;
-    align-items: stretch;
-    max-width: 1400px;
-    margin: 0 auto;
-    width: 100%;
-  }
-
-  .home-right {
-    display: flex;
-    flex-direction: column;
-  }
-
-  /* On desktop the calendar column is defined first in markup (mobile-first),
-     but grid-column pins each to the right visual slot regardless of order. */
-  .home-left  { grid-column: 1; }
-  .home-right { grid-column: 2; grid-row: 1 / 20; }
-
   /* No bottom nav on desktop — remove the nav-height reservation */
   .content-main { padding-bottom: 40px !important; }
 
@@ -249,11 +229,14 @@ input::placeholder, textarea::placeholder { color: var(--text3); }
     width: 100%;
   }
 
+  .view-col-wide {
+    max-width: 1080px;
+    margin: 0 auto;
+    width: 100%;
+    display: flex;
+    flex-direction: column;
+  }
+
   /* Mobile-only elements are hidden on desktop */
   .mobile-only { display: none !important; }
-
-  /* House narrator: house on the left, narration flowing to its right */
-  .house-anchor {
-    padding: 22px 12px 6px 20px !important;
-  }
 }

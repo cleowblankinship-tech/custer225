@@ -236,7 +236,7 @@ export function getGuestMessage(calendarData) {
 // from live calendar data. Appended to guest/calm messages so the house reads
 // as the dashboard's narrator, not just an alert lamp.
 
-const MONTH_NAMES = ['January','February','March','April','May','June',
+export const MONTH_NAMES = ['January','February','March','April','May','June',
                      'July','August','September','October','November','December']
 
 /**
@@ -287,7 +287,7 @@ function mtDate(iso) {
   return new Date(iso).toLocaleDateString('en-CA', { timeZone: 'America/Denver' })
 }
 
-function fmtDay(dateStr) {
+export function fmtDay(dateStr) {
   const [, m, d] = dateStr.split('-').map(Number)
   return `${MONTH_NAMES[m - 1].slice(0, 3)} ${d}`
 }
@@ -310,7 +310,7 @@ function nightsWord(n) {
 }
 
 // Normalize the raw calendar into sorted, MT-dated stays
-function normalizeStays(calendarData) {
+export function normalizeStays(calendarData) {
   if (!calendarData?.all?.length) return []
   return calendarData.all
     .map(b => ({
@@ -390,7 +390,7 @@ function guestStory(stays, todayMT) {
 // ── Month rollup — shared by the pulse and pacing beats ──────────────────────
 // Mirrors the calendar's revenue matching: API payout first, then the ledger
 // income entry dated to check-in; plus any ledger income not tied to a stay.
-function computeMonth(stays, expenses, y, m) {
+export function computeMonth(stays, expenses, y, m) {
   const prefix = `${y}-${String(m).padStart(2, '0')}`
   const daysInMonth = new Date(y, m, 0).getDate()
 

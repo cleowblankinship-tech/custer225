@@ -11,11 +11,11 @@ import SetupCard from './components/SetupCard'
 import { getExpenses, addExpense, updateExpense, deleteExpense, getTasks, addTask, deleteTask, toggleTask, getSetupItems } from './lib/supabase'
 import { INITIAL_ITEMS, computeSpinUpStats } from './lib/spinupData'
 import IntroSplash from './components/IntroSplash'
-// HouseToday panel removed — house now communicates inline (see HouseAnchor)
-// import HouseToday from './components/HouseToday'
 import DebtDashboard from './components/DebtDashboard'
-import HouseAnchor from './components/HouseAnchor'
-import { getActiveUpdates, getHouseMood, getNarrationDeck } from './lib/houseUpdates'
+import HouseOS from './components/HouseOS'
+import { getActiveUpdates, getHouseMood, getNarrationDeck, normalizeStays, computeMonth, fmtDay } from './lib/houseUpdates'
+import { askHouse } from './lib/houseChat'
+import { computeCashFlow } from './lib/finance'
 import { fetchWeather } from './lib/weather'
 import { getRecurringRemindersForDate, getUserRules, saveUserRule } from './lib/recurringRules'
 import { getTimeOfDay, getTheme, applyTheme } from './lib/theme'
@@ -79,6 +79,29 @@ export default function App() {
   const totalRevenue = expenses
     .filter(e => e.entry_type === 'income')
     .reduce((s, e) => s + Number(e.amount), 0)
+
+  // ── HouseOS vitals — minimal supporting info under the house ─────────────
+  const todayMT = new Date().toLocaleDateString('en-CA', { timeZone: 'America/Denver' })
+  const stays   = normalizeStays(calendarData)
+  const [vy, vm] = todayMT.split('-').map(Number)
+  const monthNow = computeMonth(stays, expenses, vy, vm)
+  const nextStay = stays.find(b => b.ci > todayMT)
+  const currStay = stays.find(b => b.ci <= todayMT && todayMT < b.co)
+  const cashAll  = computeCashFlow(expenses)
+  const houseStats = [
+    { label: 'Occupancy', value: stays.length ? `${monthNow.pct}%` : '—', view: 'calendar' },
+    {
+      label: currStay ? 'Checks out' : 'Next check-in',
+      value: currStay ? fmtDay(currStay.co) : nextStay ? fmtDay(nextStay.ci) : '—',
+      view: 'calendar',
+    },
+    { label: 'Available cash', value: '$' + Math.round(cashAll.availableCash).toLocaleString('en-US'), view: 'money' },
+  ]
+  const houseVitals = {
+    occupancyPct: monthNow.pct,
+    hasGuest:     !!currStay,
+    revenueAhead: null, // future: month pacing signal for animations
+  }
 
   // Narration deck — the house deals one focused thought per tap: alerts,
   // guest story, reminders (trash night, plants…), business pulse, gap
@@ -253,7 +276,6 @@ export default function App() {
     } else {
       setExpenses(prev => [{ ...entry, id: 'local-' + Date.now() }, ...prev])
     }
-    setView('home')
   }
 
   async function handleUpdateExpense(id, fields) {
@@ -303,7 +325,6 @@ export default function App() {
     } else {
       setTasks(prev => [{ ...entry, id: 'local-task-' + Date.now() }, ...prev])
     }
-    setView('home')
   }
 
   async function handleDeleteTask(id) {
@@ -344,7 +365,6 @@ export default function App() {
     }
     const updated = saveUserRule(rule)
     setUserRules(updated)
-    setView('home')
   }
 
   // ── Unified entry point from QuickAdd ─────────────────────────────────────
@@ -358,14 +378,26 @@ export default function App() {
   // ── Nav ───────────────────────────────────────────────────────────────────
 
   const navItems = [
-    { key: 'home',   label: 'Home',   icon: '⌂' },
-    { key: 'list',   label: 'Ledger', icon: '≡' },
-    { key: 'debt',   label: 'Debt',   icon: '$' },
-    { key: 'spinup', label: 'Launch', icon: '✓' },
-    { key: 'import', label: 'Import', icon: '↑' },
+    { key: 'home',     label: 'Home',     icon: '⌂' },
+    { key: 'calendar', label: 'Calendar', icon: '▦' },
+    { key: 'money',    label: 'Money',    icon: '$' },
+    { key: 'list',     label: 'Ledger',   icon: '≡' },
+    { key: 'debt',     label: 'Debt',     icon: '◔' },
+    { key: 'spinup',   label: 'Launch',   icon: '✓' },
+    { key: 'import',   label: 'Import',   icon: '↑' },
   ]
+  // The bottom nav fits five — Debt and Import stay reachable via the desktop
+  // nav, the Money view, and by asking the house
+  const mobileNavKeys = ['home', 'calendar', 'money', 'list', 'spinup']
 
-  const viewTitle = { home: 'Overview', list: 'Ledger', debt: 'Debt', spinup: 'Spin-Up', import: 'Import', pl: 'P&L Report' }
+  const viewTitle = { home: 'Home', calendar: 'Calendar', money: 'Money', list: 'Ledger', debt: 'Debt', spinup: 'Spin-Up', import: 'Import', pl: 'P&L Report' }
+
+  // House-directed navigation — 'tasks' routes to the ledger's task filter
+  function handleHouseNavigate(view) {
+    if (view === 'tasks') { navigateToList('tasks'); return }
+    if (view === 'list')  { navigateToList('all');   return }
+    setView(view)
+  }
 
   // ── Shared nav handler ────────────────────────────────────────────────────
   function handleNavClick(key) {
@@ -480,137 +512,143 @@ export default function App() {
         )}
 
         {!loading && view === 'home' && (
-          <div className="home-grid">
+          <HouseOS
+            messages={narrationDeck}
+            mood={mood}
+            vitals={houseVitals}
+            stats={houseStats}
+            onAsk={q => askHouse(q, { calendarData, expenses, tasks, setupStats })}
+            onNavigate={handleHouseNavigate}
+            themeMode={themeMode}
+            notifPermission={notifPermission}
+            onEnableNotifications={async () => {
+              const result = await requestNotificationPermission()
+              setNotifPermission(result)
+            }}
+            onThemeToggle={() => {
+              const CYCLE = ['auto', 'day', 'evening', 'night']
+              const m = CYCLE[(CYCLE.indexOf(themeMode) + 1) % CYCLE.length]
+              setThemeMode(m)
+              localStorage.setItem('custer225_theme_v2', m)
+            }}
+          />
+        )}
 
-            {/* ── Right column — calendar ──────────────────────────────── */}
-            <div className="home-right">
-              {/* Calendar + occupancy */}
-              <GuestCard
-                expenses={expenses}
-                calendarData={calendarData}
-                onAddIncome={handleAddExpense}
-                onEditIncome={handleUpdateExpense}
-              />
+        {!loading && view === 'calendar' && (
+          <div className="view-col-wide">
+            <GuestCard
+              expenses={expenses}
+              calendarData={calendarData}
+              onAddIncome={handleAddExpense}
+              onEditIncome={handleUpdateExpense}
+            />
+          </div>
+        )}
+
+        {!loading && view === 'money' && (
+          <div className="view-col">
+            <PLSummary
+              expenses={expenses}
+              onNavigate={navigateToList}
+              isPreLaunch={!setupStats || setupStats.pct < 100}
+            />
+
+            {/* Cash flow waterfall — gross → NOI → cash flow → available */}
+            <div style={{ padding: '8px 0 16px' }}>
+              <CashFlowCard expenses={expenses} />
             </div>
 
-            {/* ── Left column: house icon + financials ─────────────────── */}
-            <div className="home-left">
-
-              {/* House — sits above financials, to the left of the calendar */}
-              <HouseAnchor
-                messages={narrationDeck}
-                mood={mood}
-                themeMode={themeMode}
-                notifPermission={notifPermission}
-                onEnableNotifications={async () => {
-                  const result = await requestNotificationPermission()
-                  setNotifPermission(result)
+            {/* P&L link */}
+            <div style={{ padding: '0 20px 16px' }}>
+              <button
+                onClick={() => setView('pl')}
+                style={{
+                  width: '100%', padding: '13px 16px',
+                  borderRadius: 'var(--radius-sm)', background: 'var(--bg2)',
+                  display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+                  fontSize: 14, fontWeight: 500, color: 'var(--text)',
                 }}
-                onThemeToggle={() => {
-                  const CYCLE = ['auto', 'day', 'evening', 'night']
-                  const m = CYCLE[(CYCLE.indexOf(themeMode) + 1) % CYCLE.length]
-                  setThemeMode(m)
-                  localStorage.setItem('custer225_theme_v2', m)
+              >
+                <span>View full P&amp;L report</span>
+                <span style={{ color: 'var(--text3)' }}>→</span>
+              </button>
+            </div>
+
+            {/* Debt link — debt lives off the mobile nav now */}
+            <div style={{ padding: '0 20px 24px' }}>
+              <button
+                onClick={() => setView('debt')}
+                style={{
+                  width: '100%', padding: '13px 16px',
+                  borderRadius: 'var(--radius-sm)', background: 'var(--bg2)',
+                  display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+                  fontSize: 14, fontWeight: 500, color: 'var(--text)',
                 }}
-              />
+              >
+                <span>Debt dashboard</span>
+                <span style={{ color: 'var(--text3)' }}>→</span>
+              </button>
+            </div>
 
-              <div style={{ padding: '28px 20px 10px' }}>
-                <p style={{
-                  fontSize: 11, fontWeight: 700, letterSpacing: '0.12em',
-                  textTransform: 'uppercase', color: 'var(--text3)',
-                }}>
-                  Financials
-                </p>
-              </div>
-
-              <PLSummary
-                expenses={expenses}
-                onNavigate={navigateToList}
-                isPreLaunch={!setupStats || setupStats.pct < 100}
-              />
-
-              {/* Cash flow waterfall — gross → NOI → cash flow → available */}
-              <div style={{ padding: '8px 0 16px' }}>
-                <CashFlowCard expenses={expenses} />
-              </div>
-
-              {/* P&L link */}
-              <div style={{ padding: '0 20px 24px' }}>
-                <button
-                  onClick={() => setView('pl')}
-                  style={{
-                    width: '100%', padding: '13px 16px',
-                    borderRadius: 'var(--radius-sm)', background: 'var(--bg2)',
-                    display: 'flex', alignItems: 'center', justifyContent: 'space-between',
-                    fontSize: 14, fontWeight: 500, color: 'var(--text)',
-                  }}
-                >
-                  <span>View full P&amp;L report</span>
-                  <span style={{ color: 'var(--text3)' }}>→</span>
-                </button>
-              </div>
-
-              {/* ── Next Best Action ──────────────────────────────────── */}
-              {(() => {
-                let msg, sub, onClick
-                if (!setupStats) {
-                  msg     = 'Review launch checklist'
-                  sub     = 'View launch list'
-                  onClick = () => setView('spinup')
-                } else if (setupStats.pct < 100) {
-                  const { remaining, done } = setupStats
-                  if (done === 0) {
-                    msg = 'Start the launch checklist'
-                    sub = `${setupStats.total} tasks to go`
-                  } else if (remaining <= 10) {
-                    msg = remaining === 1 ? 'Finish the last launch task' : `Finish the last ${remaining} launch tasks`
-                    sub = 'View launch list'
-                  } else {
-                    msg = 'Work through the launch checklist'
-                    sub = `${remaining} tasks remaining`
-                  }
-                  onClick = () => setView('spinup')
-                } else if (totalRevenue === 0) {
-                  msg     = 'Add your first Airbnb booking when it comes in'
-                  sub     = 'Tap to log income'
-                  onClick = () => navigateToList('income', null)
+            {/* ── Next Best Action ──────────────────────────────────── */}
+            {(() => {
+              let msg, sub, onClick
+              if (!setupStats) {
+                msg     = 'Review launch checklist'
+                sub     = 'View launch list'
+                onClick = () => setView('spinup')
+              } else if (setupStats.pct < 100) {
+                const { remaining, done } = setupStats
+                if (done === 0) {
+                  msg = 'Start the launch checklist'
+                  sub = `${setupStats.total} tasks to go`
+                } else if (remaining <= 10) {
+                  msg = remaining === 1 ? 'Finish the last launch task' : `Finish the last ${remaining} launch tasks`
+                  sub = 'View launch list'
                 } else {
-                  msg     = "Review this month's house spending"
-                  sub     = 'View full P&L'
-                  onClick = () => setView('pl')
+                  msg = 'Work through the launch checklist'
+                  sub = `${remaining} tasks remaining`
                 }
-                return (
-                  <div style={{ padding: '0 20px 24px' }}>
-                    <p style={{ fontSize: 11, fontWeight: 500, color: 'var(--text2)', letterSpacing: '0.07em', textTransform: 'uppercase', marginBottom: 8 }}>
-                      Next Best Action
-                    </p>
-                    <button
-                      onClick={onClick}
-                      style={{
-                        width: '100%', padding: '13px 16px',
-                        borderRadius: 'var(--radius-sm)', background: 'var(--bg2)',
-                        display: 'flex', alignItems: 'center', justifyContent: 'space-between',
-                        textAlign: 'left',
-                      }}
-                    >
-                      <span style={{ flex: 1 }}>
-                        <span style={{ display: 'block', fontSize: 14, fontWeight: 500, color: 'var(--text)' }}>{msg}</span>
-                        {sub && <span style={{ display: 'block', fontSize: 11, color: 'var(--text3)', marginTop: 2 }}>{sub}</span>}
-                      </span>
-                      <span style={{ fontSize: 13, color: 'var(--accent)', flexShrink: 0, marginLeft: 8 }}>→</span>
-                    </button>
-                  </div>
-                )
-              })()}
+                onClick = () => setView('spinup')
+              } else if (totalRevenue === 0) {
+                msg     = 'Add your first Airbnb booking when it comes in'
+                sub     = 'Tap to log income'
+                onClick = () => navigateToList('income', null)
+              } else {
+                msg     = "Review this month's house spending"
+                sub     = 'View full P&L'
+                onClick = () => setView('pl')
+              }
+              return (
+                <div style={{ padding: '0 20px 24px' }}>
+                  <p style={{ fontSize: 11, fontWeight: 500, color: 'var(--text2)', letterSpacing: '0.07em', textTransform: 'uppercase', marginBottom: 8 }}>
+                    Next Best Action
+                  </p>
+                  <button
+                    onClick={onClick}
+                    style={{
+                      width: '100%', padding: '13px 16px',
+                      borderRadius: 'var(--radius-sm)', background: 'var(--bg2)',
+                      display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+                      textAlign: 'left',
+                    }}
+                  >
+                    <span style={{ flex: 1 }}>
+                      <span style={{ display: 'block', fontSize: 14, fontWeight: 500, color: 'var(--text)' }}>{msg}</span>
+                      {sub && <span style={{ display: 'block', fontSize: 11, color: 'var(--text3)', marginTop: 2 }}>{sub}</span>}
+                    </span>
+                    <span style={{ fontSize: 13, color: 'var(--accent)', flexShrink: 0, marginLeft: 8 }}>→</span>
+                  </button>
+                </div>
+              )
+            })()}
 
-              {/* Launch readiness card */}
-              <div style={{ padding: '0 20px 24px' }}>
-                <SetupCard onNavigate={() => setView('spinup')} />
-              </div>
-
-              <QuickAdd onAdd={handleAdd} />
+            {/* Launch readiness card */}
+            <div style={{ padding: '0 20px 24px' }}>
+              <SetupCard onNavigate={() => setView('spinup')} />
             </div>
 
+            <QuickAdd onAdd={handleAdd} />
           </div>
         )}
 
@@ -656,7 +694,7 @@ export default function App() {
           display: 'flex',
           paddingBottom: 'env(safe-area-inset-bottom)',
         }}>
-          {navItems.map(item => (
+          {navItems.filter(i => mobileNavKeys.includes(i.key)).map(item => (
             <button
               key={item.key}
               onClick={() => handleNavClick(item.key)}

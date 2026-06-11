@@ -10,8 +10,14 @@
 // All elements use currentColor so they adapt to the theme accent.
 // transform-box: fill-box on animated SVG elements makes transform-origin
 // work relative to each element rather than the SVG viewport origin.
+//
+// `vitals` is the binding point for future data-driven animations — e.g.
+// { occupancyPct, hasGuest, revenueAhead, newBooking }. Planned (not yet
+// implemented): window lights during guest stays, flowers blooming on strong
+// revenue, a mailbox flag on new bookings, seasonal weather effects. Wire
+// them here, keyed off vitals, so the house stays a single living component.
 
-export default function HouseIcon({ size = 46, style, windowOpacity = 1, mood = 'calm' }) {
+export default function HouseIcon({ size = 46, style, windowOpacity = 1, mood = 'calm', vitals = null }) {
   return (
     <svg
       viewBox="0 0 40 42"
