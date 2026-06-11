@@ -1,4 +1,5 @@
 import { useState, useEffect, useMemo } from 'react'
+import { normalizeCategory } from '../lib/categories'
 
 // ── Semantic status colors ────────────────────────────────────────────────────
 // Color communicates booking state, not arbitrary identity:
@@ -33,13 +34,14 @@ function fmt(iso) {
 
 // Revenue: prefer real payout data from the Hospitable API; fall back to
 // matching a manually-entered income entry by date.
-// The ledger income entry matched to a booking — must be 'Booking revenue'
+// The ledger income entry matched to a booking — must be 'Gross Booking
+// Revenue' (normalizeCategory also accepts the legacy 'Booking revenue' label)
 // dated exactly to check-in (how saveRevenue writes it) so a single entry
 // never leaks into an adjacent booking's date range.
 function matchIncomeEntry(booking, incomeEntries) {
   const ci = toMTDateStr(booking.checkIn)
   return incomeEntries.find(
-    e => e.category === 'Booking revenue' && e.date === ci
+    e => normalizeCategory(e.category) === 'Gross Booking Revenue' && e.date === ci
   ) ?? null
 }
 
@@ -527,7 +529,7 @@ export default function GuestCard({ expenses = [], calendarData: propData, onAdd
             await onAddIncome({
               description: `${activeB.name} — ${fmt(activeB.checkIn)} to ${fmt(activeB.checkOut)}`,
               amount: amt,
-              category: 'Booking revenue',
+              category: 'Gross Booking Revenue',
               entry_type: 'income',
               tax_type: null,
               date: toMTDateStr(activeB.checkIn),

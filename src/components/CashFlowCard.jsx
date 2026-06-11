@@ -38,7 +38,8 @@ export default function CashFlowCard({ expenses }) {
     { label: 'Debt Service',          amount: cf.debt,        sign: -1 },
     { label: 'Cash Flow',             amount: cf.cashFlow,    subtotal: true },
     { label: 'Tax Reserve',           amount: cf.taxReserve,  sign: -1 },
-    { label: 'Maintenance Reserve',   amount: cf.maintRes,    sign: -1 },
+    // Maintenance Reserve is legacy-only — hidden unless old entries exist
+    ...(cf.maintRes > 0 ? [{ label: 'Maintenance Reserve', amount: cf.maintRes, sign: -1 }] : []),
     { label: 'Owner Draws',           amount: cf.draw,        sign: -1 },
     { label: 'Available Cash',        amount: cf.availableCash, subtotal: true, final: true },
   ]

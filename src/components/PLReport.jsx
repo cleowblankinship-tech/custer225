@@ -1,4 +1,5 @@
 import { useMemo } from 'react'
+import { INCOME_CATEGORIES, OPERATING_CATEGORIES, normalizeCategory } from '../lib/categories'
 
 const fmtShort = (n, showSign = false) => {
   const abs = '$' + Math.abs(Number(n)).toLocaleString('en-US', { minimumFractionDigits: 0, maximumFractionDigits: 0 })
@@ -6,16 +7,8 @@ const fmtShort = (n, showSign = false) => {
   return abs
 }
 
-const EXPENSE_CATEGORY_ORDER = [
-  'Furniture', 'Appliances', 'Linens & supplies', 'Cleaning',
-  'Maintenance & repairs', 'Utilities', 'Management fees',
-  'Marketing', 'Insurance', 'Mortgage interest', 'HOA',
-  'Professional fees', 'Other',
-]
-
-const INCOME_CATEGORY_ORDER = [
-  'Booking revenue', 'Cleaning fee', 'Damage reimbursement', 'Other income',
-]
+const EXPENSE_CATEGORY_ORDER = OPERATING_CATEGORIES
+const INCOME_CATEGORY_ORDER  = INCOME_CATEGORIES
 
 export default function PLReport({ expenses }) {
   const stats = useMemo(() => {
@@ -26,7 +19,7 @@ export default function PLReport({ expenses }) {
     const byCategory = (list) => {
       const map = {}
       for (const e of list) {
-        const cat = e.category || 'Other'
+        const cat = normalizeCategory(e.category)
         if (!map[cat]) map[cat] = 0
         map[cat] += Number(e.amount)
       }

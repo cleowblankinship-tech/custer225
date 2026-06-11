@@ -20,18 +20,19 @@ const PERSONAL_PATTERNS = [
 
 // Smarter guesses for things that are clearly business
 const BUSINESS_HINTS = [
-  { pattern: ['airbnb','vrbo','homeaway','vacasa','payout','booking.com'],  entry_type: 'income',   category: 'Booking revenue',        tax_type: null },
-  { pattern: ['cleaning fee','clean fee'],                                   entry_type: 'income',   category: 'Cleaning fee',           tax_type: null },
+  { pattern: ['airbnb','vrbo','homeaway','vacasa','payout','booking.com'],  entry_type: 'income',   category: 'Gross Booking Revenue',  tax_type: null },
+  { pattern: ['cleaning fee','clean fee'],                                   entry_type: 'income',   category: 'Gross Booking Revenue',  tax_type: null },
   { pattern: ['xcel','rocky mountain power','pg&e','utilities','electric','water','trash','waste','garbage','recycl','sewage'], entry_type: 'expense', category: 'Utilities', tax_type: 'expense' },
-  { pattern: ['internet','comcast','xfinity','centurylink','lumen','wifi'],  entry_type: 'expense',  category: 'Utilities',              tax_type: 'expense' },
+  { pattern: ['internet','comcast','xfinity','centurylink','lumen','wifi','starlink'], entry_type: 'expense', category: 'Internet',     tax_type: 'expense' },
+  { pattern: ['property tax','county treasurer','tax assessor'],             entry_type: 'expense',  category: 'Property Tax',           tax_type: 'expense' },
   { pattern: ['insurance','state farm','allstate','geico','farmers'],        entry_type: 'expense',  category: 'Insurance',              tax_type: 'expense' },
-  { pattern: ['home depot','lowes','ace hardware','menards','true value'],   entry_type: 'expense',  category: 'Maintenance & repairs',  tax_type: 'expense' },
-  { pattern: ['wayfair','furniture','mattress','ikea','ashley','rooms to go'], entry_type: 'expense', category: 'Furniture',             tax_type: 'depreciate' },
-  { pattern: ['amazon'],                                                      entry_type: 'expense',  category: 'Linens & supplies',      tax_type: 'expense' },
-  { pattern: ['target','walmart','costco','bed bath'],                        entry_type: 'expense',  category: 'Linens & supplies',      tax_type: 'expense' },
-  { pattern: ['management','hpm','vacasa fee','property mgmt'],               entry_type: 'expense',  category: 'Management fees',        tax_type: 'expense' },
-  { pattern: ['mortgage','loan pmt','loancare','pennymac','rocket mortgage'], entry_type: 'expense',  category: 'Mortgage interest',      tax_type: 'expense' },
-  { pattern: ['hoa','homeowners assoc'],                                      entry_type: 'expense',  category: 'HOA',                    tax_type: 'expense' },
+  { pattern: ['home depot','lowes','ace hardware','menards','true value'],   entry_type: 'expense',  category: 'Maintenance',            tax_type: 'expense' },
+  { pattern: ['wayfair','furniture','mattress','ikea','ashley','rooms to go'], entry_type: 'expense', category: 'Supplies',              tax_type: 'depreciate' },
+  { pattern: ['amazon'],                                                      entry_type: 'expense',  category: 'Supplies',               tax_type: 'expense' },
+  { pattern: ['target','walmart','costco','bed bath'],                        entry_type: 'expense',  category: 'Supplies',               tax_type: 'expense' },
+  { pattern: ['management','hpm','vacasa fee','property mgmt'],               entry_type: 'expense',  category: 'Property Management',    tax_type: 'expense' },
+  { pattern: ['mortgage','loan pmt','loancare','pennymac','rocket mortgage'], entry_type: 'expense',  category: 'Debt Service',           tax_type: 'personal' },
+  { pattern: ['hoa','homeowners assoc'],                                      entry_type: 'expense',  category: 'Other',                  tax_type: 'expense' },
 ]
 
 function classifyRow(description) {

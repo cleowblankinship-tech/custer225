@@ -85,13 +85,13 @@ const MOOD_BUBBLE = {
 }
 
 const SEED_EXPENSES = [
-  { id: 's1', date: '2026-04-07', description: 'American Furniture Warehouse — couch', category: 'Furniture', entry_type: 'expense', tax_type: 'depreciate', amount: 2162.04 },
-  { id: 's2', date: '2026-04-11', description: 'Wayfair — bedframe', category: 'Furniture', entry_type: 'expense', tax_type: 'depreciate', amount: 85.75 },
-  { id: 's3', date: '2026-04-08', description: 'Costco — mattress', category: 'Furniture', entry_type: 'expense', tax_type: 'depreciate', amount: 173.39 },
-  { id: 's4', date: '2026-04-06', description: 'Amazon — home setup (x3)', category: 'Linens & supplies', entry_type: 'expense', tax_type: 'expense', amount: 428.15 },
-  { id: 's5', date: '2026-04-10', description: 'Amazon — home setup', category: 'Linens & supplies', entry_type: 'expense', tax_type: 'expense', amount: 72.17 },
-  { id: 's6', date: '2026-04-04', description: 'Ace Hardware', category: 'Maintenance & repairs', entry_type: 'expense', tax_type: 'expense', amount: 304.03 },
-  { id: 's7', date: '2026-04-11', description: 'Target', category: 'Linens & supplies', entry_type: 'expense', tax_type: 'expense', amount: 198.28 },
+  { id: 's1', date: '2026-04-07', description: 'American Furniture Warehouse — couch', category: 'Supplies', entry_type: 'expense', tax_type: 'depreciate', amount: 2162.04 },
+  { id: 's2', date: '2026-04-11', description: 'Wayfair — bedframe', category: 'Supplies', entry_type: 'expense', tax_type: 'depreciate', amount: 85.75 },
+  { id: 's3', date: '2026-04-08', description: 'Costco — mattress', category: 'Supplies', entry_type: 'expense', tax_type: 'depreciate', amount: 173.39 },
+  { id: 's4', date: '2026-04-06', description: 'Amazon — home setup (x3)', category: 'Supplies', entry_type: 'expense', tax_type: 'expense', amount: 428.15 },
+  { id: 's5', date: '2026-04-10', description: 'Amazon — home setup', category: 'Supplies', entry_type: 'expense', tax_type: 'expense', amount: 72.17 },
+  { id: 's6', date: '2026-04-04', description: 'Ace Hardware', category: 'Maintenance', entry_type: 'expense', tax_type: 'expense', amount: 304.03 },
+  { id: 's7', date: '2026-04-11', description: 'Target', category: 'Supplies', entry_type: 'expense', tax_type: 'expense', amount: 198.28 },
   { id: 's8', date: '2026-04-09', description: 'Apex Waste Solutions', category: 'Utilities', entry_type: 'expense', tax_type: 'expense', amount: 103.73 },
   { id: 's9', date: '2026-04-06', description: 'Apex Waste Solutions', category: 'Utilities', entry_type: 'expense', tax_type: 'expense', amount: 124.01 },
 ]

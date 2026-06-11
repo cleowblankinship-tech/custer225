@@ -7,15 +7,15 @@
 //
 //   gross      Gross Booking Revenue       income entries
 //   operating  Operating Expenses          expense + tax_type 'expense'
-//   debt       Debt Service                category 'Debt service'
-//   taxReserve Tax Reserve                 category 'Tax reserve'
-//   maintRes   Maintenance/Repairs Reserve category 'Maintenance reserve'
+//   debt       Debt Service                category 'Debt Service'
+//   taxReserve Tax Reserve                 category 'Tax Reserve'
+//   maintRes   Maintenance/Repairs Reserve legacy 'Maintenance reserve' rows only
 //   startup    Startup/Furnishing Assets   expense + tax_type 'depreciate'
-//   draw       Owner Draw                  category 'Owner draw'
+//   draw       Owner Draw                  category 'Owner Draw'
 //
 // Reserves, debt service, and draws use tax_type 'personal' so they stay OUT
 // of the P&L operating totals — they're cash movements, not deductible costs.
-// (Actual repairs paid for remain Operating under 'Maintenance & repairs'.)
+// (Actual repairs paid for remain Operating under 'Maintenance'.)
 //
 // Derived metrics keep gross revenue separate from profitability:
 //   NOI            = gross − operating          (before debt, reserves, draws)
@@ -32,12 +32,17 @@ export const BUCKETS = {
   draw:       { label: 'Owner Draw',                   short: 'Draw',        color: 'var(--green)' },
 }
 
-// Categories that pin an entry to a bucket regardless of tax_type
+// Categories that pin an entry to a bucket regardless of tax_type.
+// Lowercase/legacy spellings are kept so old ledger rows still map; maintRes
+// is legacy-only — it's no longer in the chart of accounts (lib/categories.js).
 const CATEGORY_BUCKETS = {
+  'Debt Service':        'debt',
   'Debt service':        'debt',
   'Mortgage interest':   'debt',
+  'Tax Reserve':         'taxReserve',
   'Tax reserve':         'taxReserve',
   'Maintenance reserve': 'maintRes',
+  'Owner Draw':          'draw',
   'Owner draw':          'draw',
 }
 
@@ -54,10 +59,9 @@ export function getBucket(entry) {
 export const BUCKET_PRESETS = {
   operating:  { tax_type: 'expense',    category: null },
   startup:    { tax_type: 'depreciate', category: null },
-  debt:       { tax_type: 'personal',   category: 'Debt service' },
-  taxReserve: { tax_type: 'personal',   category: 'Tax reserve' },
-  maintRes:   { tax_type: 'personal',   category: 'Maintenance reserve' },
-  draw:       { tax_type: 'personal',   category: 'Owner draw' },
+  debt:       { tax_type: 'personal',   category: 'Debt Service' },
+  taxReserve: { tax_type: 'personal',   category: 'Tax Reserve' },
+  draw:       { tax_type: 'personal',   category: 'Owner Draw' },
 }
 
 /**

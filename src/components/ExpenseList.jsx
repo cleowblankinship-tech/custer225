@@ -1,11 +1,10 @@
 import { useState, useMemo } from 'react'
-import { CATEGORIES, INCOME_CATEGORIES } from '../lib/parser'
+import { INCOME_CATEGORIES, OPERATING_CATEGORIES, CASH_MOVEMENT_CATEGORIES } from '../lib/categories'
 
-// Cash-movement categories selectable when editing an expense entry
+// Full chart of accounts selectable when editing an expense entry
 const EXPENSE_EDIT_CATEGORIES = [
-  ...CATEGORIES,
-  'Debt service', 'Tax reserve', 'Maintenance reserve', 'Owner draw',
-  'Mortgage interest', 'HOA', 'Professional fees',
+  ...OPERATING_CATEGORIES,
+  ...CASH_MOVEMENT_CATEGORIES,
 ]
 
 const TAX_CONFIG = {

@@ -386,7 +386,6 @@ export default function QuickAdd({ onAdd }) {
                         <option value="startup">Startup/Furnishing Asset</option>
                         <option value="debt">Debt Service</option>
                         <option value="taxReserve">Tax Reserve</option>
-                        <option value="maintRes">Maintenance/Repairs Reserve</option>
                         <option value="draw">Owner Draw</option>
                       </select>
                     </Field>

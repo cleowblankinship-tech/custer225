@@ -14,29 +14,25 @@
 //   "recycling"                 →  recurring rule (biweekly, Wednesday night)
 //   "water plants every monday" →  recurring rule (weekly, Monday)
 
-export const CATEGORIES = [
-  'Furniture', 'Appliances', 'Linens & supplies', 'Cleaning',
-  'Maintenance & repairs', 'Utilities', 'Management fees',
-  'Marketing', 'Insurance', 'Other'
-]
+import {
+  INCOME_CATEGORIES as ACCT_INCOME_CATEGORIES,
+  OPERATING_CATEGORIES,
+} from './categories'
 
-export const INCOME_CATEGORIES = [
-  'Booking revenue',
-  'Cleaning fee',
-  'Damage reimbursement',
-  'Other income',
-]
+// Re-exported so existing imports keep working — the chart of accounts itself
+// lives in lib/categories.js
+export const CATEGORIES = OPERATING_CATEGORIES
+export const INCOME_CATEGORIES = ACCT_INCOME_CATEGORIES
 
 const CATEGORY_KEYWORDS = {
-  'Furniture': ['couch','sofa','chair','table','bed','mattress','frame','dresser','desk','shelf','shelving','bookcase'],
-  'Appliances': ['appliance','fridge','microwave','toaster','coffee maker','blender','vacuum','washer','dryer'],
-  'Linens & supplies': ['towel','sheet','pillow','blanket','shampoo','soap','toilet paper','supplies','spatula','utensil','crockery','dish','pan','pot'],
+  'Property Management': ['hpm','hospitality','management','property mgmt','commission'],
   'Cleaning': ['clean','cleaning','mop','broom','sponge','detergent','spray'],
-  'Maintenance & repairs': ['repair','fix','hardware','tool','plumb','electric','lock','paint','patch'],
-  'Utilities': ['electric','gas','water','internet','wifi','trash','waste','utility'],
-  'Management fees': ['hpm','hospitality','management','commission','fee'],
-  'Marketing': ['photo','photography','listing','airbnb','vrbo'],
+  'Utilities': ['electric','gas','water','trash','waste','sewage','utility'],
+  'Internet': ['internet','wifi','comcast','xfinity','centurylink','starlink'],
+  'Supplies': ['towel','sheet','pillow','blanket','shampoo','soap','toilet paper','supplies','spatula','utensil','crockery','dish','pan','pot','couch','sofa','chair','table','bed','mattress','frame','dresser','desk','shelf','appliance','fridge','microwave','toaster','coffee maker','blender','vacuum'],
+  'Maintenance': ['repair','fix','hardware','tool','plumb','lock','paint','patch','hvac','filter'],
   'Insurance': ['insurance','state farm','policy'],
+  'Property Tax': ['property tax','county tax','tax assessor'],
 }
 
 const TAX_KEYWORDS = {
@@ -186,10 +182,9 @@ function cleanTaskTitle(text) {
 // Cash-movement buckets — these are transfers, not deductible operating costs,
 // so they get tax_type 'personal' and a pinned category (see lib/finance.js)
 const BUCKET_CATEGORY_KEYWORDS = [
-  { category: 'Debt service',        keywords: ['mortgage', 'loan payment', 'debt service', 'principal', 'heloc'] },
-  { category: 'Tax reserve',         keywords: ['tax reserve', 'taxes set aside', 'set aside for tax', 'tax savings'] },
-  { category: 'Maintenance reserve', keywords: ['maintenance reserve', 'repair reserve', 'capex reserve', 'reserve fund'] },
-  { category: 'Owner draw',          keywords: ['owner draw', 'draw', 'distribution', 'paid myself', 'pay myself'] },
+  { category: 'Debt Service', keywords: ['mortgage', 'loan payment', 'debt service', 'principal', 'heloc'] },
+  { category: 'Tax Reserve',  keywords: ['tax reserve', 'taxes set aside', 'set aside for tax', 'tax savings'] },
+  { category: 'Owner Draw',   keywords: ['owner draw', 'draw', 'distribution', 'paid myself', 'pay myself'] },
 ]
 
 function guessCategory(text) {
@@ -207,7 +202,6 @@ function guessTaxType(text, category) {
   if (BUCKET_CATEGORY_KEYWORDS.some(b => b.category === category)) return 'personal'
   const lower = text.toLowerCase()
   if (TAX_KEYWORDS.depreciate.some(k => lower.includes(k))) return 'depreciate'
-  if (category === 'Furniture' || category === 'Appliances') return 'depreciate'
   return 'expense'
 }
 
@@ -219,9 +213,10 @@ function guessEntryType(text) {
 
 function guessIncomeCategory(text) {
   const lower = text.toLowerCase()
-  if (lower.includes('cleaning')) return 'Cleaning fee'
-  if (lower.includes('damage') || lower.includes('reimburse')) return 'Damage reimbursement'
-  if (lower.includes('booking') || lower.includes('airbnb') || lower.includes('vrbo') || lower.includes('payout') || lower.includes('reservation')) return 'Booking revenue'
+  if (lower.includes('booking') || lower.includes('airbnb') || lower.includes('vrbo') ||
+      lower.includes('payout') || lower.includes('reservation') || lower.includes('cleaning fee')) {
+    return 'Gross Booking Revenue'
+  }
   return 'Other income'
 }
 
