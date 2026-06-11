@@ -1,7 +1,12 @@
 // ── Ask the House ─────────────────────────────────────────────────────────────
 //
-// The house's question-answering engine. Intent matching is rule-based; every
-// answer is grounded in actual application data (calendar, ledger, tasks,
+// Two brains, one mouth:
+//   askHouseAI() — POSTs the question plus a snapshot of REAL application
+//     data to /api/ask, where Claude answers in the house's voice. Falls back
+//     to the rule engine when the endpoint is unavailable (no API key,
+//     offline, error) — the house always answers.
+//   askHouse()   — rule-based intent matching, instant and offline.
+// Both are grounded in actual application data (calendar, ledger, tasks,
 // launch checklist) — the house NEVER invents numbers. When it doesn't have
 // the data, it says so.
 //
@@ -232,4 +237,87 @@ export function askHouse(question, ctx = {}) {
   return wrap(reply(
     "I keep track of bookings, occupancy, revenue, expenses, cash flow, debt, and the to-do list. Try “Who checks in next?” or “How are we doing this month?”"
   ))
+}
+
+// ── AI path ───────────────────────────────────────────────────────────────────
+//
+// The snapshot is the grounding contract: everything the model may cite,
+// computed with the SAME accounting functions the dashboards use. Compact on
+// purpose — a few hundred tokens of real numbers, no raw ledger dump.
+
+export function buildSnapshot(ctx = {}) {
+  const { calendarData = null, expenses = [], tasks = [], setupStats = null, weatherBlurb = null } = ctx
+  const t = todayMT()
+  const [y, m] = t.split('-').map(Number)
+  const prev = new Date(y, m - 2, 1)
+  const stays = normalizeStays(calendarData)
+
+  const month = computeMonth(stays, expenses, y, m)
+  const prevMonth = computeMonth(stays, expenses, prev.getFullYear(), prev.getMonth() + 1)
+
+  const prefix = `${y}-${String(m).padStart(2, '0')}`
+  const opsByCat = {}
+  for (const e of expenses) {
+    if (e.entry_type !== 'expense' || e.tax_type !== 'expense' || !e.date?.startsWith(prefix)) continue
+    const c = normalizeCategory(e.category)
+    opsByCat[c] = Math.round((opsByCat[c] ?? 0) + Number(e.amount))
+  }
+
+  const round = o => Object.fromEntries(Object.entries(o).map(([k, v]) => [k, Math.round(v)]))
+
+  return {
+    today: t,
+    month: {
+      name: MONTH_NAMES[m - 1],
+      occupancyPct: month.pct,
+      stays: month.stayCount,
+      bookedNights: month.bookedNights,
+      daysInMonth: month.daysInMonth,
+      revenue: Math.round(month.revenue),
+    },
+    prevMonth: { name: MONTH_NAMES[prev.getMonth()], revenue: Math.round(prevMonth.revenue) },
+    // Recent + upcoming stays only — enough context without dumping history
+    stays: stays
+      .filter(b => b.co >= `${y - 1}-01-01`)
+      .slice(-20)
+      .map(b => ({ guest: b.name, checkIn: b.ci, checkOut: b.co, nights: b.nights })),
+    cashFlowAllTime: round((({ gross, operating, noi, debt, taxReserve, draw, availableCash }) =>
+      ({ gross, operating, noi, debtService: debt, taxReserve, ownerDraw: draw, availableCash }))(
+        computeCashFlow(expenses))),
+    cashFlowThisMonth: round((({ gross, operating, cashFlow, availableCash }) =>
+      ({ gross, operating, cashFlow, availableCash }))(computeCashFlow(expenses, prefix))),
+    operatingExpensesThisMonthByCategory: opsByCat,
+    openTasks: tasks
+      .filter(x => !x.completed && (x.entry_type === 'task' || x.entry_type === 'reminder'))
+      .slice(0, 10)
+      .map(x => ({ title: x.title, due: x.due_date ?? null })),
+    launch: setupStats ? { readyPct: setupStats.pct, tasksRemaining: setupStats.remaining } : null,
+    weather: weatherBlurb,
+  }
+}
+
+/**
+ * Ask the house — AI first, rule engine as fallback. Same return shape as
+ * askHouse() so HouseOS doesn't care which brain answered.
+ */
+export async function askHouseAI(question, ctx = {}) {
+  const autoOpen = /\b(show|open|pull up|take me|go to)\b/.test(question.toLowerCase())
+  try {
+    const controller = new AbortController()
+    const timer = setTimeout(() => controller.abort(), 9000)
+    const res = await fetch('/api/ask', {
+      method: 'POST',
+      headers: { 'content-type': 'application/json' },
+      body: JSON.stringify({ question, snapshot: buildSnapshot(ctx) }),
+      signal: controller.signal,
+    })
+    clearTimeout(timer)
+    if (!res.ok) throw new Error(`ask ${res.status}`)
+    const data = await res.json()
+    if (!data?.answer || typeof data.answer !== 'string') throw new Error('empty answer')
+    const view = VIEW_LABELS[data.view] ? data.view : null
+    return { answer: data.answer, view, viewLabel: view ? VIEW_LABELS[view] : null, autoOpen: autoOpen && !!view, source: 'ai' }
+  } catch {
+    return { ...askHouse(question, ctx), source: 'rules' }
+  }
 }

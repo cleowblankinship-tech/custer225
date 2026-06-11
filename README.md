@@ -41,7 +41,10 @@ npm run dev
 1. Push to GitHub
 2. Connect repo in Vercel
 3. Add your `VITE_SUPABASE_URL` and `VITE_SUPABASE_ANON_KEY` as environment variables
-4. Deploy
+4. Optional: add `ANTHROPIC_API_KEY` to power the AI "Ask the House" assistant
+   (`/api/ask`, Claude Haiku). Without it the house falls back to its built-in
+   rule-based answers — everything still works.
+5. Deploy
 
 ### 5. Install as app on iPhone
 Open the deployed URL in Safari > Share > Add to Home Screen

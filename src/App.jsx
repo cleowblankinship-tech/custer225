@@ -14,7 +14,7 @@ import IntroSplash from './components/IntroSplash'
 import DebtDashboard from './components/DebtDashboard'
 import HouseOS from './components/HouseOS'
 import { getActiveUpdates, getHouseMood, getNarrationDeck, normalizeStays, computeMonth, fmtDay } from './lib/houseUpdates'
-import { askHouse } from './lib/houseChat'
+import { askHouseAI } from './lib/houseChat'
 import { computeCashFlow } from './lib/finance'
 import { fetchWeather } from './lib/weather'
 import { getRecurringRemindersForDate, getUserRules, saveUserRule } from './lib/recurringRules'
@@ -517,7 +517,7 @@ export default function App() {
             mood={mood}
             vitals={houseVitals}
             stats={houseStats}
-            onAsk={q => askHouse(q, { calendarData, expenses, tasks, setupStats })}
+            onAsk={q => askHouseAI(q, { calendarData, expenses, tasks, setupStats, weatherBlurb })}
             onNavigate={handleHouseNavigate}
             themeMode={themeMode}
             notifPermission={notifPermission}

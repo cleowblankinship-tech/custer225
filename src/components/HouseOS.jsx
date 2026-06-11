@@ -53,9 +53,10 @@ export default function HouseOS({
   const [pressed,  setPressed]  = useState(false)
   const [question, setQuestion] = useState('')
   const [reply,    setReply]    = useState(null)
+  const [thinking, setThinking] = useState(false)
 
   const deck   = messages.length ? messages : ['']
-  const speech = reply?.answer ?? deck[cardIdx % deck.length]
+  const speech = thinking ? 'Let me check my books…' : reply?.answer ?? deck[cardIdx % deck.length]
 
   const displayedText = useTypewriter(speech)
   const isTyping      = displayedText.length < (speech?.length ?? 0)
@@ -68,13 +69,20 @@ export default function HouseOS({
     setCardIdx(i => i + 1)
   }
 
-  function ask(text) {
+  // onAsk may be async (AI-backed) — show a brief "checking the books"
+  // beat while the house thinks
+  async function ask(text) {
     const trimmed = (text ?? question).trim()
-    if (!trimmed || !onAsk) return
-    const res = onAsk(trimmed)
+    if (!trimmed || !onAsk || thinking) return
     setQuestion('')
-    if (res?.autoOpen && res.view) { onNavigate?.(res.view); return }
-    setReply(res)
+    setThinking(true)
+    try {
+      const res = await onAsk(trimmed)
+      if (res?.autoOpen && res.view) { onNavigate?.(res.view); return }
+      setReply(res)
+    } finally {
+      setThinking(false)
+    }
   }
 
   let wrapperAnimation = 'houseFloat 7s ease-in-out infinite'
@@ -144,7 +152,7 @@ export default function HouseOS({
         </p>
 
         {/* Supporting view affordance — appears once the answer lands */}
-        {reply?.view && !isTyping && (
+        {reply?.view && !isTyping && !thinking && (
           <button
             onClick={() => onNavigate?.(reply.view)}
             style={{
