@@ -21,7 +21,9 @@ function useTypewriter(target, msPerChar = 22) {
 }
 
 export default function HouseAnchor({ message, mood, themeMode, onThemeToggle, notifPermission, onEnableNotifications }) {
-  const [open,    setOpen]    = useState(false)
+  // The house is the dashboard narrator — its bubble is open by default and
+  // retells the current message; tapping the house toggles it off/on.
+  const [open,    setOpen]    = useState(true)
   const [pressed, setPressed] = useState(false)
   const [nudging, setNudging] = useState(false)
   const nudgeTimer = useRef(null)
@@ -53,19 +55,21 @@ export default function HouseAnchor({ message, mood, themeMode, onThemeToggle, n
     return () => { clearTimeout(nudgeTimer.current); clearInterval(nudgeTimer.current) }
   }, [open, message])
 
-  // Wrapper animation: only for urgent shake and nudge — no idle bounce
-  let wrapperAnimation = ''
-  if (!open && !pressed) {
-    if (nudging)                wrapperAnimation = 'houseNudge 0.55s ease-in-out'
+  // Wrapper animation: urgent shake and nudge take priority; otherwise the
+  // house idles with a slow float — it's the personality of the dashboard,
+  // while the financial panels around it stay still.
+  let wrapperAnimation = 'houseFloat 7s ease-in-out infinite'
+  if (!pressed) {
+    if (nudging && !open)       wrapperAnimation = 'houseNudge 0.55s ease-in-out'
     else if (mood === 'urgent') wrapperAnimation = 'houseShake 0.5s ease-in-out infinite'
   }
 
   return (
-    <div style={{
+    <div className="house-anchor" style={{
       padding:    '32px 20px 12px',
       display:    'flex',
       alignItems: 'flex-start',
-      gap:        20,
+      gap:        18,
       position:   'relative',
     }}>
 
@@ -99,14 +103,12 @@ export default function HouseAnchor({ message, mood, themeMode, onThemeToggle, n
             transition: pressed
               ? 'transform 65ms ease-in, filter 200ms ease'
               : 'transform 200ms ease-out, filter 350ms ease',
-            filter: open
-              ? 'drop-shadow(0 14px 36px rgba(0,0,0,0.42))'
-              : mood === 'urgent'
+            filter: mood === 'urgent'
               ? 'drop-shadow(0 4px 18px rgba(192,85,56,0.45))'
-              : 'drop-shadow(0 4px 16px rgba(0,0,0,0.20))',
+              : 'drop-shadow(0 6px 20px rgba(74,52,30,0.22))',
           }}
         >
-          <HouseIcon size={130} windowOpacity={1} mood={mood} />
+          <HouseIcon size={169} windowOpacity={1} mood={mood} />
         </button>
       </div>
 

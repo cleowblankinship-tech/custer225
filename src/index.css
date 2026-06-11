@@ -2,37 +2,37 @@
 
 /* ── @property — typed custom properties enable CSS transitions ────────────── */
 
-@property --bg             { syntax: '<color>'; inherits: true; initial-value: #F5F3EE; }
-@property --bg2            { syntax: '<color>'; inherits: true; initial-value: #ECEAE2; }
+@property --bg             { syntax: '<color>'; inherits: true; initial-value: #F8F3EA; }
+@property --bg2            { syntax: '<color>'; inherits: true; initial-value: #F0E8DA; }
 @property --text           { syntax: '<color>'; inherits: true; initial-value: #0A0A08; }
-@property --text2          { syntax: '<color>'; inherits: true; initial-value: #4A4840; }
-@property --text3          { syntax: '<color>'; inherits: true; initial-value: #8A8878; }
-@property --accent         { syntax: '<color>'; inherits: true; initial-value: #D93020; }
-@property --accent-light   { syntax: '<color>'; inherits: true; initial-value: #FDE8E4; }
-@property --border         { syntax: '<color>'; inherits: true; initial-value: rgba(10,10,8,0.08); }
-@property --border-mid     { syntax: '<color>'; inherits: true; initial-value: rgba(10,10,8,0.14); }
+@property --text2          { syntax: '<color>'; inherits: true; initial-value: #4C4435; }
+@property --text3          { syntax: '<color>'; inherits: true; initial-value: #94876E; }
+@property --accent         { syntax: '<color>'; inherits: true; initial-value: #C05538; }
+@property --accent-light   { syntax: '<color>'; inherits: true; initial-value: #F8E4D7; }
+@property --border         { syntax: '<color>'; inherits: true; initial-value: rgba(74,52,30,0.10); }
+@property --border-mid     { syntax: '<color>'; inherits: true; initial-value: rgba(74,52,30,0.17); }
 @property --surface-strong { syntax: '<color>'; inherits: true; initial-value: #1A1A12; }
-@property --bubble-bg      { syntax: '<color>'; inherits: true; initial-value: #FFFFFF; }
+@property --bubble-bg      { syntax: '<color>'; inherits: true; initial-value: #FFFDF8; }
 @property --bubble-border  { syntax: '<color>'; inherits: true; initial-value: rgba(10,10,8,0.09); }
-@property --bubble-sub     { syntax: '<color>'; inherits: true; initial-value: #6A6860; }
+@property --bubble-sub     { syntax: '<color>'; inherits: true; initial-value: #75695A; }
 @property --header-bg      { syntax: '<color>'; inherits: true; initial-value: #F5D800; }
 @property --header-text    { syntax: '<color>'; inherits: true; initial-value: #0A0A08; }
 @property --header-sub     { syntax: '<color>'; inherits: true; initial-value: rgba(10,10,8,0.48); }
 
 :root {
-  --bg:             #F5F3EE;
-  --bg2:            #ECEAE2;
+  --bg:             #F8F3EA;
+  --bg2:            #F0E8DA;
   --text:           #0A0A08;
-  --text2:          #4A4840;
-  --text3:          #8A8878;
-  --accent:         #D93020;
-  --accent-light:   #FDE8E4;
-  --border:         rgba(10,10,8,0.08);
-  --border-mid:     rgba(10,10,8,0.14);
+  --text2:          #4C4435;
+  --text3:          #94876E;
+  --accent:         #C05538;
+  --accent-light:   #F8E4D7;
+  --border:         rgba(74,52,30,0.10);
+  --border-mid:     rgba(74,52,30,0.17);
   --surface-strong: #1A1A12;
-  --bubble-bg:      #FFFFFF;
+  --bubble-bg:      #FFFDF8;
   --bubble-border:  rgba(10,10,8,0.09);
-  --bubble-sub:     #6A6860;
+  --bubble-sub:     #75695A;
   --header-bg:      #F5D800;
   --header-text:    #0A0A08;
   --header-sub:     rgba(10,10,8,0.48);
@@ -237,4 +237,12 @@ input::placeholder, textarea::placeholder { color: var(--text3); }
 
   /* Mobile-only elements are hidden on desktop */
   .mobile-only { display: none !important; }
+
+  /* House narrator hugs the calendar edge: the row reverses so the house
+     sits at the right of the left column, beside the calendar panel, with
+     its narration flowing to the left. */
+  .house-anchor {
+    flex-direction: row-reverse;
+    padding: 22px 2px 6px 20px !important;
+  }
 }

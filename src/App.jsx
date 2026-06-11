@@ -15,7 +15,7 @@ import IntroSplash from './components/IntroSplash'
 // import HouseToday from './components/HouseToday'
 import DebtDashboard from './components/DebtDashboard'
 import HouseAnchor from './components/HouseAnchor'
-import { getActiveUpdates, getHouseMood, getCalmMessage, getCompositeMessage, getGuestMessage } from './lib/houseUpdates'
+import { getActiveUpdates, getHouseMood, getCalmMessage, getCompositeMessage, getGuestMessage, getMonthPulse } from './lib/houseUpdates'
 import { fetchWeather } from './lib/weather'
 import { getRecurringRemindersForDate, getUserRules, saveUserRule } from './lib/recurringRules'
 import { getTimeOfDay, getTheme, applyTheme } from './lib/theme'
@@ -146,7 +146,7 @@ export default function App() {
   // High-priority alerts (hard freeze, storm) override everything.
   // Normal-priority alerts (breezy, light freeze, rain) yield to guest context.
   const highAlert = activeUpdates.find(u => u.type === 'alert' && u.priority === 'high')
-  const bubbleMessage = highAlert
+  const baseMessage = highAlert
     ? highAlert.title
     : guestMessage
     ?? topUpdate?.title
@@ -156,6 +156,12 @@ export default function App() {
         setupRemaining: setupStats?.remaining ?? 0,
         totalRevenue,
       })
+  // Narrator mode: outside of alerts/reminders, the house also reads out how
+  // the month is shaping up on the calendar.
+  const monthPulse = getMonthPulse(calendarData)
+  const bubbleMessage = !highAlert && !topUpdate && monthPulse
+    ? `${baseMessage} ${monthPulse}`
+    : baseMessage
   const bubbleWeatherSubtitle = (weatherBlurb && topUpdate) ? weatherBlurb : null
   const [view, setView] = useState('home') // home | list | spinup | import | pl
   const [listFilter, setListFilter] = useState('all')

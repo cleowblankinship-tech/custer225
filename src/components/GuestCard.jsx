@@ -11,7 +11,7 @@ const STATUS_COLORS = {
   upcoming: { bar: 'rgba(122, 155, 109, 0.82)', solid: '#7A9B6D', text: '#fff'    },
   current:  { bar: 'rgba(232, 185, 49, 0.88)',  solid: '#C99B14', text: '#3A3208' },
   checkout: { bar: 'rgba(224, 106, 78, 0.85)',  solid: '#E06A4E', text: '#fff'    },
-  past:     { bar: 'rgba(150, 145, 130, 0.45)', solid: '#969182', text: '#fff'    },
+  past:     { bar: 'rgba(166, 150, 124, 0.42)', solid: '#A6967C', text: '#fff'    },
 }
 
 const MONTH_NAMES = ['January','February','March','April','May','June',
@@ -389,7 +389,7 @@ export default function GuestCard({ expenses = [], calendarData: propData, onAdd
                 key={day}
                 style={{
                   position: 'relative',
-                  background: isGap ? 'rgba(10,10,8,0.045)' : 'transparent',
+                  background: isGap ? 'rgba(192,85,56,0.06)' : 'transparent',
                   borderRadius: isGap ? 8 : 0,
                   cursor: (info || hasReminders) ? 'pointer' : 'default',
                 }}
@@ -667,7 +667,7 @@ export default function GuestCard({ expenses = [], calendarData: propData, onAdd
             ['Current',  STATUS_COLORS.current.bar],
             ['Upcoming', STATUS_COLORS.upcoming.bar],
             ['Checkout', STATUS_COLORS.checkout.bar],
-            ['Gap night','rgba(10,10,8,0.08)'],
+            ['Gap night','rgba(192,85,56,0.12)'],
           ].map(([label, swatch]) => (
             <span key={label} style={{
               display: 'inline-flex', alignItems: 'center', gap: 5,

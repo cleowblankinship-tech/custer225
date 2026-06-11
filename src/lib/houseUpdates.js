@@ -228,6 +228,49 @@ export function getGuestMessage(calendarData) {
   return null
 }
 
+// ── Month pulse ───────────────────────────────────────────────────────────────
+//
+// One narrator sentence about how the current month is shaping up, derived
+// from live calendar data. Appended to guest/calm messages so the house reads
+// as the dashboard's narrator, not just an alert lamp.
+
+const MONTH_NAMES = ['January','February','March','April','May','June',
+                     'July','August','September','October','November','December']
+
+/**
+ * @param {{ all }} calendarData — from /api/calendar
+ * @returns {string|null} e.g. "June is 87% booked — 5 stays on the calendar."
+ */
+export function getMonthPulse(calendarData) {
+  if (!calendarData?.all?.length) return null
+
+  const now      = new Date()
+  const mtToday  = now.toLocaleDateString('en-CA', { timeZone: 'America/Denver' })
+  const [y, m]   = mtToday.split('-').map(Number)
+  const daysInMonth = new Date(y, m, 0).getDate()
+  const prefix   = `${y}-${String(m).padStart(2, '0')}`
+
+  const bookedNights = new Set()
+  let stays = 0
+  for (const b of calendarData.all) {
+    const ci = new Date(b.checkIn).toLocaleDateString('en-CA', { timeZone: 'America/Denver' })
+    const co = new Date(b.checkOut).toLocaleDateString('en-CA', { timeZone: 'America/Denver' })
+    let touchesMonth = false
+    const cursor = new Date(ci.slice(0, 4), ci.slice(5, 7) - 1, ci.slice(8, 10))
+    const end    = new Date(co.slice(0, 4), co.slice(5, 7) - 1, co.slice(8, 10))
+    while (cursor < end) {
+      const key = cursor.toLocaleDateString('en-CA')
+      if (key.startsWith(prefix)) { bookedNights.add(key); touchesMonth = true }
+      cursor.setDate(cursor.getDate() + 1)
+    }
+    if (touchesMonth) stays++
+  }
+  if (stays === 0) return null
+
+  const pct = Math.round((bookedNights.size / daysInMonth) * 100)
+  return `${MONTH_NAMES[m - 1]} is ${pct}% booked — ${stays} stay${stays !== 1 ? 's' : ''} on the calendar.`
+}
+
 // ── API ───────────────────────────────────────────────────────────────────────
 
 /**
