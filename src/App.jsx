@@ -49,7 +49,7 @@ const MOOD_BUBBLE = {
     borderLeft:   '1px solid rgba(192,85,56,0.22)',
     borderRadius: '10px 16px 16px 10px',
     padding:      '11px 14px',
-    boxShadow:    '0 1px 6px rgba(0,0,0,0.08)',
+    boxShadow:    '0 1px 6px rgba(92,52,26,0.10)',
     tailBorder:   '1px solid rgba(192,85,56,0.22)',
     tailFill:     'var(--accent-light)',
     textColor:    'var(--text)',
@@ -62,10 +62,10 @@ const MOOD_BUBBLE = {
     borderLeft:   '1px solid var(--bubble-border)',
     borderRadius: '10px 16px 16px 10px',
     padding:      '11px 14px',
-    boxShadow:    '0 1px 5px rgba(0,0,0,0.06)',
+    boxShadow:    '0 1px 5px rgba(92,52,26,0.08)',
     tailBorder:   '1px solid var(--bubble-border)',
     tailFill:     'var(--bubble-bg)',
-    textColor:    '#1A1208',
+    textColor:    'var(--text)',
     textWeight:   500,
     moreColor:    'var(--bubble-sub)',
   },
@@ -75,10 +75,10 @@ const MOOD_BUBBLE = {
     borderLeft:   '1px solid var(--bubble-border)',
     borderRadius: '10px 18px 18px 10px',
     padding:      '11px 14px',
-    boxShadow:    '0 1px 5px rgba(0,0,0,0.06)',
+    boxShadow:    '0 1px 5px rgba(92,52,26,0.08)',
     tailBorder:   '1px solid var(--bubble-border)',
     tailFill:     'var(--bubble-bg)',
-    textColor:    '#1A1208',
+    textColor:    'var(--text)',
     textWeight:   500,
     moreColor:    'var(--bubble-sub)',
   },
@@ -105,7 +105,7 @@ export default function App() {
   const [weatherBlurb, setWeatherBlurb] = useState(null)
   const [weatherCondition, setWeatherCondition] = useState('clear')
   // themeMode: 'auto' = follows time + weather; 'day' / 'night' = forced
-  const [themeMode, setThemeMode] = useState(() => localStorage.getItem('custer225_theme_v2') || 'night')
+  const [themeMode, setThemeMode] = useState(() => localStorage.getItem('custer225_theme_v2') || 'auto')
   const [showIntro, setShowIntro] = useState(true) // true on every cold load
   const [userRules, setUserRules] = useState(() => getUserRules())
   const [setupStats, setSetupStats] = useState(null) // launch readiness snapshot
@@ -485,7 +485,7 @@ export default function App() {
               style={{
                 padding:      '6px 14px',
                 borderRadius: 'var(--radius-sm)',
-                background:   view === item.key ? 'rgba(0,0,0,0.14)' : 'transparent',
+                background:   view === item.key ? 'rgba(255,246,234,0.24)' : 'transparent',
                 fontSize:     13,
                 fontWeight:   view === item.key ? 600 : 400,
                 color:        'var(--header-text)',
@@ -509,7 +509,7 @@ export default function App() {
               fontSize:     14,
               color:        'var(--header-sub)',
               padding:      '5px 10px',
-              background:   'rgba(128,128,128,0.14)',
+              background:   'rgba(255,246,234,0.18)',
               borderRadius: 'var(--radius-sm)',
             }}
             title={`Theme: ${themeMode}`}

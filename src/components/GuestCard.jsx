@@ -9,7 +9,7 @@ import { normalizeCategory } from '../lib/categories'
 //   past          → muted stone
 const STATUS_COLORS = {
   upcoming: { bar: 'rgba(122, 155, 109, 0.82)', solid: '#7A9B6D', text: '#fff'    },
-  current:  { bar: 'rgba(232, 185, 49, 0.88)',  solid: '#C99B14', text: '#3A3208' },
+  current:  { bar: 'rgba(227, 178, 60, 0.90)',  solid: '#9C7714', text: '#3A2D10' },
   checkout: { bar: 'rgba(224, 106, 78, 0.85)',  solid: '#E06A4E', text: '#fff'    },
   past:     { bar: 'rgba(166, 150, 124, 0.42)', solid: '#A6967C', text: '#fff'    },
 }
@@ -286,7 +286,7 @@ export default function GuestCard({ expenses = [], calendarData: propData, onAdd
       background: 'var(--bubble-bg)',
       border: '1px solid var(--border)',
       borderRadius: 16,
-      boxShadow: '0 1px 2px rgba(10,10,8,0.04), 0 8px 24px rgba(10,10,8,0.06)',
+      boxShadow: '0 1px 2px rgba(92,52,26,0.05), 0 10px 28px rgba(92,52,26,0.07)',
       padding: '20px 22px 18px',
       minWidth: 0,
     }}>
@@ -389,7 +389,7 @@ export default function GuestCard({ expenses = [], calendarData: propData, onAdd
                 key={day}
                 style={{
                   position: 'relative',
-                  background: isGap ? 'rgba(192,85,56,0.06)' : 'transparent',
+                  background: isGap ? 'rgba(227,178,60,0.10)' : 'transparent',
                   borderRadius: isGap ? 8 : 0,
                   cursor: (info || hasReminders) ? 'pointer' : 'default',
                 }}
@@ -423,8 +423,8 @@ export default function GuestCard({ expenses = [], calendarData: propData, onAdd
                                 : info.isFirst ? '11px 0 0 11px'
                                 : info.isLast  ? '0 11px 11px 0' : 0,
                     boxShadow: isActive
-                      ? `0 0 0 2px ${info.color.solid}, 0 2px 6px rgba(10,10,8,0.18)`
-                      : '0 1px 3px rgba(10,10,8,0.12)',
+                      ? `0 0 0 2px ${info.color.solid}, 0 2px 6px rgba(92,52,26,0.20)`
+                      : '0 1px 3px rgba(92,52,26,0.14)',
                     transition: 'box-shadow 130ms ease',
                     display: 'flex', alignItems: 'center',
                     paddingLeft: showName ? 8 : 0,
@@ -436,7 +436,7 @@ export default function GuestCard({ expenses = [], calendarData: propData, onAdd
                         display: 'inline-flex', alignItems: 'center', gap: 4,
                         fontSize: 15, fontWeight: 700, color: info.color.text,
                         whiteSpace: 'nowrap', letterSpacing: '0.01em',
-                        textShadow: '0 1px 1px rgba(10,10,8,0.12)',
+                        textShadow: '0 1px 1px rgba(92,52,26,0.15)',
                       }}>
                         {isCheckInDay && <MiniHouse size={13} color={info.color.text} />}
                         {firstName(info.booking.name)}
@@ -451,7 +451,7 @@ export default function GuestCard({ expenses = [], calendarData: propData, onAdd
                     <span style={{
                       position: 'absolute', top: 5, right: 5,
                       width: 8, height: 8, borderRadius: '50%',
-                      background: 'var(--accent)',
+                      background: 'var(--plum)',
                       boxShadow: '0 0 0 2px var(--bubble-bg)',
                       zIndex: 4,
                     }} />
@@ -459,15 +459,15 @@ export default function GuestCard({ expenses = [], calendarData: propData, onAdd
                     <div style={{
                       position: 'absolute', top: 27, left: 3, right: 3,
                       height: 48,
-                      background: 'var(--accent-light)',
-                      border: '1px dashed var(--accent)',
+                      background: 'var(--plum-bg)',
+                      border: '1px dashed var(--plum)',
                       borderRadius: 7,
                       display: 'flex', alignItems: 'center',
                       padding: '0 5px', overflow: 'hidden',
                       zIndex: 1,
                     }}>
                       <span style={{
-                        fontSize: 10, fontWeight: 700, color: 'var(--accent)',
+                        fontSize: 10, fontWeight: 700, color: 'var(--plum)',
                         whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis',
                       }}>
                         ✎ {dayReminders[0].title}
@@ -486,14 +486,14 @@ export default function GuestCard({ expenses = [], calendarData: propData, onAdd
       {!loading && activeDayReminders.length > 0 && (
         <div style={{
           marginTop: 14,
-          background: 'var(--accent-light)',
-          borderLeft: '4px solid var(--accent)',
+          background: 'var(--plum-bg)',
+          borderLeft: '4px solid var(--plum)',
           borderRadius: 10,
           padding: '10px 14px',
           display: 'flex', alignItems: 'flex-start', gap: 12,
         }}>
           <div style={{ flex: 1, minWidth: 0 }}>
-            <p style={{ fontSize: 10, fontWeight: 700, color: 'var(--accent)', letterSpacing: '0.08em', textTransform: 'uppercase', marginBottom: 2 }}>
+            <p style={{ fontSize: 10, fontWeight: 700, color: 'var(--plum)', letterSpacing: '0.08em', textTransform: 'uppercase', marginBottom: 2 }}>
               Reminder{activeDayReminders.length > 1 ? 's' : ''} · {MONTH_NAMES[+activeDay.slice(5,7) - 1].slice(0,3)} {+activeDay.slice(8,10)}
             </p>
             {activeDayReminders.map(r => (
@@ -667,7 +667,7 @@ export default function GuestCard({ expenses = [], calendarData: propData, onAdd
             ['Current',  STATUS_COLORS.current.bar],
             ['Upcoming', STATUS_COLORS.upcoming.bar],
             ['Checkout', STATUS_COLORS.checkout.bar],
-            ['Gap night','rgba(192,85,56,0.12)'],
+            ['Gap night','rgba(227,178,60,0.22)'],
           ].map(([label, swatch]) => (
             <span key={label} style={{
               display: 'inline-flex', alignItems: 'center', gap: 5,

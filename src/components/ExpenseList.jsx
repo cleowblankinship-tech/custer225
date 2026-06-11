@@ -80,7 +80,7 @@ function TaskRow({ task, onToggle, onDelete, isLast }) {
         {task.due_date && (
           <p style={{
             fontSize: 11, marginTop: 2,
-            color: isOverdue ? 'var(--red, #e05252)' : isDueToday ? 'var(--accent)' : 'var(--text3)',
+            color: isOverdue ? 'var(--red, #BC4A31)' : isDueToday ? 'var(--accent)' : 'var(--text3)',
           }}>
             {isOverdue ? '⚠ ' : ''}{formatDueDate(task.due_date)}
           </p>
@@ -182,7 +182,7 @@ function EditRow({ entry, onSave, onCancel }) {
             disabled={saving || !draft.description || !draft.amount || !draft.date}
             style={{
               flex: 2, height: 36, borderRadius: 6, fontSize: 13, fontWeight: 600,
-              background: 'var(--text)', color: 'var(--bg)',
+              background: 'var(--accent)', color: '#FFF6EA',
             }}
           >
             {saving ? 'Saving…' : 'Save changes'}

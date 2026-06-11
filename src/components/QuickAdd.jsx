@@ -109,7 +109,7 @@ export default function QuickAdd({ onAdd }) {
               onKeyDown={handleKeyDown}
               placeholder={placeholder}
               style={{
-                border: '1.5px solid rgba(0,0,0,0.24)',
+                border: '1.5px solid rgba(92,62,34,0.26)',
                 padding: '11px 14px',
                 fontSize: 15,
               }}
@@ -155,7 +155,7 @@ export default function QuickAdd({ onAdd }) {
                       flex: 1, padding: '8px 0', borderRadius: 6, fontSize: 13, fontWeight: 500,
                       background: parsed.entry_type === t ? 'var(--bg)' : 'transparent',
                       color: parsed.entry_type === t ? 'var(--text)' : 'var(--text3)',
-                      boxShadow: parsed.entry_type === t ? '0 1px 3px rgba(0,0,0,0.08)' : 'none',
+                      boxShadow: parsed.entry_type === t ? '0 1px 3px rgba(92,52,26,0.10)' : 'none',
                       transition: 'all 0.15s',
                     }}
                   >
@@ -206,13 +206,13 @@ export default function QuickAdd({ onAdd }) {
                   <span style={{ fontSize: 14, color: 'var(--text)', fontWeight: 500 }}>Repeat</span>
                   <span style={{
                     width: 42, height: 24, borderRadius: 12,
-                    background: parsed.recurring ? 'var(--text)' : 'var(--bg2)',
+                    background: parsed.recurring ? 'var(--accent)' : 'var(--bg2)',
                     display: 'flex', alignItems: 'center', padding: '0 3px',
                     transition: 'background 0.2s', flexShrink: 0,
                   }}>
                     <span style={{
                       width: 18, height: 18, borderRadius: '50%', background: 'white',
-                      boxShadow: '0 1px 3px rgba(0,0,0,0.2)',
+                      boxShadow: '0 1px 3px rgba(92,52,26,0.22)',
                       transform: parsed.recurring ? 'translateX(18px)' : 'translateX(0)',
                       transition: 'transform 0.2s', display: 'block',
                     }} />
@@ -236,7 +236,7 @@ export default function QuickAdd({ onAdd }) {
                               flex: 1, padding: '8px 4px', borderRadius: 6, fontSize: 13, fontWeight: 500,
                               background: (parsed.cadence_type || 'weekly') === opt.value ? 'var(--bg)' : 'transparent',
                               color:      (parsed.cadence_type || 'weekly') === opt.value ? 'var(--text)' : 'var(--text3)',
-                              boxShadow:  (parsed.cadence_type || 'weekly') === opt.value ? '0 1px 3px rgba(0,0,0,0.08)' : 'none',
+                              boxShadow:  (parsed.cadence_type || 'weekly') === opt.value ? '0 1px 3px rgba(92,52,26,0.10)' : 'none',
                               transition: 'all 0.15s',
                             }}
                           >
@@ -287,7 +287,7 @@ export default function QuickAdd({ onAdd }) {
                   disabled={parsed.recurring ? (!parsed.title || parsed.cadence_weekday == null) : !parsed.title}
                   style={{
                     flex: 2, height: 44, borderRadius: 'var(--radius-sm)',
-                    background: 'var(--text)', color: 'var(--bg)', fontWeight: 500
+                    background: 'var(--accent)', color: '#FFF6EA', fontWeight: 600
                   }}
                 >
                   {parsed.recurring ? 'Save recurring reminder' : `Save ${parsed.entry_type}`}
@@ -322,7 +322,7 @@ export default function QuickAdd({ onAdd }) {
                     color: parsed.entry_type === t
                       ? (t === 'income' ? 'var(--accent)' : 'var(--text)')
                       : 'var(--text3)',
-                    boxShadow: parsed.entry_type === t ? '0 1px 3px rgba(0,0,0,0.08)' : 'none',
+                    boxShadow: parsed.entry_type === t ? '0 1px 3px rgba(92,52,26,0.10)' : 'none',
                     transition: 'all 0.15s',
                   }}
                 >
@@ -418,13 +418,13 @@ export default function QuickAdd({ onAdd }) {
                   <span style={{ fontSize: 14, color: 'var(--text)', fontWeight: 500 }}>Recurring</span>
                   <span style={{
                     width: 42, height: 24, borderRadius: 12,
-                    background: parsed.recurring ? 'var(--text)' : 'var(--bg2)',
+                    background: parsed.recurring ? 'var(--accent)' : 'var(--bg2)',
                     display: 'flex', alignItems: 'center', padding: '0 3px',
                     transition: 'background 0.2s', flexShrink: 0,
                   }}>
                     <span style={{
                       width: 18, height: 18, borderRadius: '50%', background: 'white',
-                      boxShadow: '0 1px 3px rgba(0,0,0,0.2)',
+                      boxShadow: '0 1px 3px rgba(92,52,26,0.22)',
                       transform: parsed.recurring ? 'translateX(18px)' : 'translateX(0)',
                       transition: 'transform 0.2s', display: 'block',
                     }} />
@@ -517,8 +517,8 @@ export default function QuickAdd({ onAdd }) {
                 disabled={!parsed.amount || !parsed.description}
                 style={{
                   flex: 2, height: 44, borderRadius: 'var(--radius-sm)',
-                  background: isIncome ? 'var(--accent)' : 'var(--text)',
-                  color: 'var(--bg)', fontWeight: 500
+                  background: 'var(--accent)',
+                  color: '#FFF6EA', fontWeight: 600
                 }}
               >
                 Save {isIncome ? 'income' : 'expense'}

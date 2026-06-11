@@ -67,7 +67,7 @@ export default function PLReport({ expenses }) {
           <p style={{ fontSize: 10, opacity: 0.55, letterSpacing: '0.08em', textTransform: 'uppercase', marginBottom: 6 }}>Net income</p>
           <p style={{
             fontSize: 20, fontWeight: 600, lineHeight: 1,
-            color: stats.totalRevenue === 0 ? 'rgba(255,255,255,0.4)' : (netPositive ? '#7FCF7F' : '#FF8080'),
+            color: stats.totalRevenue === 0 ? 'rgba(255,255,255,0.4)' : (netPositive ? '#B5CF9B' : '#F2A98F'),
           }}>
             {stats.totalRevenue === 0 ? '—' : fmtShort(stats.netIncome, true)}
           </p>

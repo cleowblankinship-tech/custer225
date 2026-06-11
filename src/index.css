@@ -2,40 +2,40 @@
 
 /* ── @property — typed custom properties enable CSS transitions ────────────── */
 
-@property --bg             { syntax: '<color>'; inherits: true; initial-value: #F8F3EA; }
-@property --bg2            { syntax: '<color>'; inherits: true; initial-value: #F0E8DA; }
-@property --text           { syntax: '<color>'; inherits: true; initial-value: #0A0A08; }
-@property --text2          { syntax: '<color>'; inherits: true; initial-value: #4C4435; }
-@property --text3          { syntax: '<color>'; inherits: true; initial-value: #94876E; }
+@property --bg             { syntax: '<color>'; inherits: true; initial-value: #F8F4EC; }
+@property --bg2            { syntax: '<color>'; inherits: true; initial-value: #F1E9DB; }
+@property --text           { syntax: '<color>'; inherits: true; initial-value: #2E2A24; }
+@property --text2          { syntax: '<color>'; inherits: true; initial-value: #5C5347; }
+@property --text3          { syntax: '<color>'; inherits: true; initial-value: #9A8C76; }
 @property --accent         { syntax: '<color>'; inherits: true; initial-value: #C05538; }
-@property --accent-light   { syntax: '<color>'; inherits: true; initial-value: #F8E4D7; }
-@property --border         { syntax: '<color>'; inherits: true; initial-value: rgba(74,52,30,0.10); }
-@property --border-mid     { syntax: '<color>'; inherits: true; initial-value: rgba(74,52,30,0.17); }
-@property --surface-strong { syntax: '<color>'; inherits: true; initial-value: #1A1A12; }
-@property --bubble-bg      { syntax: '<color>'; inherits: true; initial-value: #FFFDF8; }
+@property --accent-light   { syntax: '<color>'; inherits: true; initial-value: #F6E2D6; }
+@property --border         { syntax: '<color>'; inherits: true; initial-value: rgba(92,62,34,0.09); }
+@property --border-mid     { syntax: '<color>'; inherits: true; initial-value: rgba(92,62,34,0.16); }
+@property --surface-strong { syntax: '<color>'; inherits: true; initial-value: #2E2A24; }
+@property --bubble-bg      { syntax: '<color>'; inherits: true; initial-value: #FFFCF5; }
 @property --bubble-border  { syntax: '<color>'; inherits: true; initial-value: rgba(10,10,8,0.09); }
-@property --bubble-sub     { syntax: '<color>'; inherits: true; initial-value: #75695A; }
-@property --header-bg      { syntax: '<color>'; inherits: true; initial-value: #F5D800; }
-@property --header-text    { syntax: '<color>'; inherits: true; initial-value: #0A0A08; }
-@property --header-sub     { syntax: '<color>'; inherits: true; initial-value: rgba(10,10,8,0.48); }
+@property --bubble-sub     { syntax: '<color>'; inherits: true; initial-value: #7A6F60; }
+@property --header-bg      { syntax: '<color>'; inherits: true; initial-value: #C05538; }
+@property --header-text    { syntax: '<color>'; inherits: true; initial-value: #FFF6EA; }
+@property --header-sub     { syntax: '<color>'; inherits: true; initial-value: rgba(255,246,234,0.65); }
 
 :root {
-  --bg:             #F8F3EA;
-  --bg2:            #F0E8DA;
-  --text:           #0A0A08;
-  --text2:          #4C4435;
-  --text3:          #94876E;
+  --bg:             #F8F4EC;
+  --bg2:            #F1E9DB;
+  --text:           #2E2A24;
+  --text2:          #5C5347;
+  --text3:          #9A8C76;
   --accent:         #C05538;
-  --accent-light:   #F8E4D7;
-  --border:         rgba(74,52,30,0.10);
-  --border-mid:     rgba(74,52,30,0.17);
-  --surface-strong: #1A1A12;
-  --bubble-bg:      #FFFDF8;
+  --accent-light:   #F6E2D6;
+  --border:         rgba(92,62,34,0.09);
+  --border-mid:     rgba(92,62,34,0.16);
+  --surface-strong: #2E2A24;
+  --bubble-bg:      #FFFCF5;
   --bubble-border:  rgba(10,10,8,0.09);
-  --bubble-sub:     #75695A;
-  --header-bg:      #F5D800;
-  --header-text:    #0A0A08;
-  --header-sub:     rgba(10,10,8,0.48);
+  --bubble-sub:     #7A6F60;
+  --header-bg:      #C05538;
+  --header-text:    #FFF6EA;
+  --header-sub:     rgba(255,246,234,0.65);
 
   transition:
     --bg             350ms ease,
@@ -59,15 +59,29 @@
   --radius-sm:  8px;
   --radius-bar: 2px;
 
-  /* Semantic data colors */
-  --green:    #3B6D11;
-  --green-bg: #EAF3DE;
-  --blue:     #185FA5;
-  --blue-bg:  #E6F1FB;
-  --red:      #A32D2D;
-  --red-bg:   #FCEBEB;
-  --gold:     #A0720A;
-  --gold-bg:  #FDF4E3;
+  /* ── Storybook palette ──────────────────────────────────────────────────
+     Terracotta is the brand; sage/marigold/coral/plum carry booking states
+     and data accents. The legacy semantic tokens (--green/--gold/--red/--blue)
+     are remapped onto the palette so every component pulls from one world:
+       --green → sage      (success, upcoming)
+       --gold  → marigold  (revenue, current guests)
+       --red   → coral     (alerts, checkout)
+       --blue  → plum      (special states, secondary highlights)          */
+  --terracotta:   #C05538;
+  --sage:         #7A9B6D;
+  --marigold:     #E3B23C;
+  --coral:        #E06A4E;
+  --plum:         #8A6480;
+  --plum-bg:      #EFE3EC;
+
+  --green:    #5C7A4E;
+  --green-bg: #E9EFE0;
+  --blue:     #6F4C66;
+  --blue-bg:  #EFE3EC;
+  --red:      #BC4A31;
+  --red-bg:   #F9E3DB;
+  --gold:     #9C7714;
+  --gold-bg:  #F9EFD2;
 }
 
 html, body { height: 100%; }

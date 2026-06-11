@@ -40,40 +40,56 @@ The UI has three distinct layers. Every component belongs to exactly one.
 
 All colors live in `src/index.css` as CSS custom properties.
 
-### Primary palette (derived from the house illustration)
+### Storybook palette
+Every color is muted and storybook-inspired — never neon, never corporate.
+The house is the soul of the product; the palette radiates outward from it.
+
 | Token | Value | Use |
 |---|---|---|
-| `--accent` | `#C05538` | Terracotta — house body, primary brand action |
-| `--accent-light` | `#FAEDE9` | Soft tint for urgent speech bubble bg |
-| `--gold` | `#A0720A` | Door/light — revenue, income |
-| `--gold-bg` | `#FDF4E3` | Light tint for revenue card when positive |
-| `--blue` | `#185FA5` | Roof — assets, depreciable items |
-| `--blue-bg` | `#E6F1FB` | Light tint (use sparingly) |
+| `--terracotta` / `--accent` | `#C05538` | Brand. House body, key revenue metrics, primary actions |
+| `--sage` | `#7A9B6D` | Upcoming bookings, success states |
+| `--marigold` | `#E3B23C` | Current guests, active reservations |
+| `--coral` | `#E06A4E` | Checkout days, alerts |
+| `--plum` | `#8A6480` | Special states, maintenance, secondary highlights |
+
+Legacy semantic tokens are remapped onto the palette so old components stay
+in the same world: `--green` → deep sage `#5C7A4E`, `--gold` → deep marigold
+`#9C7714`, `--red` → deep coral `#BC4A31`, `--blue` → deep plum `#6F4C66`.
+Each has a soft `-bg` tint (e.g. `--green-bg: #E9EFE0`).
 
 ### Neutrals
 | Token | Value | Use |
 |---|---|---|
-| `--bg` | `#FAFAF8` | App background — warm off-white, NOT pure white |
-| `--bg2` | `#F2F0EC` | Card backgrounds — slightly warmer than bg |
-| `--text` | `#1A1A1A` | Primary text |
-| `--text2` | `#888880` | Secondary labels |
-| `--text3` | `#BBBBBB` | Tertiary / sub-text |
-| `--border` | `rgba(0,0,0,0.08)` | Subtle dividers |
-| `--border-mid` | `rgba(0,0,0,0.12)` | Input borders, stronger dividers |
+| `--bg` | `#F8F4EC` | App background — warm cream, never cold gray |
+| `--bg2` | `#F1E9DB` | Panel tint — layering comes from tone, not borders |
+| `--bubble-bg` | `#FFFCF5` | Soft ivory cards |
+| `--text` | `#2E2A24` | Charcoal text |
+| `--text2` | `#5C5347` | Secondary labels |
+| `--text3` | `#9A8C76` | Tertiary / sub-text |
+| `--border` | `rgba(92,62,34,0.09)` | Warm hairline dividers |
+| `--border-mid` | `rgba(92,62,34,0.16)` | Input borders |
 
-### Semantic
-| Token | Value | Use |
-|---|---|---|
-| `--green` | `#3B6D11` | Expenses (spending is tracked, not bad) |
-| `--green-bg` | `#EAF3DE` | Light tint (use sparingly) |
-| `--red` | `#A32D2D` | Errors, overdue |
-| `--red-bg` | `#FCEBEB` | Light tint for error states |
+Shadows are warm brown ink (`rgba(92,52,26,…)`), never neutral black.
+
+### Calendar state mapping
+| State | Color |
+|---|---|
+| Current stay | Marigold |
+| Upcoming stay | Sage |
+| Checkout day | Coral |
+| Special events / maintenance | Plum |
+| Empty / gap dates | Very light cream |
 
 ### Rules
-- **Max 1–2 accent colors visible per screen.** Do not use terracotta, gold, blue, and green all at once.
-- Tinted backgrounds are a strong visual signal — reserve them for the most important card on screen (usually Revenue).
-- All other cards use `--bg2`. Put color on the number or label text instead.
-- Never put high saturation everywhere. Color earns its place.
+- **Maximal color, minimal clutter.** Color carries meaning (booking states,
+  money direction); layout stays calm.
+- Reduce generic gray UI dramatically — warm cream instead of cold gray.
+- Cards layer through subtle tonal differences (`--bg` → `--bg2` → ivory),
+  not heavy borders.
+- Boutique hospitality, not SaaS: avoid anything that reads as accounting
+  software or enterprise dashboard chrome.
+- Revenue numbers, booking states, legends, badges, and interactions all pull
+  from this one palette.
 
 ---
 
