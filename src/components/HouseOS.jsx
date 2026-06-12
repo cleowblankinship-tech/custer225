@@ -129,7 +129,7 @@ export default function HouseOS({
               : 'drop-shadow(0 8px 26px rgba(92,52,26,0.22))',
           }}
         >
-          <HouseIcon size={210} windowOpacity={1} mood={mood} vitals={vitals} />
+          <HouseIcon size={280} windowOpacity={1} mood={mood} vitals={vitals} />
         </button>
       </div>
 
