@@ -118,7 +118,9 @@ export default function HouseOS({
           onPointerLeave={() => setPressed(false)}
           aria-label="Talk to the house"
           style={{
-            color: 'var(--accent)',
+            // The house wears its own coat — bright storybook red, independent
+            // of the marigold brand chrome around it
+            color: '#D93425',
             padding: 0,
             transform: pressed ? 'scale(0.94)' : 'scale(1)',
             transition: pressed
