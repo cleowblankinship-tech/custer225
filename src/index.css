@@ -7,17 +7,17 @@
 @property --text           { syntax: '<color>'; inherits: true; initial-value: #2E2A24; }
 @property --text2          { syntax: '<color>'; inherits: true; initial-value: #5C5347; }
 @property --text3          { syntax: '<color>'; inherits: true; initial-value: #9A8C76; }
-@property --accent         { syntax: '<color>'; inherits: true; initial-value: #C9941A; }
-@property --accent-light   { syntax: '<color>'; inherits: true; initial-value: #F9EFD2; }
+@property --accent         { syntax: '<color>'; inherits: true; initial-value: #D6537C; }
+@property --accent-light   { syntax: '<color>'; inherits: true; initial-value: #FAE3EA; }
 @property --border         { syntax: '<color>'; inherits: true; initial-value: rgba(92,62,34,0.09); }
 @property --border-mid     { syntax: '<color>'; inherits: true; initial-value: rgba(92,62,34,0.16); }
 @property --surface-strong { syntax: '<color>'; inherits: true; initial-value: #2E2A24; }
 @property --bubble-bg      { syntax: '<color>'; inherits: true; initial-value: #FFFCF5; }
 @property --bubble-border  { syntax: '<color>'; inherits: true; initial-value: rgba(10,10,8,0.09); }
 @property --bubble-sub     { syntax: '<color>'; inherits: true; initial-value: #7A6F60; }
-@property --header-bg      { syntax: '<color>'; inherits: true; initial-value: #E3B23C; }
-@property --header-text    { syntax: '<color>'; inherits: true; initial-value: #3A2D10; }
-@property --header-sub     { syntax: '<color>'; inherits: true; initial-value: rgba(58,45,16,0.55); }
+@property --header-bg      { syntax: '<color>'; inherits: true; initial-value: #F0A3B8; }
+@property --header-text    { syntax: '<color>'; inherits: true; initial-value: #471626; }
+@property --header-sub     { syntax: '<color>'; inherits: true; initial-value: rgba(71,22,38,0.55); }
 
 :root {
   --bg:             #F8F4EC;
@@ -25,17 +25,17 @@
   --text:           #2E2A24;
   --text2:          #5C5347;
   --text3:          #9A8C76;
-  --accent:         #C9941A;
-  --accent-light:   #F9EFD2;
+  --accent:         #D6537C;
+  --accent-light:   #FAE3EA;
   --border:         rgba(92,62,34,0.09);
   --border-mid:     rgba(92,62,34,0.16);
   --surface-strong: #2E2A24;
   --bubble-bg:      #FFFCF5;
   --bubble-border:  rgba(10,10,8,0.09);
   --bubble-sub:     #7A6F60;
-  --header-bg:      #E3B23C;
-  --header-text:    #3A2D10;
-  --header-sub:     rgba(58,45,16,0.55);
+  --header-bg:      #F0A3B8;
+  --header-text:    #471626;
+  --header-sub:     rgba(71,22,38,0.55);
 
   transition:
     --bg             350ms ease,
@@ -60,7 +60,8 @@
   --radius-bar: 2px;
 
   /* ── Storybook palette ──────────────────────────────────────────────────
-     Marigold is the brand; sage/terracotta/coral/plum carry booking states
+     Rose pink is the brand (pairing with the bright-red house); sage/
+     marigold/coral/plum carry booking states
      and data accents. The legacy semantic tokens (--green/--gold/--red/--blue)
      are remapped onto the palette so every component pulls from one world:
        --green → sage      (success, upcoming)

@@ -160,7 +160,7 @@ export default function HouseOS({
             style={{
               marginTop: 14, padding: '8px 18px',
               borderRadius: 999, background: 'var(--accent)',
-              color: '#3A2D10', fontSize: 13, fontWeight: 700,
+              color: '#FFF5F7', fontSize: 13, fontWeight: 700,
             }}
           >
             {reply.viewLabel} →
@@ -199,7 +199,7 @@ export default function HouseOS({
             aria-label="Ask"
             style={{
               width: 48, height: 48, borderRadius: '50%', flexShrink: 0,
-              background: 'var(--accent)', color: '#3A2D10',
+              background: 'var(--accent)', color: '#FFF5F7',
               fontSize: 18, fontWeight: 700,
               opacity: question.trim() ? 1 : 0.5,
               transition: 'opacity 150ms ease',

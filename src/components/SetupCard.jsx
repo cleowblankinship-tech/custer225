@@ -87,7 +87,7 @@ export default function SetupCard({ onNavigate }) {
           width: stats.pct + '%',
           background: complete
             ? 'rgba(255,255,255,0.9)'
-            : 'linear-gradient(to right, #E3B23C, #C9941A)',
+            : 'linear-gradient(to right, #F0A3B8, #D6537C)',
           borderRadius: 0,
           transition: 'width 0.4s ease',
         }} />

@@ -287,7 +287,7 @@ export default function QuickAdd({ onAdd }) {
                   disabled={parsed.recurring ? (!parsed.title || parsed.cadence_weekday == null) : !parsed.title}
                   style={{
                     flex: 2, height: 44, borderRadius: 'var(--radius-sm)',
-                    background: 'var(--accent)', color: '#3A2D10', fontWeight: 600
+                    background: 'var(--accent)', color: '#FFF5F7', fontWeight: 600
                   }}
                 >
                   {parsed.recurring ? 'Save recurring reminder' : `Save ${parsed.entry_type}`}
@@ -518,7 +518,7 @@ export default function QuickAdd({ onAdd }) {
                 style={{
                   flex: 2, height: 44, borderRadius: 'var(--radius-sm)',
                   background: 'var(--accent)',
-                  color: '#3A2D10', fontWeight: 600
+                  color: '#FFF5F7', fontWeight: 600
                 }}
               >
                 Save {isIncome ? 'income' : 'expense'}
