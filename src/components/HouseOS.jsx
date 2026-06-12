@@ -164,6 +164,17 @@ export default function HouseOS({
             {reply.viewLabel} →
           </button>
         )}
+
+        {/* Tiny provenance mark — ✦ when Claude answered, quiet when the
+            built-in rules did. Lets you verify the AI brain is connected. */}
+        {reply && !isTyping && !thinking && (
+          <p
+            title={reply.source === 'ai' ? 'Answered by the AI house' : 'Answered by built-in rules'}
+            style={{ marginTop: 10, fontSize: 11, color: 'var(--text3)', letterSpacing: '0.06em' }}
+          >
+            {reply.source === 'ai' ? '✦' : '· offline answer ·'}
+          </p>
+        )}
       </div>
 
       {/* ── Ask the House ─────────────────────────────────────────────────── */}
