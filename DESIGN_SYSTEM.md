@@ -43,10 +43,11 @@ All colors live in `src/index.css` as CSS custom properties.
 ### Storybook palette
 Every color is muted and storybook-inspired — never neon, never corporate.
 The house is the soul of the product; the palette radiates outward from it.
+The brand is marigold — a lit-window gold; terracotta remains a supporting tone.
 
 | Token | Value | Use |
 |---|---|---|
-| `--terracotta` / `--accent` | `#C05538` | Brand. House body, key revenue metrics, primary actions |
+| `--marigold` / `--accent` | `#C9941A` (deep) / `#E3B23C` (header) | Brand. House body, key revenue metrics, primary actions |
 | `--sage` | `#7A9B6D` | Upcoming bookings, success states |
 | `--marigold` | `#E3B23C` | Current guests, active reservations |
 | `--coral` | `#E06A4E` | Checkout days, alerts |

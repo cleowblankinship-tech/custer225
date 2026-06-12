@@ -125,7 +125,7 @@ export default function HouseOS({
               ? 'transform 65ms ease-in, filter 200ms ease'
               : 'transform 200ms ease-out, filter 350ms ease',
             filter: mood === 'urgent'
-              ? 'drop-shadow(0 6px 22px rgba(192,85,56,0.45))'
+              ? 'drop-shadow(0 6px 22px rgba(224,106,78,0.50))'
               : 'drop-shadow(0 8px 26px rgba(92,52,26,0.22))',
           }}
         >
@@ -158,7 +158,7 @@ export default function HouseOS({
             style={{
               marginTop: 14, padding: '8px 18px',
               borderRadius: 999, background: 'var(--accent)',
-              color: '#FFF6EA', fontSize: 13, fontWeight: 700,
+              color: '#3A2D10', fontSize: 13, fontWeight: 700,
             }}
           >
             {reply.viewLabel} →
@@ -197,7 +197,7 @@ export default function HouseOS({
             aria-label="Ask"
             style={{
               width: 48, height: 48, borderRadius: '50%', flexShrink: 0,
-              background: 'var(--accent)', color: '#FFF6EA',
+              background: 'var(--accent)', color: '#3A2D10',
               fontSize: 18, fontWeight: 700,
               opacity: question.trim() ? 1 : 0.5,
               transition: 'opacity 150ms ease',

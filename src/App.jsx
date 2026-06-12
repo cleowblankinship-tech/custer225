@@ -445,7 +445,7 @@ export default function App() {
               style={{
                 padding:      '6px 14px',
                 borderRadius: 'var(--radius-sm)',
-                background:   view === item.key ? 'rgba(255,246,234,0.24)' : 'transparent',
+                background:   view === item.key ? 'rgba(58,45,16,0.14)' : 'transparent',
                 fontSize:     13,
                 fontWeight:   view === item.key ? 600 : 400,
                 color:        'var(--header-text)',
@@ -469,7 +469,7 @@ export default function App() {
               fontSize:     14,
               color:        'var(--header-sub)',
               padding:      '5px 10px',
-              background:   'rgba(255,246,234,0.18)',
+              background:   'rgba(58,45,16,0.12)',
               borderRadius: 'var(--radius-sm)',
             }}
             title={`Theme: ${themeMode}`}

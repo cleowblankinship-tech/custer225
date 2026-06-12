@@ -182,7 +182,7 @@ function EditRow({ entry, onSave, onCancel }) {
             disabled={saving || !draft.description || !draft.amount || !draft.date}
             style={{
               flex: 2, height: 36, borderRadius: 6, fontSize: 13, fontWeight: 600,
-              background: 'var(--accent)', color: '#FFF6EA',
+              background: 'var(--accent)', color: '#3A2D10',
             }}
           >
             {saving ? 'Saving…' : 'Save changes'}
