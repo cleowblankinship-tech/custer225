@@ -9,14 +9,15 @@
 // House elements use currentColor so they follow the house's red coat. Smoke
 // cadence follows vitals.hasGuest (the fire is lit when someone's staying).
 
-export default function HouseArt({ mood = 'calm', vitals = null, windowOpacity = 1 }) {
+export default function HouseArt({ mood = 'calm', vitals = null, windowOpacity = 1, arrivingSoon = false }) {
   const hasGuest = !!vitals?.hasGuest
 
   // Brisk when urgent, a steady curl when the fire's lit for a guest, otherwise
   // slow, infrequent puffs from a cold flue.
   const smokeDur     = mood === 'urgent' ? 1.3 : hasGuest ? 3.2 : 6
   const doorAnimates = mood !== 'urgent'
-  const doorDur      = mood === 'attention' ? '5.5s' : '11s'
+  // The door opens more eagerly when someone's expected, idle otherwise.
+  const doorDur      = mood === 'attention' ? '5.5s' : arrivingSoon ? '7s' : '11s'
 
   return (
     <g>
@@ -38,6 +39,16 @@ export default function HouseArt({ mood = 'calm', vitals = null, windowOpacity =
       <path d="M 5 22 L 4.5 37.5 L 35.5 37.5 L 35 22" />
 
       {/* ── Windows ───────────────────────────────────────────────────────── */}
+      {/* Warm lamplight when a guest is staying — someone's home. The glow
+          halo sits behind the frames and breathes gently. */}
+      {hasGuest && (
+        <g fill="#F6C879" stroke="none">
+          <rect x="6.1" y="23.6" width="8.3" height="7.3" rx="1.8"
+            style={{ animation: 'windowGlow 4s ease-in-out infinite', transformBox: 'fill-box' }} />
+          <rect x="25.6" y="23.6" width="8.3" height="7.3" rx="1.8"
+            style={{ animation: 'windowGlow 4s ease-in-out infinite 0.6s', transformBox: 'fill-box' }} />
+        </g>
+      )}
       {(mood === 'attention' || mood === 'urgent') && (
         <>
           <rect x="7"    y="24.5" width="6.5" height="5.5" rx="1.2" fill="currentColor" stroke="none" opacity={0.22} />

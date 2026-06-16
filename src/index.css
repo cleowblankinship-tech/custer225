@@ -218,6 +218,33 @@ input::placeholder, textarea::placeholder { color: var(--text3); }
   100% { transform: translate(92px, -3px); }
 }
 
+/* A soft breeze — flowers nod, tree canopies lean gently. Each plant offsets
+   its own phase (via animation-delay) so the yard never sways in unison. */
+@keyframes breezeSway {
+  0%, 100% { transform: rotate(-2deg);   }
+  50%       { transform: rotate(2.2deg); }
+}
+@keyframes canopySway {
+  0%, 100% { transform: rotate(-1deg);   }
+  50%       { transform: rotate(1.1deg); }
+}
+
+/* An autumn leaf letting go and drifting down — visible only briefly each
+   cycle so leaves fall now and then rather than constantly. */
+@keyframes leafFall {
+  0%   { opacity: 0;    transform: translate(0, 0)      rotate(0deg);  }
+  8%   { opacity: 0.85; }
+  42%  { opacity: 0.55; }
+  54%  { opacity: 0;    transform: translate(-5px, 13px) rotate(85deg); }
+  100% { opacity: 0;    transform: translate(-5px, 13px) rotate(85deg); }
+}
+
+/* Warm lamplight breathing in the windows when a guest is staying. */
+@keyframes windowGlow {
+  0%, 100% { opacity: 0.42; }
+  50%       { opacity: 0.78; }
+}
+
 /* Soft clouds drifting slowly behind the rooftop. */
 @keyframes cloudDrift {
   0%   { transform: translateX(-12px); }

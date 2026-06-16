@@ -87,8 +87,16 @@ export function getPropertyScene({ expenses = [], calendarData = null, setupStat
   const hasGuest = stays.some(b => b.ci <= t && t < b.co)
   const activity = clamp01(occ * 0.8 + (hasGuest ? 0.2 : 0))
 
+  // A guest arriving in the next couple of days → the property stirs with a
+  // little anticipation (livelier wildlife, a more welcoming door).
+  const DAY = 86400000
+  const arrivingSoon = stays.some(b => {
+    if (b.ci <= t) return false
+    return (new Date(b.ci) - new Date(t)) / DAY <= 2.5
+  })
+
   return {
-    level, maturity, season: getSeason(), activity,
+    level, maturity, season: getSeason(), activity, arrivingSoon,
     bookings, monthsActive,
     listed, established, consistent, longTerm,
   }

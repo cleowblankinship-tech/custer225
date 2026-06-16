@@ -43,38 +43,61 @@ const SEASON_CANOPY = {
 
 // ── Ground: the land the house is rooted in (always present) ────────────────
 function Ground({ winter }) {
-  const grass = winter ? '#DCE6E2' : GRASS
+  const grass     = winter ? '#DCE6E2' : GRASS
+  const grassDeep = winter ? '#CBD9D4' : '#9DBE7C'
+  // An irregular, gently-rolling lawn edge — not a clean ellipse — so the land
+  // reads as organic ground rather than a shape.
+  const lawn = `M 0 ${GY + 1}
+    C 9 ${GY - 1.8} 17 ${GY - 0.6} 25 ${GY - 2.2}
+    C 34 ${GY - 3.4} 42 ${GY - 1.6} 50 ${GY - 2.6}
+    C 60 ${GY - 3.6} 70 ${GY - 1.4} 78 ${GY - 2.4}
+    C 81 ${GY - 2.8} 83 ${GY - 1.6} 84 ${GY - 1}
+    L 84 58 L 0 58 Z`
   return (
     <g>
-      {/* soft lawn the whole homestead sits on */}
-      <ellipse cx={CX} cy={GY + 4} rx="46" ry="6.5" fill={grass} stroke="none" opacity={winter ? 0.7 : 0.55} />
-      <ellipse cx={CX} cy={GY + 0.5} rx="44" ry="2.4" fill={grass} stroke="none" opacity={winter ? 0.55 : 0.45} />
+      {/* lawn — a darker base with a lighter rolling top for soft dimension */}
+      <path d={lawn} fill={grassDeep} stroke="none" opacity={winter ? 0.7 : 0.55} />
+      <path d={`M 4 ${GY - 0.5}
+        C 16 ${GY - 2.4} 30 ${GY - 1.4} 42 ${GY - 2.6}
+        C 56 ${GY - 3.8} 68 ${GY - 1.8} 80 ${GY - 2.2}
+        L 80 ${GY + 3} L 4 ${GY + 3} Z`}
+        fill={grass} stroke="none" opacity={winter ? 0.6 : 0.5} />
 
-      {/* dirt path leading from the front door toward the viewer */}
-      <path d={`M 39 ${GY} L 45 ${GY} L 50 57 L 34 57 Z`} fill={DIRT} stroke="none" opacity={winter ? 0.5 : 0.8} />
-      {/* stepping stones up the path */}
-      <ellipse cx={CX} cy={GY + 2.4} rx="2.2" ry="0.8" fill={STONE} stroke="none" opacity="0.8" />
-      <ellipse cx={CX - 0.3} cy={GY + 5.2} rx="2.7" ry="0.95" fill={STONE} stroke="none" opacity="0.8" />
-      <ellipse cx={CX - 0.6} cy={GY + 8.2} rx="3.1" ry="1.1" fill={STONE} stroke="none" opacity="0.8" />
+      {winter && <rect x="0" y={GY} width="84" height={58 - GY} fill={SNOW} stroke="none" opacity="0.4" />}
+
+      {/* dirt path from the front door toward the viewer — clearer at a glance:
+          a defined fill, soft edge lines, and a centre seam */}
+      <path d={`M 38.5 ${GY} L 45.5 ${GY} L 51 57.5 L 33 57.5 Z`} fill={DIRT} stroke="none" opacity={winter ? 0.7 : 0.95} />
+      <g stroke="#A8895E" strokeWidth="0.6" strokeLinecap="round" opacity="0.55" fill="none">
+        <path d={`M 38.5 ${GY} L 33 57.5`} />
+        <path d={`M 45.5 ${GY} L 51 57.5`} />
+        <path d={`M 42 ${GY + 1} L 42 57`} strokeWidth="0.5" opacity="0.4" strokeDasharray="1.4 2" />
+      </g>
+      {/* stepping stones up the path — defined with a thin rim + highlight */}
+      {[[CX, GY + 2.6, 2.4], [CX - 0.3, GY + 5.6, 2.9], [CX - 0.7, GY + 8.8, 3.3]].map(([sx, sy, rx], i) => (
+        <g key={i}>
+          <ellipse cx={sx} cy={sy} rx={rx} ry={rx * 0.36} fill={STONE} stroke="#9A9388" strokeWidth="0.35" />
+          <ellipse cx={sx - rx * 0.2} cy={sy - 0.25} rx={rx * 0.5} ry={rx * 0.16} fill="#C9C3B8" stroke="none" opacity="0.7" />
+        </g>
+      ))}
 
       {/* a couple of stones resting in the grass */}
-      <ellipse cx={26} cy={GY + 1.6} rx="1.6" ry="0.7" fill={STONE} stroke="none" opacity="0.7" />
-      <ellipse cx={59} cy={GY + 2}   rx="2"   ry="0.85" fill={STONE} stroke="none" opacity="0.7" />
-
-      {/* faint horizon line for grounding */}
-      <line x1="0" y1={GY} x2="84" y2={GY} stroke="currentColor" strokeWidth="1.2" opacity="0.1" />
+      <ellipse cx={26} cy={GY + 1.6} rx="1.7" ry="0.8" fill={STONE} stroke="#9A9388" strokeWidth="0.3" />
+      <ellipse cx={59} cy={GY + 2}   rx="2.1" ry="0.9" fill={STONE} stroke="#9A9388" strokeWidth="0.3" />
 
       {!winter && (
         <g stroke={STEM} strokeWidth="0.7" strokeLinecap="round" opacity="0.7">
-          {[15, 22, 63, 70, 30].map((gx, i) => (
-            <g key={i}>
-              <line x1={gx} y1={GY} x2={gx - 0.8} y2={GY - 1.6} />
-              <line x1={gx} y1={GY} x2={gx + 0.9} y2={GY - 1.5} />
+          {[14, 21, 29, 62, 69, 76].map((gx, i) => (
+            <g key={i} style={{
+              animation: `breezeSway ${5 + (i % 3)}s ease-in-out infinite ${(i % 4) * 0.4}s`,
+              transformBox: 'fill-box', transformOrigin: 'bottom center',
+            }}>
+              <line x1={gx} y1={GY} x2={gx - 0.8} y2={GY - 1.7} />
+              <line x1={gx} y1={GY} x2={gx + 0.9} y2={GY - 1.6} />
             </g>
           ))}
         </g>
       )}
-      {winter && <rect x="0" y={GY} width="84" height={58 - GY} fill={SNOW} stroke="none" opacity="0.4" />}
     </g>
   )
 }
@@ -86,6 +109,7 @@ function Tree({ x, h, season, delay = 0, back = false }) {
   const top    = GY - trunkH
   const cy     = top - h * 0.34
   const r      = h * 0.42
+  const swayDur = 6 + (x % 5) * 0.5   // deterministic per-tree breeze phase
 
   return (
     <g style={{
@@ -93,30 +117,46 @@ function Tree({ x, h, season, delay = 0, back = false }) {
       transformBox: 'fill-box', transformOrigin: 'bottom center',
       opacity: back ? 0.68 : 1,
     }}>
-      <line x1={x} y1={GY} x2={x} y2={top} stroke={BARK} strokeWidth={tw} strokeLinecap="round" />
-      {season === 'winter' ? (
-        <g stroke={BARK} strokeWidth={Math.max(tw * 0.7, 1)} strokeLinecap="round" fill="none">
-          <line x1={x} y1={top + 1} x2={x - r * 0.7} y2={top - r * 0.5} />
-          <line x1={x} y1={top + 2} x2={x + r * 0.7} y2={top - r * 0.4} />
-          <line x1={x} y1={top}     x2={x - r * 0.3} y2={top - r * 0.95} />
-          <line x1={x} y1={top}     x2={x + r * 0.35} y2={top - r * 0.85} />
-          <circle cx={x - r * 0.7} cy={top - r * 0.5} r="0.9" fill={SNOW} stroke="none" />
-          <circle cx={x + r * 0.7} cy={top - r * 0.4} r="0.9" fill={SNOW} stroke="none" />
-          <circle cx={x}           cy={top - r * 0.95} r="1" fill={SNOW} stroke="none" />
-        </g>
-      ) : (
-        <g stroke={c.edge} strokeWidth="1" fill={c.fill}>
-          <circle cx={x - r * 0.55} cy={cy + r * 0.25} r={r * 0.72} />
-          <circle cx={x + r * 0.55} cy={cy + r * 0.25} r={r * 0.72} />
-          <circle cx={x}            cy={cy}            r={r} />
-          {c.blossom && (
-            <g fill={c.blossom} stroke="none">
-              <circle cx={x - r * 0.4} cy={cy - r * 0.1} r="0.7" />
-              <circle cx={x + r * 0.45} cy={cy + r * 0.1} r="0.7" />
-              <circle cx={x + r * 0.05} cy={cy - r * 0.5} r="0.6" />
-              <circle cx={x - r * 0.1} cy={cy + r * 0.5} r="0.6" />
-            </g>
-          )}
+      {/* whole tree leans gently in the breeze, hinged at its base */}
+      <g style={{
+        animation: `canopySway ${swayDur}s ease-in-out infinite ${(x % 7) * 0.3}s`,
+        transformBox: 'fill-box', transformOrigin: 'bottom center',
+      }}>
+        <line x1={x} y1={GY} x2={x} y2={top} stroke={BARK} strokeWidth={tw} strokeLinecap="round" />
+        {season === 'winter' ? (
+          <g stroke={BARK} strokeWidth={Math.max(tw * 0.7, 1)} strokeLinecap="round" fill="none">
+            <line x1={x} y1={top + 1} x2={x - r * 0.7} y2={top - r * 0.5} />
+            <line x1={x} y1={top + 2} x2={x + r * 0.7} y2={top - r * 0.4} />
+            <line x1={x} y1={top}     x2={x - r * 0.3} y2={top - r * 0.95} />
+            <line x1={x} y1={top}     x2={x + r * 0.35} y2={top - r * 0.85} />
+            <circle cx={x - r * 0.7} cy={top - r * 0.5} r="0.9" fill={SNOW} stroke="none" />
+            <circle cx={x + r * 0.7} cy={top - r * 0.4} r="0.9" fill={SNOW} stroke="none" />
+            <circle cx={x}           cy={top - r * 0.95} r="1" fill={SNOW} stroke="none" />
+          </g>
+        ) : (
+          <g stroke={c.edge} strokeWidth="1" fill={c.fill}>
+            <circle cx={x - r * 0.55} cy={cy + r * 0.25} r={r * 0.72} />
+            <circle cx={x + r * 0.55} cy={cy + r * 0.25} r={r * 0.72} />
+            <circle cx={x}            cy={cy}            r={r} />
+            {c.blossom && (
+              <g fill={c.blossom} stroke="none">
+                <circle cx={x - r * 0.4} cy={cy - r * 0.1} r="0.7" />
+                <circle cx={x + r * 0.45} cy={cy + r * 0.1} r="0.7" />
+                <circle cx={x + r * 0.05} cy={cy - r * 0.5} r="0.6" />
+                <circle cx={x - r * 0.1} cy={cy + r * 0.5} r="0.6" />
+              </g>
+            )}
+          </g>
+        )}
+      </g>
+
+      {/* autumn: a leaf lets go now and then and drifts down */}
+      {season === 'autumn' && (
+        <g fill={c.edge} stroke="none">
+          <ellipse cx={x + r * 0.4} cy={cy} rx="0.8" ry="0.5"
+            style={{ animation: `leafFall 6s ease-in infinite ${(x % 4)}s`, transformBox: 'fill-box', transformOrigin: 'center' }} />
+          <ellipse cx={x - r * 0.5} cy={cy + r * 0.3} rx="0.7" ry="0.45"
+            style={{ animation: `leafFall 7s ease-in infinite ${3 + (x % 3)}s`, transformBox: 'fill-box', transformOrigin: 'center' }} />
         </g>
       )}
     </g>
@@ -129,10 +169,16 @@ function Flower({ x, hue, h = 4, delay = 0 }) {
       animation: `sproutIn 0.9s ease ${delay}s both`,
       transformBox: 'fill-box', transformOrigin: 'bottom center',
     }}>
-      <line x1={x} y1={GY} x2={x} y2={GY - h} stroke={STEM} strokeWidth="1.1" strokeLinecap="round" />
-      <circle cx={x - 1.1} cy={GY - h * 0.55} r="0.9" fill={STEM} stroke="none" opacity="0.85" />
-      <circle cx={x} cy={GY - h} r="1.5" fill={hue} stroke="none" />
-      <circle cx={x} cy={GY - h} r="0.55" fill="#FFFDF5" stroke="none" opacity="0.6" />
+      {/* nods in the breeze, hinged at the soil */}
+      <g style={{
+        animation: `breezeSway ${4.5 + (x % 4) * 0.6}s ease-in-out infinite ${(x % 5) * 0.5}s`,
+        transformBox: 'fill-box', transformOrigin: 'bottom center',
+      }}>
+        <line x1={x} y1={GY} x2={x} y2={GY - h} stroke={STEM} strokeWidth="1.1" strokeLinecap="round" />
+        <circle cx={x - 1.1} cy={GY - h * 0.55} r="0.9" fill={STEM} stroke="none" opacity="0.85" />
+        <circle cx={x} cy={GY - h} r="1.5" fill={hue} stroke="none" />
+        <circle cx={x} cy={GY - h} r="0.55" fill="#FFFDF5" stroke="none" opacity="0.6" />
+      </g>
     </g>
   )
 }
@@ -224,18 +270,22 @@ export default function HouseScene({ size = 260, mood = 'calm', vitals = null, s
   const hasMail  = !!vitals?.hasMail
 
   // History-driven milestones (with gentle fallbacks for a bare scene).
-  const bookings    = scene?.bookings ?? 0
-  const listed      = scene?.listed ?? false
-  const established = scene?.established ?? false
-  const consistent  = scene?.consistent ?? false
-  const longTerm    = scene?.longTerm ?? false
+  const bookings     = scene?.bookings ?? 0
+  const listed       = scene?.listed ?? false
+  const established  = scene?.established ?? false
+  const consistent   = scene?.consistent ?? false
+  const longTerm     = scene?.longTerm ?? false
+  const arrivingSoon = scene?.arrivingSoon ?? false
 
   const W = size * (84 / 40)
   const H = size * (58 / 40)
 
-  const flowers   = winter ? [] : flowerSlots(bookings)
-  const isFront   = x => x >= 24 && x <= 60   // flowers in the front yard vs the sides
-  const birdDur   = 17 - activity * 5         // a busier property feels livelier
+  const flowers = winter ? [] : flowerSlots(bookings)
+  const isFront = x => x >= 24 && x <= 60   // flowers in the front yard vs the sides
+  // A busier property — and one expecting a guest — feels livelier (birds pass
+  // more often). The whole scene reads as more active before an arrival.
+  const lively  = Math.min(activity + (arrivingSoon ? 0.35 : 0), 1)
+  const birdDur = 17 - lively * 6
   const leftTreeH  = 11 + Math.min(bookings, 16) * 0.45
   const rightTreeH = 12 + Math.min(bookings, 16) * 0.35
 
@@ -269,6 +319,8 @@ export default function HouseScene({ size = 260, mood = 'calm', vitals = null, s
       {/* ── Birds cross the whole sky once the property is established ──────── */}
       {established && !winter && <BirdFlock dur={birdDur} y={9} />}
       {longTerm    && !winter && <BirdFlock dur={birdDur + 6} delay={8} y={13} />}
+      {/* an extra pass when a guest is on the way — anticipation in the air */}
+      {arrivingSoon && established && !winter && <BirdFlock dur={birdDur - 2} delay={3} y={6} />}
 
       {/* ── The land ──────────────────────────────────────────────────────── */}
       <Ground winter={winter} />
@@ -294,7 +346,7 @@ export default function HouseScene({ size = 260, mood = 'calm', vitals = null, s
 
       {/* ── The house — the focal character, sitting in its yard ──────────── */}
       <g transform="translate(22, 9.5)">
-        <HouseArt mood={mood} vitals={vitals} windowOpacity={1} />
+        <HouseArt mood={mood} vitals={vitals} windowOpacity={1} arrivingSoon={arrivingSoon} />
       </g>
 
       {/* ── Front-yard flowers, in front of the house base ────────────────── */}
