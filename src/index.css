@@ -219,6 +219,27 @@ input::placeholder, textarea::placeholder { color: var(--text3); }
   100% { transform: translateX(50px);  }
 }
 
+/* A plant sprouting up from the ground when the property matures into it —
+   grows from nothing rather than popping in. */
+@keyframes sproutIn {
+  0%   { opacity: 0; transform: scaleY(0.12) translateY(4px); }
+  55%  { opacity: 1; }
+  100% { opacity: 1; transform: scaleY(1)    translateY(0);   }
+}
+
+/* A butterfly wandering a loose loop near the flowers, wings fluttering. */
+@keyframes flutterPath {
+  0%   { transform: translate(0px, 0px);   }
+  25%  { transform: translate(5px, -4px);  }
+  50%  { transform: translate(10px, 1px);  }
+  75%  { transform: translate(4px, 5px);   }
+  100% { transform: translate(0px, 0px);   }
+}
+@keyframes wingFlap {
+  0%, 100% { transform: scaleX(1);    }
+  50%       { transform: scaleX(0.3); }
+}
+
 /* Today's hand-drawn circle on the calendar — gentle breathing highlight */
 @keyframes sketchPulse {
   0%, 100% { opacity: 1;    transform: rotate(0deg)  scale(1);     }

@@ -16,6 +16,7 @@ import HouseOS from './components/HouseOS'
 import { getActiveUpdates, getHouseMood, getNarrationDeck, normalizeStays, computeMonth, fmtDay } from './lib/houseUpdates'
 import { askHouseAI } from './lib/houseChat'
 import { computeCashFlow } from './lib/finance'
+import { getPropertyScene } from './lib/propertyScene'
 import { fetchWeather } from './lib/weather'
 import { getRecurringRemindersForDate, getUserRules, saveUserRule } from './lib/recurringRules'
 import { getTimeOfDay, getTheme, applyTheme } from './lib/theme'
@@ -103,6 +104,10 @@ export default function App() {
     hasMail:      activeUpdates.length > 0, // notification → mailbox flag up
     revenueAhead: null, // future: month pacing signal for animations
   }
+
+  // The storybook world around the house — how grown-in it is (level), the
+  // season, and how much wildlife/movement — derived from real property data.
+  const propertyScene = getPropertyScene({ expenses, calendarData, setupStats })
 
   // Narration deck — the house deals one focused thought per tap: alerts,
   // guest story, reminders (trash night, plants…), business pulse, gap
@@ -517,6 +522,7 @@ export default function App() {
             messages={narrationDeck}
             mood={mood}
             vitals={houseVitals}
+            scene={propertyScene}
             stats={houseStats}
             onAsk={q => askHouseAI(q, { calendarData, expenses, tasks, setupStats, weatherBlurb })}
             onNavigate={handleHouseNavigate}

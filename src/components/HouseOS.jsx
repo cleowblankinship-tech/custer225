@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react'
-import HouseIcon from './HouseIcon'
+import HouseScene from './HouseScene'
 
 // ── HouseOS ───────────────────────────────────────────────────────────────────
 //
@@ -10,9 +10,10 @@ import HouseIcon from './HouseIcon'
 //
 // The house is alive: it floats gently, its chimney puffs, its door swings,
 // birds pass and clouds drift, and its mailbox flag stands up when there's a
-// notification. Those data-driven beats are wired in HouseIcon via the
-// `vitals` prop (hasGuest → steady smoke, hasMail → flag up) so the house
-// stays a single living component.
+// notification. The world around it (trees, flowers, gardens, wildlife) grows
+// as the property matures — see HouseScene, driven by the `scene` prop. The
+// house's own beats are wired via `vitals` (hasGuest → steady smoke,
+// hasMail → flag up).
 
 const THEME_ICONS = { auto: '◐', day: '☀', evening: '◑', night: '☾' }
 
@@ -42,7 +43,8 @@ function useTypewriter(target, msPerChar = 14) {
 export default function HouseOS({
   messages = [],
   mood,
-  vitals = null,          // { occupancyPct, hasGuest, revenueAhead } — future animation hooks
+  vitals = null,          // { occupancyPct, hasGuest, hasMail } — drives house beats
+  scene = null,           // { level, season, activity } — the evolving world
   stats = [],             // [{ label, value, view }] minimal supporting info
   onAsk,                  // (question) => { answer, view, viewLabel, autoOpen }
   onNavigate,             // (view) => void
@@ -131,7 +133,7 @@ export default function HouseOS({
               : 'drop-shadow(0 8px 26px rgba(92,52,26,0.22))',
           }}
         >
-          <HouseIcon size={280} windowOpacity={1} mood={mood} vitals={vitals} />
+          <HouseScene size={280} mood={mood} vitals={vitals} scene={scene} />
         </button>
       </div>
 
