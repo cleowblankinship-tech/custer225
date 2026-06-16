@@ -212,6 +212,11 @@ input::placeholder, textarea::placeholder { color: var(--text3); }
   0%, 100% { transform: scaleY(1);    }
   50%       { transform: scaleY(0.5); }
 }
+/* Birds crossing the wider property scene, off-screen on both ends. */
+@keyframes birdCross {
+  0%   { transform: translate(-22px, 1px); }
+  100% { transform: translate(92px, -3px); }
+}
 
 /* Soft clouds drifting slowly behind the rooftop. */
 @keyframes cloudDrift {

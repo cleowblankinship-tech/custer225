@@ -9,12 +9,21 @@
 // Nothing here is ever shown as a number or a "level badge" — the world simply
 // reflects the work, the way a garden reflects its gardener.
 //
-//   level   1–5   how grown-in the surrounding world is
-//   season  spring|summer|autumn|winter  from the real calendar date
-//   activity 0–1  how much wildlife/movement (occupancy + a guest in house)
+// The scene is driven by the property's *history*, not an abstract level:
+//   listed       a real listing → the mailbox goes up
+//   bookings     each recorded stay plants a flower (a visual record)
+//   established  a few stays in → the first tree takes root
+//   consistent   operating across several months → garden beds
+//   longTerm     a long, steady run → mature trees and abundant wildlife
+//
+// Also returned:
+//   season   spring|summer|autumn|winter, from the real calendar date
+//   activity 0–1, how much wildlife/movement (occupancy + a guest in house)
+//   level    1–5 coarse summary, kept for continuity (never shown to the user)
 
 import { normalizeStays, computeMonth } from './houseUpdates'
 import { computeCashFlow } from './finance'
+import { normalizeCategory } from './categories'
 
 export function getSeason(date = new Date()) {
   const m = date.getMonth() // 0–11
@@ -31,11 +40,24 @@ const clamp01 = n => Math.min(Math.max(n, 0), 1)
  * @returns {{ level: number, maturity: number, season: string, activity: number }}
  */
 export function getPropertyScene({ expenses = [], calendarData = null, setupStats = null } = {}) {
-  const stays   = normalizeStays(calendarData)
-  const revenue = expenses
-    .filter(e => e.entry_type === 'income')
-    .reduce((s, e) => s + Number(e.amount), 0)
+  const stays  = normalizeStays(calendarData)
+  const income = expenses.filter(e => e.entry_type === 'income')
+  const revenue = income.reduce((s, e) => s + Number(e.amount), 0)
   const cash    = computeCashFlow(expenses).availableCash
+
+  // ── The property's history — durable, accumulating record ────────────────
+  // Each logged booking-revenue entry is a stay you recorded; that's the
+  // permanent history a flower can stand for, even after the live calendar
+  // window has rolled past. Fall back to the live calendar when nothing's
+  // logged yet so a freshly-connected listing still shows life.
+  const loggedBookings = income.filter(e => normalizeCategory(e.category) === 'Gross Booking Revenue').length
+  const bookings       = Math.max(loggedBookings, stays.length)
+  const monthsActive   = new Set(income.map(e => e.date?.slice(0, 7)).filter(Boolean)).size
+
+  const listed      = (setupStats?.pct >= 100) || bookings > 0
+  const established = bookings >= 3
+  const consistent  = monthsActive >= 3
+  const longTerm    = monthsActive >= 9 || bookings >= 15
 
   // Four signals of a cared-for, established property, each normalized 0–1 and
   // accumulating slowly so the world grows gradually rather than in leaps.
@@ -65,5 +87,9 @@ export function getPropertyScene({ expenses = [], calendarData = null, setupStat
   const hasGuest = stays.some(b => b.ci <= t && t < b.co)
   const activity = clamp01(occ * 0.8 + (hasGuest ? 0.2 : 0))
 
-  return { level, maturity, season: getSeason(), activity }
+  return {
+    level, maturity, season: getSeason(), activity,
+    bookings, monthsActive,
+    listed, established, consistent, longTerm,
+  }
 }

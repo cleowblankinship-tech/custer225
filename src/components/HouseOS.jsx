@@ -133,7 +133,7 @@ export default function HouseOS({
               : 'drop-shadow(0 8px 26px rgba(92,52,26,0.22))',
           }}
         >
-          <HouseScene size={280} mood={mood} vitals={vitals} scene={scene} />
+          <HouseScene size={250} mood={mood} vitals={vitals} scene={scene} />
         </button>
       </div>
 
