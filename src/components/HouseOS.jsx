@@ -8,11 +8,11 @@ import HouseIcon from './HouseIcon'
 // input, and a minimal strip of vitals. Dashboards (calendar, money, ledger)
 // are supporting tools the house opens when a question calls for them.
 //
-// Animation policy (deliberate restraint): chimney smoke + a slow idle float
-// keep the house alive. HouseIcon receives a `vitals` prop so future
-// state-based animations (window lights during stays, blooming flowers on
-// strong revenue, mailbox flags on new bookings) can bind to real property
-// data without restructuring this component.
+// The house is alive: it floats gently, its chimney puffs, its door swings,
+// birds pass and clouds drift, and its mailbox flag stands up when there's a
+// notification. Those data-driven beats are wired in HouseIcon via the
+// `vitals` prop (hasGuest → steady smoke, hasMail → flag up) so the house
+// stays a single living component.
 
 const THEME_ICONS = { auto: '◐', day: '☀', evening: '◑', night: '☾' }
 

@@ -99,7 +99,8 @@ export default function App() {
   ]
   const houseVitals = {
     occupancyPct: monthNow.pct,
-    hasGuest:     !!currStay,
+    hasGuest:     !!currStay,            // fire lit → steady chimney smoke
+    hasMail:      activeUpdates.length > 0, // notification → mailbox flag up
     revenueAhead: null, // future: month pacing signal for animations
   }
 

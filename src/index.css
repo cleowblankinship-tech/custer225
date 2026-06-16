@@ -185,6 +185,40 @@ input::placeholder, textarea::placeholder { color: var(--text3); }
   100% { opacity: 0;   transform: translateY(-10px) translateX(3px) scaleX(1.8); }
 }
 
+/* Chimney smoke that puffs and pauses — a curl rises, thins, then a gap
+   before the next, so it visibly "stops and starts" like a real chimney. */
+@keyframes smokePuff {
+  0%        { opacity: 0;    transform: translateY(2px)   translateX(0)   scaleX(0.7); }
+  14%       { opacity: 0.55; }
+  52%       { opacity: 0.3;  transform: translateY(-9px)  translateX(2px) scaleX(1.6); }
+  66%, 100% { opacity: 0;    transform: translateY(-13px) translateX(3px) scaleX(2);   }
+}
+
+/* The front door swinging open and gently shutting again. scaleX toward the
+   left hinge foreshortens the panel like it's opening inward. */
+@keyframes doorSwing {
+  0%, 50%  { transform: scaleX(1);    }
+  68%, 84% { transform: scaleX(0.34); }
+  100%     { transform: scaleX(1);    }
+}
+
+/* Birds gliding across the sky — the flock drifts left to right, off-screen
+   on both ends so there are quiet stretches between passes. */
+@keyframes birdFly {
+  0%   { transform: translate(-16px, 1px); }
+  100% { transform: translate(54px, -3px); }
+}
+@keyframes birdFlap {
+  0%, 100% { transform: scaleY(1);    }
+  50%       { transform: scaleY(0.5); }
+}
+
+/* Soft clouds drifting slowly behind the rooftop. */
+@keyframes cloudDrift {
+  0%   { transform: translateX(-12px); }
+  100% { transform: translateX(50px);  }
+}
+
 /* Today's hand-drawn circle on the calendar — gentle breathing highlight */
 @keyframes sketchPulse {
   0%, 100% { opacity: 1;    transform: rotate(0deg)  scale(1);     }
