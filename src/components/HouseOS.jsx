@@ -87,8 +87,9 @@ export default function HouseOS({
     }
   }
 
-  let wrapperAnimation = 'houseFloat 7s ease-in-out infinite'
-  if (!pressed && mood === 'urgent') wrapperAnimation = 'houseShake 0.5s ease-in-out infinite'
+  // The scene holds still — only an urgent alert shakes it. (The house's own
+  // small motions — smoke, door, wildlife — still play inside HouseScene.)
+  const wrapperAnimation = (!pressed && mood === 'urgent') ? 'houseShake 0.5s ease-in-out infinite' : 'none'
 
   return (
     <div style={{
