@@ -3,86 +3,235 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>225 Custer — Lot Concept v1</title>
+  <title>225 Custer — Lot Concept v2</title>
   <style>
     * { box-sizing: border-box; margin: 0; padding: 0; }
+
     body {
-      background: #0E0D1A;
+      background: #0B0A18;
       min-height: 100vh;
       display: flex;
       flex-direction: column;
       align-items: center;
       justify-content: center;
-      gap: 18px;
+      gap: 20px;
       padding: 40px 24px;
       font-family: 'Courier New', monospace;
       color: #C0B8CC;
+      overflow: hidden;
     }
+
     .eyebrow {
       font-size: 10px;
       letter-spacing: 5px;
       text-transform: uppercase;
-      opacity: 0.38;
+      opacity: 0.35;
     }
-    .frame {
-      border: 2px solid #22203A;
-      box-shadow:
-        0 0 0 1px #2E2C48,
-        0 12px 48px rgba(0,0,0,0.7),
-        0 2px 8px rgba(0,0,0,0.5);
+
+    /* The isometric transform lives here on a wrapper div.
+       scaleY(0.5) collapses Y, rotate(45deg) tilts the diamond,
+       then scaleX corrects the width so it reads as a square lot. */
+    .iso-stage {
+      position: relative;
+      width: 600px;
+      height: 600px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
     }
+
+    /* The actual SVG sits inside and gets the iso transform */
+    .iso-stage svg {
+      transform: rotateX(60deg) rotateZ(-45deg);
+      transform-style: preserve-3d;
+      filter: drop-shadow(0 40px 60px rgba(0,0,0,0.7));
+    }
+
+    /* Elements that should pop ABOVE the lot plane (trees, house walls)
+       use translateZ in an inner <g> — but for SVG we fake elevation
+       with layering and shadows instead, keeping everything flat SVG. */
+
     .caption {
       font-size: 9px;
       letter-spacing: 3px;
       text-transform: uppercase;
-      opacity: 0.22;
+      opacity: 0.20;
     }
+
+    /* ── Animations ─────────────────────────────────────────────────── */
+
+    /* Tree / tall plant sway — hinged at base */
+    @keyframes sway {
+      0%,100% { transform: rotate(0deg); }
+      30%      { transform: rotate(1.8deg); }
+      65%      { transform: rotate(-1.2deg); }
+    }
+
+    /* Slower sway for the big tree */
+    @keyframes swayBig {
+      0%,100% { transform: rotate(0deg); }
+      25%      { transform: rotate(2.5deg); }
+      60%      { transform: rotate(-1.8deg); }
+    }
+
+    /* Umbrella gentle pulse (subtle, like fabric catching breeze) */
+    @keyframes umbrellaBreeze {
+      0%,100% { transform: scale(1,1) rotate(0deg); }
+      40%      { transform: scale(1.04,0.97) rotate(0.8deg); }
+      70%      { transform: scale(0.97,1.02) rotate(-0.5deg); }
+    }
+
+    /* Bird flight path — crosses sky diagonally */
+    @keyframes birdCross {
+      0%   { transform: translate(-60px, 20px); opacity: 0; }
+      5%   { opacity: 1; }
+      95%  { opacity: 1; }
+      100% { transform: translate(200px, -60px); opacity: 0; }
+    }
+
+    @keyframes birdCross2 {
+      0%   { transform: translate(-40px, 50px); opacity: 0; }
+      8%   { opacity: 0.8; }
+      92%  { opacity: 0.8; }
+      100% { transform: translate(180px, -40px); opacity: 0; }
+    }
+
+    /* Wing flap */
+    @keyframes flap {
+      0%,100% { d: path("M0,0 Q-3,-3 -6,0"); }
+      50%      { d: path("M0,0 Q-3,1 -6,2"); }
+    }
+
+    /* Cloud drift — slow leftward float */
+    @keyframes cloudDrift {
+      0%   { transform: translateX(0px); }
+      100% { transform: translateX(-80px); }
+    }
+
+    /* Mailbox flag gentle bob */
+    @keyframes flagBob {
+      0%,100% { transform: rotate(0deg); }
+      50%      { transform: rotate(-8deg); }
+    }
+
+    /* Ambient shimmer on windows (faint light pulse) */
+    @keyframes windowGlow {
+      0%,100% { opacity: 0.6; }
+      50%      { opacity: 0.85; }
+    }
+
+    /* Shadow pulse (subtle breathing of the lot) */
+    @keyframes shadowPulse {
+      0%,100% { opacity: 0.18; }
+      50%      { opacity: 0.24; }
+    }
+
+    /* Chimney smoke puff */
+    @keyframes puff {
+      0%   { transform: translateY(0) scale(0.5); opacity: 0.6; }
+      60%  { opacity: 0.3; }
+      100% { transform: translateY(-12px) scale(1.6); opacity: 0; }
+    }
+
+    /* Leaf fall */
+    @keyframes leafFall {
+      0%   { transform: translate(0,0) rotate(0deg); opacity: 0.9; }
+      100% { transform: translate(4px, 14px) rotate(120deg); opacity: 0; }
+    }
+
+    /* Sprout from ground */
+    @keyframes sprout {
+      from { transform: scaleY(0); opacity: 0; }
+      to   { transform: scaleY(1); opacity: 1; }
+    }
+
+    /* Patio umbrella slow rotate (barely perceptible, like wind spinning it) */
+    @keyframes slowSpin {
+      0%   { transform: rotate(0deg) scale(1); }
+      100% { transform: rotate(3deg) scale(1); }
+    }
+
+    /* Grass blade sway (gravel shimmer) */
+    @keyframes gravel {
+      0%,100% { opacity: 0.55; }
+      50%      { opacity: 0.75; }
+    }
+
+    .tree-big { transform-origin: 19px 48px; animation: swayBig 7s ease-in-out infinite; }
+    .tree-back { transform-origin: 40px 20px; animation: sway 5.5s ease-in-out infinite 1.2s; }
+    .tree-shrub-l { transform-origin: 11px 19px; animation: sway 4.8s ease-in-out infinite 0.7s; }
+    .tree-shrub-r { transform-origin: 68px 28px; animation: sway 5.2s ease-in-out infinite 1.8s; }
+
+    .shrub-fl { transform-origin: 33px 56px; animation: sway 3.8s ease-in-out infinite 0.3s; }
+    .shrub-fr { transform-origin: 47px 56px; animation: sway 4.2s ease-in-out infinite 1.1s; }
+
+    .umbrella { transform-origin: 65px 17px; animation: umbrellaBreeze 6s ease-in-out infinite 0.5s; }
+
+    .bird1 { animation: birdCross  18s linear infinite 2s; }
+    .bird2 { animation: birdCross2 22s linear infinite 9s; }
+
+    .cloud1 { animation: cloudDrift 55s linear infinite; }
+    .cloud2 { animation: cloudDrift 70s linear infinite 15s; }
+
+    .flag  { transform-origin: 42px 62px; animation: flagBob 4s ease-in-out infinite 1s; }
+
+    .win-glow { animation: windowGlow 4s ease-in-out infinite; }
+
+    .puff1 { animation: puff 5s ease-out infinite 0s; }
+    .puff2 { animation: puff 5s ease-out infinite 2.5s; }
+
+    .leaf1 { animation: leafFall 7s ease-in infinite 1s; }
+    .leaf2 { animation: leafFall 8s ease-in infinite 4s; }
+    .leaf3 { animation: leafFall 6s ease-in infinite 7s; }
   </style>
 </head>
 <body>
 
-<div class="eyebrow">225 Custer Ave · Colorado Springs · Static Lot Concept v1</div>
+<div class="eyebrow">225 Custer Ave · Colorado Springs · Lot Concept v2 · Isometric</div>
 
-<div class="frame">
+<div class="iso-stage">
 <!--
-  80×80 viewBox displayed at 560px → each viewBox unit = 7px.
-  A 2-unit element = 14px display. Thick enough to feel chunky/tiled.
-  Orientation: North = top (backyard), South = bottom (street).
-  Inspired by Stardew Valley / Animal Crossing map tiles.
-  Property is xeriscape (gravel/mulch), not lawn — warm tan palette.
+  The isometric illusion is done entirely with CSS 3D transform on this SVG.
+  rotateX(60deg) + rotateZ(-45deg) gives the classic 2:1 isometric dimetric look.
+  The SVG itself is drawn as a flat 80×80 top-down map — CSS does the tilt.
+
+  Orientation of the underlying flat map (before iso transform):
+    North = top  (backyard / alley)
+    South = bottom (street)
+    The iso transform makes "north" recede and "south" face the viewer.
+
+  All animations run on the flat map — they appear in iso space automatically.
 -->
 <svg
   viewBox="0 0 80 80"
-  width="560" height="560"
+  width="500" height="500"
   xmlns="http://www.w3.org/2000/svg"
 >
 <defs>
-  <!-- Xeriscape gravel — warm tan with organic pebble variation -->
+  <!-- Xeriscape gravel -->
   <pattern id="gravel" x="0" y="0" width="4" height="4" patternUnits="userSpaceOnUse">
     <rect width="4" height="4" fill="#C0A46E"/>
-    <rect x="1" y="0" width="2" height="1" fill="#B09458" opacity="0.55"/>
-    <rect x="3" y="2" width="1" height="2" fill="#CEB87A" opacity="0.45"/>
-    <rect x="0" y="3" width="2" height="1" fill="#A88C52" opacity="0.45"/>
-    <rect x="2" y="1" width="1" height="2" fill="#D0BC80" opacity="0.35"/>
-    <rect x="0" y="1" width="1" height="1" fill="#A88C52" opacity="0.25"/>
+    <rect x="1" y="0" width="2" height="1" fill="#B09458" opacity="0.5"/>
+    <rect x="3" y="2" width="1" height="2" fill="#CEB87A" opacity="0.4"/>
+    <rect x="0" y="3" width="2" height="1" fill="#A88C52" opacity="0.4"/>
+    <rect x="2" y="1" width="1" height="2" fill="#D0BC80" opacity="0.3"/>
   </pattern>
 
-  <!-- Asphalt — cool dark with subtle grain -->
+  <!-- Asphalt -->
   <pattern id="asphalt" x="0" y="0" width="4" height="3" patternUnits="userSpaceOnUse">
     <rect width="4" height="3" fill="#36363E"/>
     <rect x="0" y="1" width="3" height="1" fill="#40404A" opacity="0.4"/>
-    <rect x="1" y="0" width="2" height="1" fill="#2C2C34" opacity="0.3"/>
-    <rect x="3" y="2" width="1" height="1" fill="#44444C" opacity="0.3"/>
+    <rect x="2" y="0" width="2" height="1" fill="#2C2C34" opacity="0.3"/>
   </pattern>
 
-  <!-- Concrete — light gray with expansion joint grid -->
+  <!-- Concrete paths -->
   <pattern id="concrete" x="0" y="0" width="6" height="6" patternUnits="userSpaceOnUse">
     <rect width="6" height="6" fill="#CCCABF"/>
     <rect x="0" y="3" width="6" height="1" fill="#BAB8AC" opacity="0.5"/>
     <rect x="3" y="0" width="1" height="6" fill="#BAB8AC" opacity="0.35"/>
   </pattern>
 
-  <!-- Roof shingles — slate gray with offset rows -->
+  <!-- Roof shingles -->
   <pattern id="shingles" x="0" y="0" width="8" height="4" patternUnits="userSpaceOnUse">
     <rect width="8" height="4" fill="#686876"/>
     <rect x="0" y="0" width="4" height="2" fill="#747484" opacity="0.45"/>
@@ -91,70 +240,96 @@
     <rect x="4" y="0" width="1" height="4" fill="#565664" opacity="0.2"/>
   </pattern>
 
-  <!-- Mulch — dark brown for garden beds -->
+  <!-- Mulch -->
   <pattern id="mulch" x="0" y="0" width="3" height="3" patternUnits="userSpaceOnUse">
     <rect width="3" height="3" fill="#6A4A28"/>
     <rect x="1" y="0" width="2" height="1" fill="#7A5A32" opacity="0.5"/>
     <rect x="0" y="2" width="2" height="1" fill="#583A1C" opacity="0.5"/>
-    <rect x="2" y="1" width="1" height="2" fill="#7A5A32" opacity="0.35"/>
   </pattern>
+
+  <!-- Subtle sky gradient -->
+  <linearGradient id="skyGrad" x1="0" y1="0" x2="0" y2="1">
+    <stop offset="0%" stop-color="#1A1830"/>
+    <stop offset="100%" stop-color="#2A2848"/>
+  </linearGradient>
 </defs>
 
-<!-- ================================================================
-     CONTEXT: NEIGHBORS & STREET (muted, so lot stays focal)
-     ================================================================ -->
+<!-- ============================================================
+     SKY / ATMOSPHERE (fills behind everything)
+     ============================================================ -->
+<rect x="0" y="0" width="80" height="80" fill="url(#skyGrad)"/>
 
-<!-- Back alley / rear neighbor property -->
-<rect x="0" y="0" width="80" height="8" fill="#423D52"/>
-<!-- Neighbor structure hints — roof shapes, de-saturated -->
-<rect x="8"  y="1" width="22" height="6" fill="#504A60" rx="0"/>
-<rect x="38" y="2" width="14" height="5" fill="#504A60" rx="0"/>
-<rect x="58" y="1" width="12" height="5" fill="#4A4558" rx="0"/>
-<!-- Alley/lane dark strip -->
-<rect x="0" y="7" width="80" height="2" fill="#2C2A38" opacity="0.7"/>
+<!-- Clouds drifting (they'll look great in iso) -->
+<g class="cloud1" fill="#2E2C4A" opacity="0.5">
+  <circle cx="15" cy="5" r="2.5"/>
+  <circle cx="18" cy="4" r="3.2"/>
+  <circle cx="22" cy="5" r="2.2"/>
+  <rect x="14.5" y="5" width="8" height="2" rx="1"/>
+</g>
+<g class="cloud2" fill="#2E2C4A" opacity="0.38">
+  <circle cx="55" cy="4" r="2"/>
+  <circle cx="58" cy="3.2" r="2.5"/>
+  <circle cx="61" cy="4" r="1.8"/>
+  <rect x="54.5" y="4" width="7.5" height="1.8" rx="0.9"/>
+</g>
 
-<!-- Left neighbor lot -->
-<rect x="0" y="9" width="7" height="62" fill="#524C5E"/>
-<!-- Left neighbor structure -->
-<rect x="1" y="14" width="5" height="10" fill="#5E5870" rx="0"/>
-<rect x="1" y="26" width="5" height="6"  fill="#5E5870" rx="0" opacity="0.6"/>
+<!-- ============================================================
+     BIRDS  (cross diagonally over the scene)
+     ============================================================ -->
+<g class="bird1" stroke="#8080A0" stroke-width="0.7" fill="none" stroke-linecap="round">
+  <path d="M10,8 Q12,6 14,8"/>
+  <path d="M15,10 Q17,8 19,10"/>
+</g>
+<g class="bird2" stroke="#7070A0" stroke-width="0.6" fill="none" stroke-linecap="round" opacity="0.7">
+  <path d="M12,9 Q14,7 16,9"/>
+</g>
 
-<!-- Right neighbor lot -->
-<rect x="73" y="9" width="7" height="62" fill="#524C5E"/>
-<!-- Right neighbor structure -->
-<rect x="74" y="16" width="5" height="8" fill="#5E5870" rx="0"/>
+<!-- ============================================================
+     NEIGHBORS (muted, recede into background)
+     ============================================================ -->
+<!-- Back neighbor -->
+<rect x="0" y="0" width="80" height="8" fill="#3A384E"/>
+<rect x="8"  y="1" width="22" height="6" fill="#46445C"/>
+<rect x="38" y="2" width="14" height="5" fill="#46445C"/>
+<rect x="58" y="1" width="12" height="5" fill="#42405A"/>
+<rect x="0"  y="7" width="80" height="2" fill="#28263A" opacity="0.8"/>
 
-<!-- Street (asphalt) -->
+<!-- Left neighbor -->
+<rect x="0" y="9" width="7" height="62" fill="#48465A"/>
+<rect x="1" y="14" width="5" height="10" fill="#54526A"/>
+
+<!-- Right neighbor -->
+<rect x="73" y="9" width="7" height="62" fill="#48465A"/>
+<rect x="74" y="16" width="5" height="8" fill="#54526A"/>
+
+<!-- ============================================================
+     STREET + SIDEWALK
+     ============================================================ -->
 <rect x="0" y="73" width="80" height="7" fill="url(#asphalt)"/>
-<!-- Dashed center line -->
-<rect x="0"  y="76" width="9"  height="1" fill="#F0DC60" opacity="0.35"/>
-<rect x="13" y="76" width="9"  height="1" fill="#F0DC60" opacity="0.35"/>
-<rect x="26" y="76" width="9"  height="1" fill="#F0DC60" opacity="0.35"/>
-<rect x="39" y="76" width="9"  height="1" fill="#F0DC60" opacity="0.35"/>
-<rect x="52" y="76" width="9"  height="1" fill="#F0DC60" opacity="0.35"/>
-<rect x="65" y="76" width="9"  height="1" fill="#F0DC60" opacity="0.35"/>
-
-<!-- Curb -->
+<!-- Center line dashes -->
+<rect x="0"  y="76" width="9"  height="1" fill="#F0DC60" opacity="0.3"/>
+<rect x="13" y="76" width="9"  height="1" fill="#F0DC60" opacity="0.3"/>
+<rect x="26" y="76" width="9"  height="1" fill="#F0DC60" opacity="0.3"/>
+<rect x="39" y="76" width="9"  height="1" fill="#F0DC60" opacity="0.3"/>
+<rect x="52" y="76" width="9"  height="1" fill="#F0DC60" opacity="0.3"/>
+<rect x="65" y="76" width="9"  height="1" fill="#F0DC60" opacity="0.3"/>
+<!-- Curb + sidewalk -->
 <rect x="0" y="71" width="80" height="2" fill="#ACA8A0"/>
-<!-- Sidewalk -->
 <rect x="0" y="68" width="80" height="3" fill="#C4C0B6"/>
-<!-- Sidewalk expansion joints -->
 <rect x="20" y="68" width="1" height="3" fill="#B4B0A6" opacity="0.6"/>
 <rect x="40" y="68" width="1" height="3" fill="#B4B0A6" opacity="0.6"/>
 <rect x="60" y="68" width="1" height="3" fill="#B4B0A6" opacity="0.6"/>
 
-<!-- ================================================================
-     THE LOT
-     ================================================================ -->
-
-<!-- Main lot ground — xeriscape gravel -->
+<!-- ============================================================
+     THE LOT — xeriscape ground
+     ============================================================ -->
 <rect x="7" y="9" width="66" height="59" fill="url(#gravel)"/>
 
-<!-- Lot boundary fences -->
-<rect x="7"  y="9"  width="66" height="1" fill="#8A6A3C" opacity="0.9"/><!-- back -->
-<rect x="7"  y="9"  width="1"  height="59" fill="#8A6A3C" opacity="0.9"/><!-- left -->
-<rect x="72" y="9"  width="1"  height="59" fill="#8A6A3C" opacity="0.9"/><!-- right -->
-<!-- Fence post caps (every ~10 units) -->
+<!-- Lot fences -->
+<rect x="7"  y="9"  width="66" height="1" fill="#8A6A3C" opacity="0.9"/>
+<rect x="7"  y="9"  width="1"  height="59" fill="#8A6A3C" opacity="0.9"/>
+<rect x="72" y="9"  width="1"  height="59" fill="#8A6A3C" opacity="0.9"/>
+<!-- Fence posts -->
 <rect x="7"  y="9"  width="2" height="2" fill="#9A7A4A"/>
 <rect x="7"  y="38" width="2" height="2" fill="#9A7A4A"/>
 <rect x="7"  y="67" width="2" height="2" fill="#9A7A4A"/>
@@ -163,220 +338,221 @@
 <rect x="72" y="67" width="2" height="2" fill="#9A7A4A"/>
 <rect x="36" y="9"  width="2" height="2" fill="#9A7A4A"/>
 
-<!-- ================================================================
-     BACKYARD FEATURES (north / top of image)
-     ================================================================ -->
-
-<!-- Back garden mulch beds -->
+<!-- ============================================================
+     BACK FEATURES
+     ============================================================ -->
+<!-- Mulch garden beds -->
 <rect x="8"  y="11" width="16" height="6" fill="url(#mulch)" opacity="0.75"/>
 <rect x="30" y="10" width="16" height="4" fill="url(#mulch)" opacity="0.65"/>
 
-<!-- Back patio (northeast — concrete pavers) -->
+<!-- Back patio — concrete pavers -->
 <rect x="59" y="11" width="13" height="13" fill="url(#concrete)"/>
-<!-- Patio border / edge shadow -->
 <rect x="59" y="11" width="13" height="1" fill="#AEACA0"/>
 <rect x="59" y="11" width="1"  height="13" fill="#AEACA0"/>
-<!-- Patio outer shadow (south + east faces, isometric feel) -->
-<rect x="59" y="23" width="13" height="1" fill="#968E80" opacity="0.6"/>
-<rect x="71" y="11" width="1"  height="13" fill="#968E80" opacity="0.4"/>
+<rect x="59" y="23" width="13" height="1" fill="#968E80" opacity="0.5"/>
 
-<!-- Patio umbrella (closed/down, circle is the canopy from above) -->
-<circle cx="65" cy="16" r="4" fill="#1A4A4A" opacity="0.95"/>
-<circle cx="65" cy="16" r="3" fill="#1E5858"/>
-<circle cx="65" cy="16" r="2" fill="#246464"/>
-<circle cx="64" cy="15" r="1" fill="#2A7070" opacity="0.7"/><!-- highlight -->
-<!-- Umbrella pole -->
-<rect x="64" y="13" width="1" height="6" fill="#0C2424"/>
-<!-- Table + chairs suggestion -->
+<!-- Umbrella canopy -->
+<g class="umbrella">
+  <circle cx="65" cy="17" r="5" fill="#1A4848" opacity="0.95"/>
+  <circle cx="65" cy="17" r="4" fill="#1E5858"/>
+  <circle cx="65" cy="17" r="3" fill="#246464"/>
+  <!-- Umbrella panel lines (spokes from center) -->
+  <line x1="65" y1="17" x2="65" y2="12" stroke="#1A4848" stroke-width="0.5" opacity="0.6"/>
+  <line x1="65" y1="17" x2="70" y2="17" stroke="#1A4848" stroke-width="0.5" opacity="0.6"/>
+  <line x1="65" y1="17" x2="65" y2="22" stroke="#1A4848" stroke-width="0.5" opacity="0.6"/>
+  <line x1="65" y1="17" x2="60" y2="17" stroke="#1A4848" stroke-width="0.5" opacity="0.6"/>
+  <circle cx="64" cy="15" r="1" fill="#2E7070" opacity="0.6"/>
+  <!-- Pole -->
+  <rect x="64" y="13" width="1" height="7" fill="#0C2424"/>
+</g>
+<!-- Table + chairs -->
 <rect x="63" y="20" width="4" height="3" fill="#8A8070" opacity="0.7"/>
 <rect x="61" y="19" width="2" height="2" fill="#7A7060" opacity="0.5"/>
 <rect x="67" y="19" width="2" height="2" fill="#7A7060" opacity="0.5"/>
 <rect x="61" y="22" width="2" height="2" fill="#7A7060" opacity="0.5"/>
 <rect x="67" y="22" width="2" height="2" fill="#7A7060" opacity="0.5"/>
 
-<!-- ================================================================
+<!-- ============================================================
      PATHS
-     ================================================================ -->
+     ============================================================ -->
+<!-- East side path — runs north–south along house right -->
+<rect x="59" y="11" width="5" height="47" fill="url(#concrete)"/>
+<rect x="59" y="11" width="1" height="47" fill="#AEAC9E" opacity="0.4"/>
+<rect x="63" y="11" width="1" height="47" fill="#AEAC9E" opacity="0.35"/>
 
-<!-- East side path — runs along right side of house north→south -->
-<rect x="59" y="24" width="5" height="34" fill="url(#concrete)"/>
-<!-- The path continues north to connect to back patio -->
-<rect x="59" y="11" width="5" height="13" fill="url(#concrete)"/>
-<!-- (The patio and north path share x=59-64, so they connect seamlessly) -->
-
-<!-- Path edge shadow lines -->
-<rect x="59" y="24" width="1" height="34" fill="#AEAC9E" opacity="0.5"/>
-<rect x="63" y="24" width="1" height="34" fill="#AEAC9E" opacity="0.4"/>
-
-<!-- GATE opening in right fence (gap at ~y=36-44) -->
-<!-- The right fence has a break here — represented by a lighter fill -->
-<rect x="72" y="37" width="1" height="8" fill="#B4B0A6"/>
-<!-- Gate posts (chunky wood posts) -->
+<!-- Gate gap in right fence (y=37–45) -->
+<rect x="72" y="37" width="1" height="8" fill="#C4C0B6"/>
+<!-- Gate posts -->
 <rect x="71" y="36" width="2" height="2" fill="#7A5A2E"/>
 <rect x="71" y="44" width="2" height="2" fill="#7A5A2E"/>
+<!-- Gate bar (horizontal, partly open) -->
+<rect x="71" y="40" width="4" height="1" fill="#8A6A3E" opacity="0.7"/>
 
-<!-- Main front path — street to front door, center of lot -->
+<!-- Main front path — center street to porch -->
 <rect x="37" y="55" width="7" height="13" fill="url(#concrete)"/>
-<!-- Path edge lines -->
-<rect x="37" y="55" width="1" height="13" fill="#AEAC9E" opacity="0.55"/>
-<rect x="43" y="55" width="1" height="13" fill="#AEAC9E" opacity="0.45"/>
+<rect x="37" y="55" width="1" height="13" fill="#AEAC9E" opacity="0.5"/>
+<rect x="43" y="55" width="1" height="13" fill="#AEAC9E" opacity="0.4"/>
 
-<!-- ================================================================
-     TREES & VEGETATION
-     ================================================================ -->
+<!-- ============================================================
+     TREES — layered canopy circles, animated sway
+     ============================================================ -->
 
-<!-- ── BIG FRONT-LEFT TREE (dominant — matches aerial photo) ──
-     Large mature deciduous, spring leafy, canopy ~16 units across -->
-<!-- Ground shadow, cast south-east by overhead light -->
-<ellipse cx="20" cy="48" rx="10" ry="5" fill="#5C4820" opacity="0.18"/>
-<!-- Trunk — just a hint below the canopy -->
-<rect x="18" y="44" width="3" height="4" fill="#7A5A28"/>
-<rect x="19" y="43" width="2" height="2" fill="#6A4A1E"/>
-<!-- Canopy: layered circles, dark at base, bright at top = depth -->
-<!-- Deepest shadow / canopy floor -->
-<circle cx="19" cy="40" r="9" fill="#1E4410"/>
-<!-- Mid canopy mass -->
-<circle cx="16" cy="38" r="6" fill="#2A5A18"/>
-<circle cx="22" cy="39" r="6" fill="#2A5A18"/>
-<circle cx="19" cy="36" r="7" fill="#326618"/>
-<!-- Upper lit canopy -->
-<circle cx="15" cy="34" r="5" fill="#3E7A20"/>
-<circle cx="23" cy="35" r="5" fill="#3E7A20"/>
-<circle cx="19" cy="32" r="6" fill="#4A8A26"/>
-<!-- Top-of-canopy highlights (catching direct light) -->
-<circle cx="16" cy="30" r="4" fill="#5A9E30"/>
-<circle cx="22" cy="31" r="4" fill="#5A9E30"/>
-<circle cx="19" cy="29" r="4" fill="#6AB038"/>
-<!-- Brightest highlight cluster -->
-<circle cx="18" cy="27" r="3" fill="#7CC044"/>
-<circle cx="21" cy="28" r="3" fill="#7CC044"/>
-<circle cx="19" cy="26" r="2" fill="#90D050"/>
-<!-- Edge bounce-light pops -->
-<circle cx="11" cy="38" r="2" fill="#2A5A18"/>
-<circle cx="27" cy="40" r="2" fill="#2A5A18"/>
-<circle cx="15" cy="44" r="2" fill="#1E4410" opacity="0.8"/>
-<circle cx="23" cy="43" r="2" fill="#1E4410" opacity="0.8"/>
+<!-- BIG FRONT-LEFT TREE -->
+<g class="tree-big">
+  <!-- Ground shadow -->
+  <ellipse cx="21" cy="48" rx="10" ry="5" fill="#5C4820" opacity="0.18"
+    style="animation: shadowPulse 7s ease-in-out infinite;"/>
+  <!-- Trunk -->
+  <rect x="18" y="44" width="3" height="5" fill="#7A5A28"/>
+  <rect x="19" y="43" width="2" height="2" fill="#6A4A1E"/>
+  <!-- Canopy layers: deep shadow → mid → highlight -->
+  <circle cx="19" cy="40" r="9" fill="#1E4410"/>
+  <circle cx="16" cy="38" r="6" fill="#2A5A18"/>
+  <circle cx="22" cy="39" r="6" fill="#2A5A18"/>
+  <circle cx="19" cy="36" r="7" fill="#326618"/>
+  <circle cx="15" cy="34" r="5" fill="#3E7A20"/>
+  <circle cx="23" cy="35" r="5" fill="#3E7A20"/>
+  <circle cx="19" cy="32" r="6" fill="#4A8A26"/>
+  <circle cx="16" cy="30" r="4" fill="#5A9E30"/>
+  <circle cx="22" cy="31" r="4" fill="#5A9E30"/>
+  <circle cx="19" cy="29" r="4" fill="#6AB038"/>
+  <circle cx="18" cy="27" r="3" fill="#7CC044"/>
+  <circle cx="21" cy="28" r="3" fill="#7CC044"/>
+  <circle cx="19" cy="26" r="2" fill="#90D050"/>
+  <!-- Edge bounce -->
+  <circle cx="11" cy="38" r="2" fill="#2A5A18"/>
+  <circle cx="27" cy="40" r="2" fill="#2A5A18"/>
+  <!-- Falling leaves -->
+  <circle class="leaf1" cx="23" cy="33" r="1" fill="#6AB038"/>
+  <circle class="leaf2" cx="16" cy="36" r="1" fill="#5A9E30"/>
+  <circle class="leaf3" cx="21" cy="30" r="0.8" fill="#7CC044"/>
+</g>
 
-<!-- ── BACK-CENTER TREE (smaller, behind house) -->
-<circle cx="40" cy="15" r="5" fill="#1E4410"/>
-<circle cx="37" cy="13" r="3" fill="#326618"/>
-<circle cx="43" cy="14" r="3" fill="#326618"/>
-<circle cx="40" cy="11" r="4" fill="#4A8A26"/>
-<circle cx="39" cy="9"  r="3" fill="#5A9E30"/>
-<circle cx="41" cy="10" r="2" fill="#6AB038"/>
+<!-- BACK CENTER TREE (smaller) -->
+<g class="tree-back">
+  <rect x="39" y="18" width="2" height="3" fill="#7A5A28"/>
+  <circle cx="40" cy="17" r="5" fill="#1E4410"/>
+  <circle cx="37" cy="15" r="3" fill="#326618"/>
+  <circle cx="43" cy="15" r="3" fill="#326618"/>
+  <circle cx="40" cy="13" r="4" fill="#4A8A26"/>
+  <circle cx="39" cy="11" r="3" fill="#5A9E30"/>
+  <circle cx="41" cy="12" r="2" fill="#6AB038"/>
+  <circle cx="40" cy="10" r="2" fill="#7CC044"/>
+</g>
 
-<!-- ── BACK-LEFT SHRUBS (northwest corner) -->
-<circle cx="11" cy="15" r="4" fill="#244A14"/>
-<circle cx="10" cy="12" r="3" fill="#3A6E20"/>
-<circle cx="13" cy="14" r="3" fill="#3A6E20"/>
-<circle cx="11" cy="11" r="2" fill="#4A8226"/>
+<!-- BACK-LEFT SHRUBS -->
+<g class="tree-shrub-l">
+  <circle cx="11" cy="17" r="4" fill="#244A14"/>
+  <circle cx="10" cy="14" r="3" fill="#3A6E20"/>
+  <circle cx="13" cy="15" r="3" fill="#3A6E20"/>
+  <circle cx="11" cy="12" r="2" fill="#4A8226"/>
+  <circle cx="26" cy="14" r="3" fill="#2E621A"/>
+  <circle cx="25" cy="12" r="2" fill="#3E7222"/>
+</g>
 
-<!-- Small shrub near back-left garden bed -->
-<circle cx="26" cy="13" r="3" fill="#2E621A"/>
-<circle cx="25" cy="11" r="2" fill="#3E7222"/>
+<!-- RIGHT SIDE SHRUBS -->
+<g class="tree-shrub-r">
+  <circle cx="68" cy="28" r="3" fill="#244A14"/>
+  <circle cx="68" cy="26" r="2" fill="#3A6E20"/>
+  <circle cx="70" cy="27" r="2" fill="#3A6E20"/>
+</g>
 
-<!-- ── RIGHT-SIDE SHRUBS (near east fence, back area) -->
-<circle cx="68" cy="26" r="3" fill="#244A14"/>
-<circle cx="68" cy="24" r="2" fill="#3A6E20"/>
-<circle cx="70" cy="25" r="2" fill="#3A6E20"/>
-
-<!-- ── FRONT DOOR SHRUBS / PLANTERS (flanking porch entry) -->
-<!-- Left shrub -->
-<circle cx="33" cy="54" r="2" fill="#2A5E18" opacity="0.95"/>
-<circle cx="33" cy="53" r="1" fill="#3A7222"/>
-<!-- Left pot -->
+<!-- FRONT DOOR SHRUBS / PLANTERS -->
+<g class="shrub-fl">
+  <circle cx="33" cy="54" r="2" fill="#2A5E18"/>
+  <circle cx="33" cy="53" r="1" fill="#3A7222"/>
+</g>
 <rect x="32" y="55" width="3" height="2" fill="#8A5A38"/>
 <rect x="32" y="55" width="3" height="1" fill="#9A6A48"/>
-<!-- Right shrub -->
-<circle cx="47" cy="54" r="2" fill="#2A5E18" opacity="0.95"/>
-<circle cx="47" cy="53" r="1" fill="#3A7222"/>
-<!-- Right pot -->
+
+<g class="shrub-fr">
+  <circle cx="47" cy="54" r="2" fill="#2A5E18"/>
+  <circle cx="47" cy="53" r="1" fill="#3A7222"/>
+</g>
 <rect x="46" y="55" width="3" height="2" fill="#8A5A38"/>
 <rect x="46" y="55" width="3" height="1" fill="#9A6A48"/>
 
-<!-- ================================================================
-     HOUSE ROOF  (top-down view, hip roof with shingle texture)
-     House footprint: x=26-60, y=28-57
-     Hip roof eaves overhang the footprint by ~2u on each side
-     ================================================================ -->
+<!-- ============================================================
+     HOUSE ROOF  (hip roof, top-down flat in the iso plane)
+     ============================================================ -->
 
-<!-- Cast shadow (south + east edges, soft) -->
-<rect x="26" y="57" width="34" height="2" fill="#5C4820" opacity="0.22"/>
-<rect x="60" y="28" width="2" height="29" fill="#5C4820" opacity="0.18"/>
+<!-- Cast shadow -->
+<rect x="26" y="57" width="34" height="2" fill="#5C4820" opacity="0.2"
+  style="animation: shadowPulse 6s ease-in-out infinite 1s;"/>
+<rect x="60" y="28" width="2" height="29" fill="#5C4820" opacity="0.15"/>
 
-<!-- ── MAIN ROOF BODY ── -->
+<!-- Main roof body (shingle texture) -->
 <rect x="26" y="28" width="34" height="29" fill="url(#shingles)"/>
 
-<!-- Hip roof face shading — gives 3D top-down read -->
-<!-- North face: lightest (lit from above-north light) -->
-<polygon points="26,28 60,28 55,33 31,33" fill="#9898AC" opacity="0.45"/>
-<!-- West face: mid-lit -->
-<polygon points="26,28 26,57 31,52 31,33" fill="#808090" opacity="0.35"/>
-<!-- South face: shadow (faces viewer / south light) -->
-<polygon points="26,57 60,57 55,52 31,52" fill="#202030" opacity="0.42"/>
-<!-- East face: shadow -->
-<polygon points="60,28 60,57 55,52 55,33" fill="#202030" opacity="0.48"/>
+<!-- Hip roof face shading -->
+<polygon points="26,28 60,28 55,33 31,33" fill="#9898AC" opacity="0.45"/><!-- N face lit -->
+<polygon points="26,28 26,57 31,52 31,33" fill="#8080AA" opacity="0.38"/><!-- W face mid-lit -->
+<polygon points="26,57 60,57 55,52 31,52" fill="#181828" opacity="0.48"/><!-- S face shadow -->
+<polygon points="60,28 60,57 55,52 55,33" fill="#181828" opacity="0.52"/><!-- E face shadow -->
 
-<!-- Central roof plateau (flat or gently sloped top, between ridges) -->
+<!-- Central plateau -->
 <rect x="31" y="33" width="24" height="19" fill="#6E6E7E"/>
 
-<!-- Ridge lines (raised peak seams) -->
-<rect x="31" y="41" width="24" height="2" fill="#8E8EA0" opacity="0.65"/><!-- E–W ridge -->
-<rect x="42" y="33" width="2" height="19" fill="#8E8EA0" opacity="0.5"/><!-- N–S ridge -->
-
-<!-- Ridge cap highlight (very top of peak) -->
+<!-- Ridge lines -->
+<rect x="31" y="41" width="24" height="2" fill="#8E8EA0" opacity="0.65"/>
+<rect x="42" y="33" width="2" height="19" fill="#8E8EA0" opacity="0.5"/>
 <rect x="43" y="34" width="1" height="17" fill="#A0A0B4" opacity="0.4"/>
 <rect x="32" y="42" width="22" height="1" fill="#A0A0B4" opacity="0.35"/>
 
-<!-- Chimney (brick, south-center of roof — visible from aerial) -->
-<rect x="50" y="30" width="5" height="5" fill="#7A4838"/>
-<rect x="50" y="30" width="5" height="1" fill="#9A6050"/><!-- top cap -->
-<rect x="50" y="32" width="5" height="1" fill="#9A6050" opacity="0.5"/><!-- mortar -->
-<!-- Chimney shadow -->
-<rect x="55" y="30" width="1" height="5" fill="#28181C" opacity="0.4"/>
-<rect x="50" y="35" width="6" height="1" fill="#28181C" opacity="0.3"/>
+<!-- Windows (tiny, hinted — warm light from inside) -->
+<rect x="28" y="38" width="3" height="3" fill="#F0D870" class="win-glow" opacity="0.6"/>
+<rect x="57" y="36" width="3" height="3" fill="#F0D870" class="win-glow" opacity="0.55"
+  style="animation-delay: 1.5s;"/>
+<rect x="28" y="44" width="3" height="3" fill="#F0D870" class="win-glow" opacity="0.5"
+  style="animation-delay: 2.8s;"/>
 
-<!-- Roof vent / skylight detail -->
+<!-- Chimney -->
+<rect x="50" y="30" width="5" height="5" fill="#7A4838"/>
+<rect x="50" y="30" width="5" height="1" fill="#9A6050"/>
+<rect x="50" y="32" width="5" height="1" fill="#9A6050" opacity="0.5"/>
+<rect x="55" y="30" width="1" height="5" fill="#281818" opacity="0.4"/>
+<!-- Smoke puffs from chimney -->
+<circle class="puff1" cx="52" cy="29" r="1.5" fill="#8888A8" opacity="0.6"/>
+<circle class="puff2" cx="53" cy="28" r="1.8" fill="#9898B8" opacity="0.5"/>
+
+<!-- Roof vent -->
 <rect x="36" y="36" width="5" height="4" fill="#4E4E5E"/>
 <rect x="36" y="36" width="5" height="1" fill="#5E5E6E"/>
 
-<!-- ── FRONT PORCH ROOF (south projection, smaller roof) -->
+<!-- Front porch roof -->
 <rect x="36" y="53" width="8" height="5" fill="#626272"/>
-<!-- Porch hip shadows -->
-<polygon points="36,53 44,53 46,58 34,58" fill="#1C1C28" opacity="0.38"/>
-<polygon points="36,53 36,58 39,56 39,54" fill="#787888" opacity="0.3"/><!-- west porch face lit -->
+<polygon points="36,53 44,53 46,58 34,58" fill="#1C1C28" opacity="0.4"/>
+<polygon points="36,53 36,58 39,56 39,54" fill="#787888" opacity="0.3"/>
 
-<!-- ================================================================
-     MAILBOX (near street, front center)
-     ================================================================ -->
-<!-- Post -->
+<!-- ============================================================
+     MAILBOX + FLAG
+     ============================================================ -->
 <rect x="39" y="64" width="2" height="5" fill="#64646E" opacity="0.9"/>
-<!-- Box -->
 <rect x="37" y="62" width="6" height="3" fill="#8A8A98"/>
-<rect x="37" y="62" width="6" height="1" fill="#A0A0AE"/><!-- top -->
-<!-- Flag (up = mail) -->
-<rect x="42" y="61" width="1" height="3" fill="#64646E"/>
-<rect x="43" y="61" width="3" height="2" fill="#C84040"/>
+<rect x="37" y="62" width="6" height="1" fill="#A0A0AE"/>
+<!-- Flag -->
+<g class="flag">
+  <rect x="42" y="61" width="1" height="4" fill="#64646E"/>
+  <rect x="43" y="61" width="4" height="3" fill="#C84040"/>
+  <rect x="43" y="61" width="4" height="1" fill="#E05050"/>
+</g>
 
-<!-- ================================================================
-     COMPASS (bottom-right corner, subtle)
-     ================================================================ -->
-<rect x="67" y="65" width="10" height="10" fill="#0E0D1A" opacity="0.72" rx="1"/>
+<!-- ============================================================
+     COMPASS (subtle, corner)
+     ============================================================ -->
+<rect x="67" y="65" width="10" height="10" fill="#0E0D1A" opacity="0.7" rx="1"/>
 <text x="70.5" y="73" font-size="5" fill="#7070A0" font-family="monospace" font-weight="bold" opacity="0.7">N</text>
 <polygon points="72,66 71,69 72,68.5 73,69" fill="#7070A0" opacity="0.6"/>
-<line x1="72" y1="68.5" x2="72" y2="66" stroke="#7070A0" stroke-width="0.8" opacity="0.5"/>
 
-<!-- ================================================================
-     PROPERTY ADDRESS LABEL (top-left corner, subtle)
-     ================================================================ -->
+<!-- Address label -->
 <rect x="8" y="60" width="22" height="7" fill="#0E0D1A" opacity="0.55" rx="1"/>
 <text x="10" y="65" font-size="3.5" fill="#A090C0" font-family="monospace" opacity="0.65">225 CUSTER</text>
-<text x="10" y="69" font-size="2.8" fill="#706880" font-family="monospace" opacity="0.5">COS · CO</text>
+<text x="10" y="69" font-size="2.8"  fill="#706880" font-family="monospace" opacity="0.5">COS · CO</text>
 
 </svg>
 </div>
 
-<div class="caption">Pixel-art lot concept · spring · static v1 · not for production</div>
+<div class="caption">Isometric lot concept · animated · v2 · spring · pixel-storybook</div>
 
 </body>
 </html>
