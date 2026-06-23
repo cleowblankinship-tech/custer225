@@ -24,15 +24,12 @@ const GY = 47   // ground line in stage coords; the house's feet rest here
 const CX = 42   // horizontal center of the stage (and the house)
 
 const BARK  = '#8A6A48'
-const STEM  = '#6E8E54'
 const GRASS = '#B4D192'
 const DIRT  = '#CBB489'
 const STONE = '#B9B2A6'
 const CLOUD = '#D8CEBE'
 const BIRD  = '#9C8E7A'
 const SNOW  = '#EAF1F4'
-const SOIL  = '#A98C68'
-const FLOWER_HUES = ['#E3B23C', '#E0703F', '#8A6480', '#D6537C', '#EFE6D2']
 
 const SEASON_CANOPY = {
   spring: { fill: '#A7C77E', edge: '#7FA255', blossom: '#F2B8C6' },
@@ -85,19 +82,6 @@ function Ground({ winter }) {
       <ellipse cx={26} cy={GY + 1.6} rx="1.7" ry="0.8" fill={STONE} stroke="#9A9388" strokeWidth="0.3" />
       <ellipse cx={59} cy={GY + 2}   rx="2.1" ry="0.9" fill={STONE} stroke="#9A9388" strokeWidth="0.3" />
 
-      {!winter && (
-        <g stroke={STEM} strokeWidth="0.7" strokeLinecap="round" opacity="0.7">
-          {[14, 21, 29, 62, 69, 76].map((gx, i) => (
-            <g key={i} style={{
-              animation: `breezeSway ${5 + (i % 3)}s ease-in-out infinite ${(i % 4) * 0.4}s`,
-              transformBox: 'fill-box', transformOrigin: 'bottom center',
-            }}>
-              <line x1={gx} y1={GY} x2={gx - 0.8} y2={GY - 1.7} />
-              <line x1={gx} y1={GY} x2={gx + 0.9} y2={GY - 1.6} />
-            </g>
-          ))}
-        </g>
-      )}
     </g>
   )
 }
@@ -163,41 +147,6 @@ function Tree({ x, h, season, delay = 0, back = false }) {
   )
 }
 
-function Flower({ x, hue, h = 4, delay = 0 }) {
-  return (
-    <g style={{
-      animation: `sproutIn 0.9s ease ${delay}s both`,
-      transformBox: 'fill-box', transformOrigin: 'bottom center',
-    }}>
-      {/* nods in the breeze, hinged at the soil */}
-      <g style={{
-        animation: `breezeSway ${4.5 + (x % 4) * 0.6}s ease-in-out infinite ${(x % 5) * 0.5}s`,
-        transformBox: 'fill-box', transformOrigin: 'bottom center',
-      }}>
-        <line x1={x} y1={GY} x2={x} y2={GY - h} stroke={STEM} strokeWidth="1.1" strokeLinecap="round" />
-        <circle cx={x - 1.1} cy={GY - h * 0.55} r="0.9" fill={STEM} stroke="none" opacity="0.85" />
-        <circle cx={x} cy={GY - h} r="1.5" fill={hue} stroke="none" />
-        <circle cx={x} cy={GY - h} r="0.55" fill="#FFFDF5" stroke="none" opacity="0.6" />
-      </g>
-    </g>
-  )
-}
-
-function GardenPatch({ x, w, delay = 0 }) {
-  return (
-    <g style={{
-      animation: `sproutIn 0.9s ease ${delay}s both`,
-      transformBox: 'fill-box', transformOrigin: 'bottom center',
-    }}>
-      <ellipse cx={x} cy={GY + 0.4} rx={w / 2} ry="1.6" fill={SOIL} stroke="none" opacity="0.45" />
-      <g stroke={STEM} strokeWidth="0.9" strokeLinecap="round">
-        {[-0.3, 0, 0.32].map((f, i) => (
-          <line key={i} x1={x + f * w} y1={GY} x2={x + f * w} y2={GY - 2.2} />
-        ))}
-      </g>
-    </g>
-  )
-}
 
 function Mailbox({ x, hasMail }) {
   return (
@@ -220,19 +169,6 @@ function Mailbox({ x, hasMail }) {
   )
 }
 
-function Butterfly({ x, y, hue, dur = 6, delay = 0 }) {
-  return (
-    <g style={{ animation: `flutterPath ${dur}s ease-in-out ${delay}s infinite` }}>
-      <g transform={`translate(${x} ${y})`}>
-        <line x1="0" y1="-1.2" x2="0" y2="1.2" stroke="#5A4632" strokeWidth="0.5" />
-        <ellipse cx="-1" cy="0" rx="1.2" ry="1.6" fill={hue} stroke="none" opacity="0.9"
-          style={{ animation: 'wingFlap 0.32s ease-in-out infinite', transformBox: 'fill-box', transformOrigin: 'right center' }} />
-        <ellipse cx="1" cy="0" rx="1.2" ry="1.6" fill={hue} stroke="none" opacity="0.9"
-          style={{ animation: 'wingFlap 0.32s ease-in-out infinite', transformBox: 'fill-box', transformOrigin: 'left center' }} />
-      </g>
-    </g>
-  )
-}
 
 function BirdFlock({ dur, delay = 0, y = 9 }) {
   return (
@@ -245,21 +181,6 @@ function BirdFlock({ dur, delay = 0, y = 9 }) {
   )
 }
 
-// Each recorded booking plants a flower. Placement is deterministic by index,
-// so booking #1 always grows the same flower — the yard becomes a stable record
-// of the property's history, filling outward and to both sides over time.
-const LEFT_SPOTS  = [16, 12, 20, 9, 28, 31, 24]
-const RIGHT_SPOTS = [68, 72, 64, 75, 56, 53, 60]
-function flowerSlots(count) {
-  const slots = []
-  for (let i = 0; i < Math.min(count, 10); i++) {
-    const row = LEFT_SPOTS.length
-    const spots = i % 2 === 0 ? LEFT_SPOTS : RIGHT_SPOTS
-    const x = spots[Math.floor(i / 2) % row]
-    slots.push({ x, hue: i % FLOWER_HUES.length, h: 3 + ((i * 7) % 4) * 0.5 })
-  }
-  return slots
-}
 
 // ── The scene ─────────────────────────────────────────────────────────────────
 
@@ -269,25 +190,17 @@ export default function HouseScene({ size = 260, mood = 'calm', vitals = null, s
   const winter   = season === 'winter'
   const hasMail  = !!vitals?.hasMail
 
-  // History-driven milestones (with gentle fallbacks for a bare scene).
-  const bookings     = scene?.bookings ?? 0
   const listed       = scene?.listed ?? false
   const established  = scene?.established ?? false
-  const consistent   = scene?.consistent ?? false
   const longTerm     = scene?.longTerm ?? false
   const arrivingSoon = scene?.arrivingSoon ?? false
 
   const W = size * (84 / 40)
   const H = size * (58 / 40)
 
-  const flowers = winter ? [] : flowerSlots(bookings)
-  const isFront = x => x >= 24 && x <= 60   // flowers in the front yard vs the sides
-  // A busier property — and one expecting a guest — feels livelier (birds pass
-  // more often). The whole scene reads as more active before an arrival.
   const lively  = Math.min(activity + (arrivingSoon ? 0.35 : 0), 1)
   const birdDur = 17 - lively * 6
-  const leftTreeH  = 11 + Math.min(bookings, 16) * 0.45
-  const rightTreeH = 12 + Math.min(bookings, 16) * 0.35
+  const leftTreeH = 11 + Math.min(scene?.bookings ?? 0, 16) * 0.45
 
   return (
     <svg
@@ -302,61 +215,35 @@ export default function HouseScene({ size = 260, mood = 'calm', vitals = null, s
       style={{ display: 'block', flexShrink: 0, overflow: 'visible', ...style }}
       aria-hidden="true"
     >
-      {/* ── Sky: clouds drifting behind the rooftop ──────────────────────────── */}
+      {/* ── Clouds ───────────────────────────────────────────────────────────── */}
       <g stroke="none" fill={CLOUD}>
         <g style={{ animation: 'cloudDrift 50s linear infinite', transformBox: 'fill-box', transformOrigin: 'center' }} opacity="0.5">
           <circle cx="20" cy="7" r="2.2" /><circle cx="23" cy="6.2" r="2.7" /><circle cx="26" cy="7.1" r="2" />
           <rect x="19.5" y="7" width="7.5" height="2.2" rx="1.1" />
         </g>
-        {established && (
-          <g style={{ animation: 'cloudDrift 70s linear infinite 10s', transformBox: 'fill-box', transformOrigin: 'center' }} opacity="0.36">
-            <circle cx="56" cy="4" r="1.7" /><circle cx="58.5" cy="3.3" r="2.1" /><circle cx="61" cy="4" r="1.6" />
-            <rect x="55.8" y="4" width="5.6" height="1.8" rx="0.9" />
-          </g>
-        )}
+        <g style={{ animation: 'cloudDrift 70s linear infinite 10s', transformBox: 'fill-box', transformOrigin: 'center' }} opacity="0.3">
+          <circle cx="56" cy="4" r="1.7" /><circle cx="58.5" cy="3.3" r="2.1" /><circle cx="61" cy="4" r="1.6" />
+          <rect x="55.8" y="4" width="5.6" height="1.8" rx="0.9" />
+        </g>
       </g>
 
-      {/* ── Birds cross the whole sky once the property is established ──────── */}
-      {established && !winter && <BirdFlock dur={birdDur} y={9} />}
-      {longTerm    && !winter && <BirdFlock dur={birdDur + 6} delay={8} y={13} />}
-      {/* an extra pass when a guest is on the way — anticipation in the air */}
-      {arrivingSoon && established && !winter && <BirdFlock dur={birdDur - 2} delay={3} y={6} />}
+      {/* ── Birds ────────────────────────────────────────────────────────────── */}
+      {!winter && <BirdFlock dur={birdDur} y={9} />}
+      {longTerm && !winter && <BirdFlock dur={birdDur + 6} delay={8} y={13} />}
 
-      {/* ── The land ──────────────────────────────────────────────────────── */}
+      {/* ── Ground ───────────────────────────────────────────────────────────── */}
       <Ground winter={winter} />
 
-      {/* ── A tree behind the house adds depth at full maturity ───────────── */}
-      {longTerm && <Tree x={CX} h={17} season={season} delay={0.05} back />}
+      {/* ── Left tree (always present — it's a real feature of the lot) ──────── */}
+      <Tree x={11} h={leftTreeH} season={season} delay={0.1} />
 
-      {/* ── Flanking trees frame the house ────────────────────────────────── */}
-      {established && <Tree x={11} h={leftTreeH} season={season} delay={0.1} />}
-      {longTerm    && <Tree x={73} h={rightTreeH} season={season} delay={0.2} />}
-
-      {/* ── Garden beds, both sides as the property keeps operating ───────── */}
-      {consistent && !winter && <GardenPatch x={14} w={10} delay={0.25} />}
-      {longTerm   && !winter && <GardenPatch x={70} w={9}  delay={0.3} />}
-
-      {/* ── Side flowers (a record of bookings, framing the house) ────────── */}
-      {flowers.filter(f => !isFront(f.x)).map((f, i) => (
-        <Flower key={`fs${f.x}-${i}`} x={f.x} hue={FLOWER_HUES[f.hue]} h={f.h} delay={0.3 + i * 0.07} />
-      ))}
-
-      {/* ── Mailbox — goes up the moment the property is a real listing ───── */}
+      {/* ── Mailbox ──────────────────────────────────────────────────────────── */}
       {listed && <Mailbox x={70} hasMail={hasMail} />}
 
-      {/* ── The house — the focal character, sitting in its yard ──────────── */}
+      {/* ── House ────────────────────────────────────────────────────────────── */}
       <g transform="translate(22, 9.5)">
         <HouseArt mood={mood} vitals={vitals} windowOpacity={1} arrivingSoon={arrivingSoon} />
       </g>
-
-      {/* ── Front-yard flowers, in front of the house base ────────────────── */}
-      {flowers.filter(f => isFront(f.x)).map((f, i) => (
-        <Flower key={`ff${f.x}-${i}`} x={f.x} hue={FLOWER_HUES[f.hue]} h={f.h} delay={0.5 + i * 0.1} />
-      ))}
-
-      {/* ── Butterflies wander the beds at maturity ───────────────────────── */}
-      {consistent && !winter && <Butterfly x={20} y={31} hue="#CE8AA8" dur={6.5} />}
-      {longTerm   && !winter && <Butterfly x={64} y={28} hue="#E8B7C9" dur={7.5} delay={1.2} />}
     </svg>
   )
 }
