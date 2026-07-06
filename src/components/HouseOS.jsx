@@ -93,8 +93,8 @@ export default function HouseOS({
 
   return (
     <div style={{
-      maxWidth: 620, margin: '0 auto', width: '100%',
-      padding: '40px 24px 24px', position: 'relative',
+      maxWidth: 680, margin: '0 auto', width: '100%',
+      padding: '16px 24px 24px', position: 'relative',
       display: 'flex', flexDirection: 'column', alignItems: 'center',
     }}>
 
@@ -123,7 +123,7 @@ export default function HouseOS({
           style={{
             // The house wears its own coat — bright storybook red, independent
             // of the marigold brand chrome around it
-            color: '#D93425',
+            color: 'var(--text)',
             padding: 0,
             transform: pressed ? 'scale(0.94)' : 'scale(1)',
             transition: pressed
@@ -134,7 +134,7 @@ export default function HouseOS({
               : 'drop-shadow(0 8px 26px rgba(92,52,26,0.22))',
           }}
         >
-          <HouseScene size={250} mood={mood} vitals={vitals} scene={scene} />
+          <HouseScene size={310} mood={mood} vitals={vitals} scene={scene} />
         </button>
       </div>
 

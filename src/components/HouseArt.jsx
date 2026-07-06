@@ -1,89 +1,90 @@
 // ── HouseArt ──────────────────────────────────────────────────────────────────
 //
-// Just the building — chimney, smoke, roof, body, windows, swinging door, and
-// emergency flames. Returns a <g> in its own 40×42 coordinate space so it can
-// be dropped into the wider HouseScene stage at any position. The ground,
-// mailbox, garden, trees, and wildlife all live in HouseScene; the house stays
-// the focal character and reacts to mood + vitals.
+// Keith Haring–inspired line drawing of the house.
+// Bold outlines only — no fills except the background color behind each shape
+// so overlapping forms read clearly. Stroke is currentColor so it follows
+// the light/dark theme (black on white, white on dark).
 //
-// House elements use currentColor so they follow the house's red coat. Smoke
-// cadence follows vitals.hasGuest (the fire is lit when someone's staying).
+// Natural animations only:
+//   smoke       — chimney puffs, slow when cold, steady when a guest is in
+//   door        — swings open then settles, more eager before a check-in
+//   window glow — warm amber inside the glass only when a guest is staying
+//
+// Coordinate space: 40 × 42  (same as before, dropped into HouseScene)
 
-export default function HouseArt({ mood = 'calm', vitals = null, windowOpacity = 1, arrivingSoon = false }) {
+const SW = 3.2   // stroke weight — the thick line that defines KH style
+
+export default function HouseArt({ mood = 'calm', vitals = null, arrivingSoon = false }) {
   const hasGuest = !!vitals?.hasGuest
-
-  // Brisk when urgent, a steady curl when the fire's lit for a guest, otherwise
-  // slow, infrequent puffs from a cold flue.
-  const smokeDur     = mood === 'urgent' ? 1.3 : hasGuest ? 3.2 : 6
-  const doorAnimates = mood !== 'urgent'
-  // The door opens more eagerly when someone's expected, idle otherwise.
-  const doorDur      = mood === 'attention' ? '5.5s' : arrivingSoon ? '7s' : '11s'
+  const smokeDur = mood === 'urgent' ? 1.3 : hasGuest ? 3.0 : 6
+  const doorDur  = arrivingSoon ? '8s' : '14s'
 
   return (
-    <g>
-      {/* ── Chimney ────────────────────────────────────────────────────────── */}
-      <path d="M 26 15.5 L 26 9 L 30 9 L 30 13" />
+    <g strokeLinecap="round" strokeLinejoin="round">
 
-      {/* ── Smoke — puffs that rise then pause; two offset curls ───────────── */}
-      <g opacity="0.45" strokeWidth="1.4" fill="none">
-        <path d="M 28 9 Q 26 6.5 28 4 Q 30 1.5 28 -1"
-          style={{ animation: `smokePuff ${smokeDur}s ease-out infinite`, transformBox: 'fill-box', transformOrigin: 'bottom center' }} />
-        <path d="M 28 9 Q 26.5 6.5 28 4.5 Q 29.5 2 28 0"
-          style={{ animation: `smokePuff ${smokeDur}s ease-out infinite ${smokeDur / 2}s`, transformBox: 'fill-box', transformOrigin: 'bottom center' }} />
-      </g>
+      {/* ── Background fills — block whatever is behind so outlines read ───── */}
+      {/* Drawn first (painter's base) so the outlines sit cleanly on top.     */}
+      <rect x="23" y="7"  width="7"  height="15" fill="var(--bg)" stroke="none"/>
+      <polygon points="0,22 20,1.5 40,22"         fill="var(--bg)" stroke="none"/>
+      <rect x="3"  y="21" width="34" height="21"  fill="var(--bg)" stroke="none"/>
 
-      {/* ── Roof ──────────────────────────────────────────────────────────── */}
-      <path d="M 1 22 L 19.5 4.5 L 39 21.5" />
+      {/* ── Chimney ──────────────────────────────────────────────────────────── */}
+      <rect x="23" y="7" width="7" height="15"
+        fill="none" stroke="currentColor" strokeWidth={SW}/>
 
-      {/* ── Body ──────────────────────────────────────────────────────────── */}
-      <path d="M 5 22 L 4.5 37.5 L 35.5 37.5 L 35 22" />
+      {/* ── Roof ─────────────────────────────────────────────────────────────── */}
+      <polyline points="0,22 20,1.5 40,22"
+        fill="none" stroke="currentColor" strokeWidth={SW}/>
 
-      {/* ── Windows ───────────────────────────────────────────────────────── */}
-      {/* Warm lamplight when a guest is staying — someone's home. The glow
-          halo sits behind the frames and breathes gently. */}
+      {/* ── Body ─────────────────────────────────────────────────────────────── */}
+      <rect x="3" y="21" width="34" height="21"
+        fill="none" stroke="currentColor" strokeWidth={SW}/>
+
+      {/* ── Windows ──────────────────────────────────────────────────────────── */}
+      {/* Amber warmth inside the glass when someone is home */}
       {hasGuest && (
-        <g fill="#F6C879" stroke="none">
-          <rect x="6.1" y="23.6" width="8.3" height="7.3" rx="1.8"
-            style={{ animation: 'windowGlow 4s ease-in-out infinite', transformBox: 'fill-box' }} />
-          <rect x="25.6" y="23.6" width="8.3" height="7.3" rx="1.8"
-            style={{ animation: 'windowGlow 4s ease-in-out infinite 0.6s', transformBox: 'fill-box' }} />
+        <g fill="#FFF2CC" stroke="none">
+          <rect x="5.5"  y="24.5" width="9"   height="8"
+            style={{ animation: 'windowGlow 4s ease-in-out infinite' }} opacity="0.85"/>
+          <rect x="25.5" y="24.5" width="9"   height="8"
+            style={{ animation: 'windowGlow 4s ease-in-out infinite 0.7s' }} opacity="0.85"/>
         </g>
       )}
-      {(mood === 'attention' || mood === 'urgent') && (
-        <>
-          <rect x="7"    y="24.5" width="6.5" height="5.5" rx="1.2" fill="currentColor" stroke="none" opacity={0.22} />
-          <rect x="26.5" y="24.5" width="6.5" height="5.5" rx="1.2" fill="currentColor" stroke="none" opacity={0.22} />
-        </>
-      )}
-      <rect x="7"    y="24.5" width="6.5" height="5.5" rx="1.2" fill="currentColor" stroke="none" opacity={windowOpacity} />
-      <rect x="26.5" y="24.5" width="6.5" height="5.5" rx="1.2" fill="currentColor" stroke="none" opacity={windowOpacity} />
+      <rect x="5"  y="24" width="10" height="9"
+        fill="none" stroke="currentColor" strokeWidth={SW}/>
+      <rect x="25" y="24" width="10" height="9"
+        fill="none" stroke="currentColor" strokeWidth={SW}/>
 
-      {/* ── Door — frame stays put; the panel swings open on its left hinge ── */}
-      <path d="M 15.5 37.5 L 15.5 30.5 Q 15.5 26 19.5 26 Q 23.5 26 23.5 30.5 L 23.5 37.5"
-        fill="currentColor" stroke="none" opacity="0.12" />
-      <path d="M 15.5 37.5 L 15.5 30.5 Q 15.5 26 19.5 26 Q 23.5 26 23.5 30.5 L 23.5 37.5" />
+      {/* ── Door — arched frame stays fixed, panel swings on its left hinge ─── */}
+      <path d="M 15,42 L 15,33.5 Q 15,28 20,28 Q 25,28 25,33.5 L 25,42"
+        fill="none" stroke="currentColor" strokeWidth={SW}/>
       <g style={{
-        animation: doorAnimates ? `doorSwing ${doorDur} ease-in-out infinite` : 'none',
+        animation: `doorSwing ${doorDur} ease-in-out infinite`,
         transformBox: 'fill-box',
         transformOrigin: '0% 50%',
       }}>
-        <path d="M 16.1 37.5 L 16.1 30.7 Q 16.1 26.6 19.5 26.6 Q 22.9 26.6 22.9 30.7 L 22.9 37.5"
-          strokeWidth="1.6" opacity="0.85" />
-        <circle cx="21.9" cy="33" r="0.7" fill="currentColor" stroke="none" opacity="0.85" />
+        <path d="M 15.8,42 L 15.8,33.8 Q 15.8,28.7 20,28.7 Q 24.2,28.7 24.2,33.8 L 24.2,42"
+          fill="none" stroke="currentColor" strokeWidth="2" opacity="0.55"/>
+        {/* Knob */}
+        <circle cx="23" cy="35.5" r="0.9" fill="currentColor" stroke="none" opacity="0.45"/>
       </g>
 
-      {/* ── URGENT: flames at the left window ─────────────────────────────── */}
+      {/* ── Chimney smoke ─────────────────────────────────────────────────────── */}
+      {/* Two offset curls: one rises while the other pauses, like a real flue. */}
+      <g fill="none" stroke="currentColor" strokeWidth="1.6" opacity="0.35" strokeLinecap="round">
+        <path d="M 26.5 7 Q 24.5 4.5 26.5 2 Q 28.5 -0.5 26.5 -3"
+          style={{ animation: `smokePuff ${smokeDur}s ease-out infinite`, transformBox: 'fill-box', transformOrigin: 'bottom center' }}/>
+        <path d="M 26.5 7 Q 25 4.5 26.5 2.5 Q 28 0.5 26.5 -2"
+          style={{ animation: `smokePuff ${smokeDur}s ease-out infinite ${smokeDur / 2}s`, transformBox: 'fill-box', transformOrigin: 'bottom center' }}/>
+      </g>
+
+      {/* ── URGENT: fire at the left window ──────────────────────────────────── */}
       {mood === 'urgent' && (
         <g fill="currentColor" stroke="none">
           <path
-            d="M 8 30 C 6.5 26.5 9 23.5 8.5 21.5 C 10 24 9.5 22 11.5 20.5 C 10.5 23 12.5 22 13 20 C 13 23 14.5 25.5 13.5 30 Z"
+            d="M 8 33 C 6.5 29.5 9 26.5 8.5 24.5 C 10 27 9.5 25 11.5 23.5 C 10.5 26 12.5 25 13 23 C 13 26 14.5 28.5 13.5 33 Z"
             style={{ animation: 'flameFlicker 0.28s ease-in-out infinite alternate', transformBox: 'fill-box', transformOrigin: 'bottom center' }}
-            opacity="0.95"
-          />
-          <path
-            d="M 7 30 C 6 28 7.5 26 7 24.5 C 8 26 8 25 9 24 C 8.5 26 9.5 27.5 9 30 Z"
-            style={{ animation: 'flameFlicker 0.22s ease-in-out infinite alternate-reverse', transformBox: 'fill-box', transformOrigin: 'bottom center' }}
-            opacity="0.7"
+            opacity="0.9"
           />
         </g>
       )}
