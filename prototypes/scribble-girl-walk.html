@@ -1,0 +1,429 @@
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>ScribbleGirl — walk cycle</title>
+
+<!--
+  ScribbleGirl walk-cycle prototype
+  ---------------------------------
+  A hand-drawn stick figure rigged and animated as a loose, seamless walk.
+
+  How the rig works
+  - The six source paths are each a single unbroken limb whose FIRST `M`
+    coordinate is its joint (shoulders/hips sit at the start, hands/feet at
+    the end). We normalise their ids, then split arms + legs in code into an
+    upper/lower pair nested as
+        <g id="leg-l-upper"><path/><g id="leg-l-lower"><path/></g></g>
+    so the lower segment inherits the upper's rotation and we can add a
+    lagging knee/elbow bend on top.
+  - Every rotating element uses `transform-box: fill-box` with an explicit
+    per-element `transform-origin` placed exactly on its joint, so limbs
+    pivot at the shoulder / hip / knee / elbow rather than the bbox corner.
+  - The whole walk is driven from a single phase value, so it loops
+    seamlessly. anime.js v4 is the clock (with a rAF fallback so the file
+    still runs offline).
+
+  Tuning
+  - SPLIT_RATIOS and PARAMS at the top are meant to be tuned by eye.
+  - The on-screen panel edits them live. "joints" shows the pivots + split
+    points; "segments" colour-codes upper/lower. If a knee or elbow bends the
+    wrong way (hyperextends), flip its sign toggle.
+-->
+
+<style>
+  :root { color-scheme: light dark; }
+  * { box-sizing: border-box; }
+  html, body { height: 100%; margin: 0; }
+  body {
+    font: 14px/1.45 ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+    display: flex; gap: 28px; align-items: flex-start; justify-content: center;
+    flex-wrap: wrap; padding: 32px;
+    background: #eae3d6;
+    color: #2a2521;
+  }
+  @media (prefers-color-scheme: dark) {
+    body { background: #1d1a17; color: #e9e2d6; }
+  }
+
+  /* ── The "portrait" she lives in ─────────────────────────────────────── */
+  .stage { display: flex; flex-direction: column; align-items: center; gap: 12px; }
+  .frame {
+    background:
+      radial-gradient(120% 90% at 50% 15%, #fbf7ee 0%, #f3ebdb 60%, #e7dcc6 100%);
+    border: 14px solid #8a6a3f;
+    border-radius: 6px;
+    box-shadow:
+      inset 0 0 0 3px #d9b878,
+      inset 0 0 22px rgba(80,50,20,.28),
+      0 18px 40px rgba(0,0,0,.32);
+    padding: 10px;
+    position: relative;
+    overflow: hidden;
+  }
+  @media (prefers-color-scheme: dark) {
+    .frame {
+      background: radial-gradient(120% 90% at 50% 15%, #2b271f 0%, #221f19 70%);
+      border-color: #6f5533;
+    }
+  }
+  /* a soft floor she stands on */
+  .frame::after {
+    content: ""; position: absolute; left: 0; right: 0; bottom: 44px; height: 2px;
+    background: rgba(90,60,25,.18);
+  }
+  #sg-svg { display: block; height: min(66vh, 460px); width: auto; }
+  #sg-svg #scribble-girl { will-change: transform; }
+  .nameplate {
+    font-variant: small-caps; letter-spacing: .14em; font-weight: 600;
+    color: #6f5533; padding: 4px 14px; border-radius: 4px;
+    background: #d9b878; box-shadow: 0 2px 6px rgba(0,0,0,.25);
+  }
+  @media (prefers-color-scheme: dark) { .nameplate { background: #4a3a22; color: #d9b878; } }
+
+  /* ── Debug visuals (toggled) ─────────────────────────────────────────── */
+  #joints { visibility: hidden; }
+  body.show-joints #joints { visibility: visible; }
+  body.show-segments #arm-l-upper path { stroke: #d3453b; }
+  body.show-segments #arm-l-lower path { stroke: #f0876f; }
+  body.show-segments #arm-r-upper path { stroke: #1f7ae0; }
+  body.show-segments #arm-r-lower path { stroke: #6bb2f5; }
+  body.show-segments #leg-l-upper path { stroke: #c98a00; }
+  body.show-segments #leg-l-lower path { stroke: #f0c14b; }
+  body.show-segments #leg-r-upper path { stroke: #1f9d5b; }
+  body.show-segments #leg-r-lower path { stroke: #6bd39b; }
+
+  /* ── Control panel ───────────────────────────────────────────────────── */
+  .panel {
+    background: rgba(255,255,255,.55);
+    border: 1px solid rgba(0,0,0,.12);
+    border-radius: 14px; padding: 16px 18px; width: 300px;
+    backdrop-filter: blur(6px);
+    box-shadow: 0 10px 30px rgba(0,0,0,.14);
+  }
+  @media (prefers-color-scheme: dark) {
+    .panel { background: rgba(40,36,30,.6); border-color: rgba(255,255,255,.12); }
+  }
+  .panel h1 { font-size: 15px; margin: 0 0 2px; letter-spacing: .01em; }
+  .panel .sub { margin: 0 0 14px; opacity: .7; font-size: 12px; }
+  .row { display: grid; grid-template-columns: 92px 1fr 40px; align-items: center; gap: 8px; margin: 7px 0; }
+  .row label { font-size: 12px; opacity: .85; }
+  .row output { font-variant-numeric: tabular-nums; font-size: 12px; opacity: .7; text-align: right; }
+  input[type="range"] { width: 100%; accent-color: #c98a00; }
+  .toggles { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 14px; }
+  .toggles button {
+    font: inherit; font-size: 12px; cursor: pointer;
+    padding: 6px 10px; border-radius: 999px;
+    border: 1px solid rgba(0,0,0,.2); background: transparent; color: inherit;
+  }
+  .toggles button[aria-pressed="true"] { background: #c98a00; border-color: #c98a00; color: #241c08; }
+  .hint { margin-top: 14px; font-size: 11px; opacity: .62; line-height: 1.5; }
+  code { background: rgba(0,0,0,.08); padding: 1px 5px; border-radius: 4px; }
+  @media (prefers-color-scheme: dark) { code { background: rgba(255,255,255,.1); } }
+</style>
+
+<div class="stage">
+  <div class="frame">
+    <!-- viewBox is the artist's original; strokes inherit from #scribble-girl -->
+    <svg id="sg-svg" viewBox="0 0 200 411" xmlns="http://www.w3.org/2000/svg">
+      <g id="scribble-girl" fill="none" stroke="black" stroke-width="8"
+         stroke-linecap="round" stroke-linejoin="round">
+        <path id="torso" d="M94.5904 131.846C94.5904 141.096 95.2504 160.486 96.4204 166.316C98.7541 177.945 98.2504 183.486 98.7554 196.961C99.3964 214.065 100.25 240.826 100.755 245.661C101.198 249.896 102.25 254.486 102.755 269.786C102.911 274.51 103.59 287.066 103.425 304.726C102.59 316.156 102.26 321.836 101.76 325.151C101.59 327.476 101.59 331.106 102.59 335.846"/>
+        <path id="arm-l" d="M95.5904 205.846C92.6104 205.846 85.9504 207.166 81.6054 208.841C77.5584 210.401 73.6104 213.826 67.7904 216.831C54.7849 223.546 49.9504 224.506 45.4404 226.006C42.9504 227.166 40.6004 228.506 38.6054 229.671C37.6004 230.176 36.6104 230.506 33.5904 231.846"/>
+        <path id="arm-r" d="M102.59 206.846C106.389 206.846 120.935 208.909 129.528 212.045C133.872 213.631 138.048 215.174 142.227 216.866C146.548 218.615 151.613 220.377 157.003 221.815C163.102 223.768 167.265 226.362 170.74 229.092C172.149 230.276 172.837 231.049 174.59 231.846"/>
+        <path id="head" d="M95.5904 117.846C95.5904 117.516 95.5904 117.186 95.5904 103.156C95.5904 89.1261 95.5904 61.4061 95.5904 58.3461C95.5904 55.2861 95.5904 77.7261 95.2604 91.7611C94.8135 110.767 93.2604 117.166 91.9354 119.496C91.2345 120.729 89.2904 121.166 87.7804 121.176C81.3674 121.219 74.6304 108.586 69.9354 97.7111C69.153 95.8988 68.9304 94.8661 69.4204 94.8511C78.0294 94.5876 97.4704 106.486 108.9 107.186C111.717 107.359 111.92 102.856 112.42 100.696C112.983 98.2646 111.93 95.8561 110.435 93.8611C106.97 89.2372 101.61 85.8661 97.6054 83.6861C96.6195 83.1495 95.6104 82.5261 96.5854 81.5261C99.7803 78.2493 104.91 76.5261 107.24 73.7011C111.717 68.2736 110.59 60.5461 108.27 54.2011C105.82 47.4996 94.6304 46.5261 81.6404 46.1761C72.5461 45.9311 66.9504 52.8261 55.1354 58.1611C52.6467 59.2849 51.6104 59.5061 51.9254 60.1711C52.2404 60.8361 53.8904 61.8261 69.0954 62.8311C84.3004 63.8361 113.01 64.8261 129.45 65.6661C145.89 66.5061 149.19 67.1661 149.405 67.5061C154.104 74.9361 124.69 61.2261 114.945 55.8611C112.255 54.38 110.93 51.5261 109.765 48.8661C108.647 46.3124 108.92 43.1961 109.915 40.2011C110.818 37.4851 114.24 35.8561 117.73 34.1911C121.295 32.4903 125.24 33.5061 128.73 35.1661C132.766 37.0859 135.58 40.8261 137.575 45.1461C139.825 50.0166 140.26 59.7761 139.1 72.0911C138.231 81.3181 132.95 88.8061 127.3 96.4561C116.215 111.465 98.9904 115.826 86.3104 117.676C82.3487 118.254 77.0304 117.846 73.4854 117.186C60.1764 114.708 55.2904 88.9061 50.6054 82.8611C49.7347 81.7377 48.6104 80.8661 48.1004 81.3461C47.5904 81.8261 47.5904 83.8061 48.5804 86.3111C49.5704 88.8161 51.5504 91.7861 60.1604 100.576C68.7704 109.366 83.9504 123.886 91.1104 128.891C98.2704 133.896 96.9504 128.946 96.1054 125.241C92.462 109.266 95.2504 88.8861 95.5904 78.2111C95.8112 71.2782 99.5704 105.106 106.055 119.456C110.661 129.648 119.24 133.506 122.565 134.671C125.801 135.805 129.24 135.846 132.235 135.516C134.756 135.238 136.58 132.856 138.41 130.036C140.977 126.081 140.59 121.856 139.93 119.861C139.048 117.193 123.06 116.846 99.5904 116.351C83.6447 116.015 76.6004 113.516 74.9354 112.521C69.4014 109.214 72.2704 90.9261 72.2504 69.9161C72.2468 66.1282 74.2304 65.5261 76.2304 65.1861C78.2304 64.8461 80.8704 64.8461 82.3954 65.5061C83.9204 66.1661 84.2504 67.4861 82.9354 70.4761C81.6204 73.4661 78.6504 78.0861 70.6854 86.9011C62.7204 95.7161 49.8504 108.586 42.5604 115.711C32.0617 125.972 30.2604 129.166 29.9254 131.661C29.769 132.826 30.2504 133.826 31.0804 134.501C32.9217 135.999 36.5704 135.846 40.8904 135.516C45.9531 135.129 55.5204 127.576 68.1654 115.601C87.4358 97.3518 92.5804 86.1861 94.4104 85.6811C95.2338 85.4539 95.9104 86.8261 96.0854 88.4911C96.5012 92.4474 93.2804 101.446 87.9654 114.416C78.3607 137.854 68.6004 143.836 67.9254 143.851C63.5192 143.949 75.2204 131.896 85.8354 119.281C92.5123 111.346 103.05 101.386 109.97 94.7961C127.035 78.5451 138.91 73.1861 141.075 71.5261C142.114 70.7295 142.25 69.2061 141.1 67.7011C138.106 63.7828 131.62 61.5261 121.345 56.0611C113.93 52.1171 102.49 44.9861 93.4054 40.2611C78.421 32.4679 68.6204 30.1861 64.7804 30.0111C62.6007 29.9118 68.5704 35.4961 78.6654 42.9461C100.612 59.1428 115.92 69.8361 115.265 71.5011C114.004 74.7069 102.33 72.1861 87.2054 70.0311C70.8128 67.6955 58.6304 62.1961 50.1554 58.3761C33.722 50.969 30.6004 47.5161 29.2654 48.1711C18.5035 53.4513 40.2304 76.4661 48.2254 86.9761C51.2978 91.015 55.5704 92.5061 61.2104 93.8361C70.0075 95.9106 84.5004 95.8461 99.4854 95.3511C113.522 94.8875 119.23 91.8461 125.565 91.0161C133.181 90.0184 141.23 94.8261 145.575 98.6661C146.557 99.5335 147.57 100.166 147.42 100.671C146.939 102.292 141.62 100.526 130.85 97.7011C110.941 92.4788 91.9804 91.1961 82.6554 88.2011C77.0846 86.4119 74.2704 83.8561 72.1054 81.8611C70.4027 80.2922 70.5904 77.5261 70.7554 74.7011C71.155 67.8601 78.8904 61.5461 93.0304 51.5511C96.7228 48.9412 100.19 47.5461 102.385 46.6961C104.58 45.8461 105.57 45.8461 104.595 64.9861C103.62 84.1261 100.65 122.406 98.9554 142.786C97.2604 163.166 96.9304 164.486 96.5954 164.176C94.8452 162.557 95.5904 156.216 98.3954 136.526C100.695 120.386 106.81 92.0861 109.7 74.6611C114.914 43.2274 110.59 33.5461 109.76 28.8611C108.942 24.2414 107.27 17.5461 105.595 11.0361C104.871 8.22076 104.26 5.85614 103.1 4.68614C99.5891 1.14453 91.9704 12.1461 81.2954 18.6561C73.2772 23.5459 67.9504 31.8061 65.7604 40.9761C63.3929 50.8891 70.2304 60.4661 81.2154 75.6211C88.2433 85.3169 87.5904 102.406 85.4354 114.646C83.8923 123.411 75.9704 136.086 70.1104 144.826C67.6711 148.464 63.6004 149.176 61.6054 149.511C60.6143 149.678 59.6104 149.186 59.1004 148.521C58.0465 147.147 59.2504 144.196 61.2404 140.541C63.8409 135.765 70.2204 131.206 78.1954 125.886C87.1048 119.943 97.5404 115.866 107.35 112.371C116.587 109.08 132.81 108.186 151.46 107.516C166.701 106.969 169.58 111.176 171.575 111.511C172.567 111.678 173.57 111.186 173.585 110.191C173.683 103.731 158.67 99.8761 139.08 94.2211C112.841 86.6467 94.6104 86.1861 90.7854 85.0211C87.3479 83.9742 84.6004 83.5161 84.2554 82.8511C82.8605 80.1625 105.1 81.8461 129.425 82.0111C139.902 82.0822 142.58 82.8461 143.585 82.0211C145.641 80.3333 133.67 74.8761 117.215 69.5511C100.186 64.0403 82.6704 63.8461 68.3604 64.1761C51.1583 64.5728 47.6004 66.8461 45.6054 67.8361C38.4871 71.3685 36.6104 79.1661 30.9504 80.6761C29.011 81.1935 26.3104 80.8461 26.1054 81.1761C24.8779 83.1521 34.5504 82.8461 45.8304 82.0211C53.1771 81.4838 63.7104 79.5461 76.0804 76.7161C102.493 70.6736 118.9 64.8561 123.39 63.1911C131.366 60.2334 138.23 56.8661 143.9 53.0261C149.979 48.9096 156.23 50.1861 160.575 49.6811C161.587 49.5636 162.57 49.1861 162.42 48.8511C160.45 44.4498 148.97 52.4861 139.79 59.4861C137.61 61.1661 135.63 62.4861 133.455 64.3211C131.28 66.1561 128.97 68.4661 126.59 72.8461"/>
+        <path id="leg-l" d="M99.5904 335.846C99.2604 337.836 97.9304 341.826 94.7704 346.661C91.3959 351.824 85.6104 357.486 81.4404 360.836C77.0011 364.402 72.6104 367.826 63.6254 376.646C58.7731 381.409 54.2704 384.826 52.2654 390.156C49.2604 396.836 47.9304 399.836 46.7654 401.831C46.2604 402.836 45.9304 403.826 45.5904 406.846"/>
+        <path id="leg-r" d="M104.59 338.846C108.24 339.506 114.89 342.826 120.735 346.831C126.807 350.991 131.57 354.826 135.41 358.001C139.444 361.336 145.87 373.426 154.395 383.156C161.24 386.836 167.23 391.486 171.395 395.981C172.92 397.836 173.25 398.826 174.59 399.846"/>
+
+        <!-- debug pivots + split points, filled by JS -->
+        <g id="joints"></g>
+      </g>
+    </svg>
+  </div>
+  <div class="nameplate">ScribbleGirl</div>
+</div>
+
+<div class="panel">
+  <h1>Walk tuning</h1>
+  <p class="sub">Loose, hand-drawn — nudge until it reads right.</p>
+  <div id="sliders"></div>
+  <div class="toggles">
+    <button id="t-play"      aria-pressed="true">▮▮ pause</button>
+    <button id="t-dir"       aria-pressed="false">⇄ face left</button>
+    <button id="t-kneeSign"  aria-pressed="false">flip knees</button>
+    <button id="t-elbowSign" aria-pressed="false">flip elbows</button>
+    <button id="t-joints"    aria-pressed="false">joints</button>
+    <button id="t-segments"  aria-pressed="false">segments</button>
+  </div>
+  <p class="hint">
+    Legs split at <code>55%</code>, arms at <code>50%</code> from the joint —
+    edit <code>SPLIT_RATIOS</code> in the source. If a knee/elbow bends the
+    wrong way, hit <em>flip</em>.
+  </p>
+</div>
+
+<script type="module">
+/* ───────────────────────── tunable constants ───────────────────────── */
+
+// Where each limb breaks into upper/lower, measured from the joint (0) to
+// the tip (1). Exposed so they can be tuned by eye.
+const SPLIT_RATIOS = { leg: 0.55, arm: 0.50 };
+
+// Source paths in document order → normalised ids.
+const LIMB_ORDER = ['torso', 'arm-l', 'arm-r', 'head', 'leg-l', 'leg-r'];
+
+// Walk parameters. All angles in degrees; period in ms. Live-editable below.
+const PARAMS = {
+  period:    980,   // ms for one full stride (both feet)
+  thighAmp:  15,    // upper-leg swing
+  kneeAmp:   24,    // lower-leg bend (one-directional)
+  kneeLag:   0.11,  // knee trails the thigh by this fraction of a cycle
+  armAmp:    17,    // upper-arm swing (counter to same-side leg)
+  elbowAmp:  20,    // forearm bend (one-directional)
+  elbowLag:  0.09,
+  headAmp:   2.4,   // deliberately under-natural — the head reads as heavy
+  torsoAmp:  2.0,   // gentle counter-sway of the trunk
+  bobAmp:    5.0,   // vertical bob (runs at 2× stride frequency)
+  overshoot: 0.12,  // 2nd-harmonic — gives the swing a loose overshoot
+  asym:      0.06,  // small left/right amplitude imbalance
+};
+
+// One-directional bend signs. Knees may only fold backward, elbows only
+// forward; if the default folds the wrong way, flip the sign (UI toggle).
+const SIGNS = { knee: -1, elbow: 1 };
+
+let direction = 1; // +1 faces right, -1 faces left (mirrored via scaleX)
+
+const TWO_PI = Math.PI * 2;
+const NS = 'http://www.w3.org/2000/svg';
+const clamp01 = x => Math.max(0, x);
+
+/* ───────────────────────── rig construction ────────────────────────── */
+
+const svg     = document.getElementById('sg-svg');
+const wrapper = document.getElementById('scribble-girl');
+const jointsG = document.getElementById('joints');
+
+// Normalise ids in document order (defensive — markup already uses them).
+[...wrapper.querySelectorAll(':scope > path')].forEach((p, i) => {
+  if (LIMB_ORDER[i]) p.id = LIMB_ORDER[i];
+});
+
+const debugDots = []; // {x, y, kind}
+
+// Rotate `el` about the SVG-space point `pt`, using fill-box so the origin is
+// relative to the element's own geometry bbox.
+function pivotAt(el, pt) {
+  const bb = el.getBBox();
+  el.style.transformBox = 'fill-box';
+  el.style.transformOrigin = `${pt.x - bb.x}px ${pt.y - bb.y}px`;
+}
+
+// Sample a sub-stretch of `path` (between arc-lengths a→b) as a polyline.
+// Direction-agnostic: b may be less than a. At stroke-width 8 the straight
+// segments are indistinguishable from the original curve.
+function samplePath(path, a, b, step = 2) {
+  const dir = b >= a ? 1 : -1;
+  const pts = [];
+  for (let s = a; dir > 0 ? s < b : s > b; s += dir * step) {
+    const p = path.getPointAtLength(s);
+    pts.push(p);
+  }
+  const end = path.getPointAtLength(b);
+  pts.push(end);
+  return pts.map((p, i) =>
+    `${i ? 'L' : 'M'} ${p.x.toFixed(2)} ${p.y.toFixed(2)}`).join(' ');
+}
+
+// Split one limb into nested upper/lower groups pivoting at joint and knee.
+// The root (joint) end is verified rather than assumed: we take the endpoint
+// nearer the body's top. For this asset that always equals the first `M`, but
+// this keeps working if a limb were authored tip-to-joint.
+function splitLimb(id, ratio) {
+  const path = document.getElementById(id);
+  const L = path.getTotalLength();
+  const A = path.getPointAtLength(0);
+  const B = path.getPointAtLength(L);
+  const rootAtStart = A.y <= B.y;          // higher point = shoulder/hip
+
+  const joint     = rootAtStart ? A : B;
+  const rootLen   = rootAtStart ? 0 : L;
+  const tipLen    = rootAtStart ? L : 0;
+  const splitLen  = rootAtStart ? L * ratio : L * (1 - ratio);
+  const knee      = path.getPointAtLength(splitLen);
+
+  const upperD = samplePath(path, rootLen, splitLen);
+  const lowerD = samplePath(path, splitLen, tipLen);
+
+  const mk = (tag, attrs) => {
+    const e = document.createElementNS(NS, tag);
+    for (const k in attrs) e.setAttribute(k, attrs[k]);
+    return e;
+  };
+  const upperG = mk('g', { id: `${id}-upper` });
+  const lowerG = mk('g', { id: `${id}-lower` });
+  lowerG.appendChild(mk('path', { d: lowerD }));
+  upperG.appendChild(mk('path', { d: upperD }));
+  upperG.appendChild(lowerG);           // nest → lower inherits upper rotation
+  path.replaceWith(upperG);
+
+  pivotAt(upperG, joint);
+  pivotAt(lowerG, knee);
+  // NB: SVGPoint x/y are prototype accessors, not own properties — copy by hand.
+  debugDots.push({ x: joint.x, y: joint.y, kind: 'joint' },
+                 { x: knee.x,  y: knee.y,  kind: 'knee' });
+
+  return { upperG, lowerG };
+}
+
+// Split the four limbs; head + torso stay single paths.
+const legL = splitLimb('leg-l', SPLIT_RATIOS.leg);
+const legR = splitLimb('leg-r', SPLIT_RATIOS.leg);
+const armL = splitLimb('arm-l', SPLIT_RATIOS.arm);
+const armR = splitLimb('arm-r', SPLIT_RATIOS.arm);
+
+// Head + torso pivot at their own joint (first M / higher endpoint).
+const headEl  = document.getElementById('head');
+const torsoEl = document.getElementById('torso');
+(() => {
+  const hj = headEl.getPointAtLength(0);
+  pivotAt(headEl, hj);
+  debugDots.push({ x: hj.x, y: hj.y, kind: 'joint' });
+  const tL = torsoEl.getTotalLength();
+  const a = torsoEl.getPointAtLength(0), b = torsoEl.getPointAtLength(tL);
+  const tj = a.y <= b.y ? a : b;
+  pivotAt(torsoEl, tj);
+  debugDots.push({ x: tj.x, y: tj.y, kind: 'joint' });
+})();
+
+// Wrapper flips + bobs around its own centre.
+wrapper.style.transformBox = 'fill-box';
+wrapper.style.transformOrigin = '50% 50%';
+
+// Debug pivot markers.
+for (const d of debugDots) {
+  const c = document.createElementNS(NS, 'circle');
+  c.setAttribute('cx', d.x); c.setAttribute('cy', d.y);
+  c.setAttribute('r', d.kind === 'joint' ? 4.5 : 3.5);
+  c.setAttribute('fill', d.kind === 'joint' ? '#e0322b' : '#1f8ae0');
+  c.setAttribute('stroke', 'white'); c.setAttribute('stroke-width', '1.2');
+  jointsG.appendChild(c);
+}
+
+/* ───────────────────────── the walk itself ─────────────────────────── */
+
+// Loose swing: a sine plus a small phase-shifted 2nd harmonic. The harmonic
+// makes the limb overshoot slightly on the forward reach — hand-drawn, not
+// mechanical — while staying perfectly periodic (seamless loop).
+function swing(th, phase) {
+  return Math.sin(th + phase) + PARAMS.overshoot * Math.sin(2 * (th + phase) + 0.6);
+}
+
+// One-directional secondary bend (knee/elbow), trailing the primary swing by
+// `lag`. clamp01 keeps it folding one way only — no hyperextension.
+function bend(th, phase, lag) {
+  return clamp01(Math.sin(th + phase - TWO_PI * lag));
+}
+
+let phase = 0, lastT = null, running = true;
+
+function tick(elapsedMs) {
+  if (lastT === null) lastT = elapsedMs;
+  const dt = elapsedMs - lastT;
+  lastT = elapsedMs;
+  if (!running) return;
+
+  phase = (phase + dt / PARAMS.period) % 1;
+  const th = phase * TWO_PI;
+
+  // Legs: opposed by half a period. A touch of asymmetry L vs R.
+  const thighL = PARAMS.thighAmp * (1 + PARAMS.asym) * swing(th, 0);
+  const thighR = PARAMS.thighAmp * (1 - PARAMS.asym) * swing(th, Math.PI);
+  const kneeL  = PARAMS.kneeAmp * SIGNS.knee * bend(th, 0, PARAMS.kneeLag);
+  const kneeR  = PARAMS.kneeAmp * SIGNS.knee * bend(th, Math.PI, PARAMS.kneeLag);
+
+  // Arms: counter the same-side leg, so arm-l opposes leg-l (and arm-l is
+  // half a period off arm-r).
+  const upperArmL = PARAMS.armAmp * swing(th, Math.PI);
+  const upperArmR = PARAMS.armAmp * swing(th, 0);
+  const elbowL    = PARAMS.elbowAmp * SIGNS.elbow * bend(th, Math.PI, PARAMS.elbowLag);
+  const elbowR    = PARAMS.elbowAmp * SIGNS.elbow * bend(th, 0, PARAMS.elbowLag);
+
+  // Head is heavy → understated. Torso counter-sways a hair.
+  const head  = PARAMS.headAmp  * Math.sin(th);
+  const torso = PARAMS.torsoAmp * Math.sin(th + Math.PI);
+
+  // Vertical bob at 2× stride frequency.
+  const yBob = -PARAMS.bobAmp * Math.cos(2 * th);
+
+  legL.upperG.style.transform = `rotate(${thighL}deg)`;
+  legL.lowerG.style.transform = `rotate(${kneeL}deg)`;
+  legR.upperG.style.transform = `rotate(${thighR}deg)`;
+  legR.lowerG.style.transform = `rotate(${kneeR}deg)`;
+  armL.upperG.style.transform = `rotate(${upperArmL}deg)`;
+  armL.lowerG.style.transform = `rotate(${elbowL}deg)`;
+  armR.upperG.style.transform = `rotate(${upperArmR}deg)`;
+  armR.lowerG.style.transform = `rotate(${elbowR}deg)`;
+  headEl.style.transform  = `rotate(${head}deg)`;
+  torsoEl.style.transform = `rotate(${torso}deg)`;
+  wrapper.style.transform = `scaleX(${direction}) translateY(${yBob}px)`;
+}
+
+/* ── anime.js v4 as the clock (rAF fallback so the file runs offline) ── */
+(async () => {
+  try {
+    const { createTimer } = await import('https://cdn.jsdelivr.net/npm/animejs@4.0.2/+esm');
+    createTimer({ duration: 1e12, onUpdate: self => tick(self.currentTime) });
+  } catch (err) {
+    console.warn('anime.js unavailable — using requestAnimationFrame fallback.', err);
+    const t0 = performance.now();
+    const loop = now => { tick(now - t0); requestAnimationFrame(loop); };
+    requestAnimationFrame(loop);
+  }
+})();
+
+/* ───────────────────────── control panel ───────────────────────────── */
+
+const SLIDERS = [
+  ['period',    400, 1800, 10],
+  ['thighAmp',  0,   40,   1],
+  ['kneeAmp',   0,   60,   1],
+  ['kneeLag',   0,   0.35, 0.005],
+  ['armAmp',    0,   40,   1],
+  ['elbowAmp',  0,   50,   1],
+  ['elbowLag',  0,   0.35, 0.005],
+  ['headAmp',   0,   12,   0.2],
+  ['torsoAmp',  0,   10,   0.2],
+  ['bobAmp',    0,   16,   0.5],
+  ['overshoot', 0,   0.4,  0.01],
+  ['asym',      0,   0.3,  0.01],
+];
+const slidersHost = document.getElementById('sliders');
+for (const [key, min, max, step] of SLIDERS) {
+  const row = document.createElement('div');
+  row.className = 'row';
+  row.innerHTML =
+    `<label for="s-${key}">${key}</label>` +
+    `<input id="s-${key}" type="range" min="${min}" max="${max}" step="${step}" value="${PARAMS[key]}">` +
+    `<output id="o-${key}">${PARAMS[key]}</output>`;
+  slidersHost.appendChild(row);
+  const input = row.querySelector('input');
+  const out = row.querySelector('output');
+  input.addEventListener('input', () => {
+    PARAMS[key] = parseFloat(input.value);
+    out.textContent = PARAMS[key];
+  });
+}
+
+function toggle(btnId, onChange, pressed = false) {
+  const b = document.getElementById(btnId);
+  let state = pressed;
+  const apply = () => { b.setAttribute('aria-pressed', String(state)); onChange(state); };
+  b.addEventListener('click', () => { state = !state; apply(); });
+  apply();
+}
+toggle('t-play',      s => { running = s; document.getElementById('t-play').textContent = s ? '▮▮ pause' : '▶ play'; }, true);
+toggle('t-dir',       s => { direction = s ? -1 : 1; }, false);
+toggle('t-kneeSign',  s => { SIGNS.knee  = s ? 1 : -1; }, false);
+toggle('t-elbowSign', s => { SIGNS.elbow = s ? -1 : 1; }, false);
+toggle('t-joints',    s => document.body.classList.toggle('show-joints', s), false);
+toggle('t-segments',  s => document.body.classList.toggle('show-segments', s), false);
+</script>
