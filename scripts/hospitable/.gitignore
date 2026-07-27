@@ -1,0 +1,4 @@
+# Never commit real credentials or captured screenshots of your account
+.env
+screenshots/*.png
+node_modules/
