@@ -281,6 +281,22 @@ input::placeholder, textarea::placeholder { color: var(--text3); }
 /* Mobile-only elements — visible on phones, hidden on desktop */
 .mobile-only { display: block; }
 
+/* ── Home conversation transcript ────────────────────────────────────────────
+   By default (phones + narrow screens) the conversation stacks below the house,
+   centered under the input. On wide screens it moves into the empty space
+   beside the house — see the ≥1100px rule below.                              */
+.house-transcript {
+  width: 100%;
+  max-width: 520px;
+  margin: 4px auto 0;
+  padding: 0 24px;
+}
+
+.house-transcript-scroll {
+  display: flex;
+  flex-direction: column;
+}
+
 /* ── Desktop nav: hidden on mobile, shown via JS className on ≥768px ─────── */
 .desktop-nav { display: none; }
 
@@ -327,4 +343,39 @@ input::placeholder, textarea::placeholder { color: var(--text3); }
 
   /* Mobile-only elements are hidden on desktop */
   .mobile-only { display: none !important; }
+}
+
+/* ── Wide screens: the conversation sits beside the house ─────────────────────
+   The house column stays centered (equal 1fr gutters); the transcript fills the
+   left gutter, right-aligned toward the house, and sticks as you scroll.       */
+@media (min-width: 1100px) {
+  .house-os {
+    display: grid;
+    grid-template-columns: 1fr minmax(0, 620px) 1fr;
+    align-items: start;
+    gap: 20px;
+  }
+
+  .house-os__main {
+    grid-column: 2;
+    grid-row: 1;
+  }
+
+  .house-transcript {
+    grid-column: 1;
+    grid-row: 1;
+    justify-self: end;
+    width: 340px;
+    max-width: 340px;
+    margin: 56px 0 0;
+    padding: 0;
+    position: sticky;
+    top: 24px;
+  }
+
+  .house-transcript-scroll {
+    max-height: calc(100vh - 180px);
+    overflow-y: auto;
+    padding-right: 4px;
+  }
 }

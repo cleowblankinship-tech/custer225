@@ -1,5 +1,20 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import HouseScene from './HouseScene'
+
+// Where the running conversation lives between visits, so you can always see
+// what you've been asking the house.
+const CHAT_KEY = 'custer225_chat_v1'
+const CHAT_MAX = 40
+
+function loadChat() {
+  try {
+    const raw = localStorage.getItem(CHAT_KEY)
+    const arr = raw ? JSON.parse(raw) : []
+    return Array.isArray(arr) ? arr.slice(-CHAT_MAX) : []
+  } catch {
+    return []
+  }
+}
 
 // ── HouseOS ───────────────────────────────────────────────────────────────────
 //
@@ -40,6 +55,92 @@ function useTypewriter(target, msPerChar = 14) {
   return output
 }
 
+// ── Transcript ────────────────────────────────────────────────────────────────
+//
+// The running record of the conversation, tucked into the space beside the
+// house on wide screens and stacked below the input on phones. Your questions
+// sit on the right in the house's warm accent; its replies answer back on the
+// left. It scrolls to the newest exchange as you talk.
+function Transcript({ items, onNavigate, onClear }) {
+  const endRef = useRef(null)
+
+  useEffect(() => {
+    endRef.current?.scrollIntoView({ block: 'nearest' })
+  }, [items.length])
+
+  if (!items.length) return null
+
+  return (
+    <div className="house-transcript" aria-label="Conversation with the house">
+      <div style={{
+        display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+        marginBottom: 10, padding: '0 2px',
+      }}>
+        <span style={{
+          fontSize: 10, fontWeight: 700, letterSpacing: '0.12em',
+          textTransform: 'uppercase', color: 'var(--text3)',
+        }}>
+          Our conversation
+        </span>
+        <button
+          onClick={onClear}
+          title="Clear conversation"
+          style={{ fontSize: 10, fontWeight: 600, color: 'var(--text3)', padding: '2px 4px' }}
+        >
+          Clear
+        </button>
+      </div>
+
+      <div className="house-transcript-scroll">
+        {items.map(m => (
+          <div key={m.id} style={{ display: 'flex', flexDirection: 'column', gap: 6, marginBottom: 14 }}>
+            {/* You asked */}
+            <div style={{
+              alignSelf: 'flex-end', maxWidth: '90%',
+              background: 'var(--accent)', color: '#FFF5F7',
+              fontSize: 13, lineHeight: 1.4, fontWeight: 500,
+              padding: '8px 12px',
+              borderRadius: '14px 14px 4px 14px',
+            }}>
+              {m.q}
+            </div>
+
+            {/* The house answered */}
+            <div style={{
+              alignSelf: 'flex-start', maxWidth: '92%',
+              background: 'var(--bubble-bg)', border: '1px solid var(--border)',
+              color: 'var(--text)', fontSize: 13, lineHeight: 1.45,
+              padding: '8px 12px',
+              borderRadius: '14px 14px 14px 4px',
+            }}>
+              {m.a}
+              {m.view && (
+                <button
+                  onClick={() => onNavigate?.(m.view)}
+                  style={{
+                    display: 'block', marginTop: 6,
+                    fontSize: 11, fontWeight: 700, color: 'var(--accent)',
+                  }}
+                >
+                  {m.viewLabel} →
+                </button>
+              )}
+              {m.source === 'ai' && (
+                <span title="Answered by the AI house" style={{
+                  display: 'block', marginTop: 4, fontSize: 10, color: 'var(--text3)',
+                }}>
+                  ✦
+                </span>
+              )}
+            </div>
+          </div>
+        ))}
+        <div ref={endRef} />
+      </div>
+    </div>
+  )
+}
+
 export default function HouseOS({
   messages = [],
   mood,
@@ -56,6 +157,12 @@ export default function HouseOS({
   const [question, setQuestion] = useState('')
   const [reply,    setReply]    = useState(null)
   const [thinking, setThinking] = useState(false)
+  const [history,  setHistory]  = useState(loadChat)
+
+  // Keep the conversation around between visits
+  useEffect(() => {
+    try { localStorage.setItem(CHAT_KEY, JSON.stringify(history.slice(-CHAT_MAX))) } catch { /* ignore */ }
+  }, [history])
 
   const deck   = messages.length ? messages : ['']
   const speech = thinking ? 'Let me check my books…' : reply?.answer ?? deck[cardIdx % deck.length]
@@ -80,6 +187,17 @@ export default function HouseOS({
     setThinking(true)
     try {
       const res = await onAsk(trimmed)
+      // Record every exchange so the conversation stays visible beside the house
+      if (res?.answer) {
+        setHistory(h => [...h, {
+          id:        Date.now() + '' + Math.random().toString(36).slice(2, 6),
+          q:         trimmed,
+          a:         res.answer,
+          source:    res.source,
+          view:      res.view,
+          viewLabel: res.viewLabel,
+        }].slice(-CHAT_MAX))
+      }
       if (res?.autoOpen && res.view) { onNavigate?.(res.view); return }
       setReply(res)
     } finally {
@@ -92,7 +210,8 @@ export default function HouseOS({
   const wrapperAnimation = (!pressed && mood === 'urgent') ? 'houseShake 0.5s ease-in-out infinite' : 'none'
 
   return (
-    <div style={{
+    <div className="house-os">
+    <div className="house-os__main" style={{
       maxWidth: 620, margin: '0 auto', width: '100%',
       padding: '40px 24px 24px', position: 'relative',
       display: 'flex', flexDirection: 'column', alignItems: 'center',
@@ -276,6 +395,14 @@ export default function HouseOS({
           Enable booking alerts
         </button>
       )}
+    </div>
+
+    {/* ── The conversation, beside the house (or below it on phones) ───────── */}
+    <Transcript
+      items={history}
+      onNavigate={onNavigate}
+      onClear={() => { setHistory([]); setReply(null) }}
+    />
     </div>
   )
 }

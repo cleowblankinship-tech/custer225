@@ -13,7 +13,7 @@ import HouseArt from './HouseArt'
 //   consistent   → garden beds appear
 //   longTerm     → a second tree (right), a tree behind, butterflies, more birds
 //
-// The land itself — a soft lawn, a dirt path to the door, a couple of stones —
+// The land itself — a soft lawn and a couple of stones resting in the grass —
 // is always there: even a brand-new listing is rooted somewhere. New plants
 // sprout up from the ground rather than popping in. Season recolors the
 // foliage and, in winter, bares the trees and lays snow over the beds.
@@ -26,7 +26,6 @@ const CX = 42   // horizontal center of the stage (and the house)
 const BARK  = '#8A6A48'
 const STEM  = '#6E8E54'
 const GRASS = '#B4D192'
-const DIRT  = '#CBB489'
 const STONE = '#B9B2A6'
 const CLOUD = '#D8CEBE'
 const BIRD  = '#9C8E7A'
@@ -64,22 +63,6 @@ function Ground({ winter }) {
         fill={grass} stroke="none" opacity={winter ? 0.6 : 0.5} />
 
       {winter && <rect x="0" y={GY} width="84" height={58 - GY} fill={SNOW} stroke="none" opacity="0.4" />}
-
-      {/* dirt path from the front door toward the viewer — clearer at a glance:
-          a defined fill, soft edge lines, and a centre seam */}
-      <path d={`M 38.5 ${GY} L 45.5 ${GY} L 51 57.5 L 33 57.5 Z`} fill={DIRT} stroke="none" opacity={winter ? 0.7 : 0.95} />
-      <g stroke="#A8895E" strokeWidth="0.6" strokeLinecap="round" opacity="0.55" fill="none">
-        <path d={`M 38.5 ${GY} L 33 57.5`} />
-        <path d={`M 45.5 ${GY} L 51 57.5`} />
-        <path d={`M 42 ${GY + 1} L 42 57`} strokeWidth="0.5" opacity="0.4" strokeDasharray="1.4 2" />
-      </g>
-      {/* stepping stones up the path — defined with a thin rim + highlight */}
-      {[[CX, GY + 2.6, 2.4], [CX - 0.3, GY + 5.6, 2.9], [CX - 0.7, GY + 8.8, 3.3]].map(([sx, sy, rx], i) => (
-        <g key={i}>
-          <ellipse cx={sx} cy={sy} rx={rx} ry={rx * 0.36} fill={STONE} stroke="#9A9388" strokeWidth="0.35" />
-          <ellipse cx={sx - rx * 0.2} cy={sy - 0.25} rx={rx * 0.5} ry={rx * 0.16} fill="#C9C3B8" stroke="none" opacity="0.7" />
-        </g>
-      ))}
 
       {/* a couple of stones resting in the grass */}
       <ellipse cx={26} cy={GY + 1.6} rx="1.7" ry="0.8" fill={STONE} stroke="#9A9388" strokeWidth="0.3" />
