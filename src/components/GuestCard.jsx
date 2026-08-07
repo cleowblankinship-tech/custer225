@@ -2,16 +2,19 @@ import { useState, useEffect, useMemo } from 'react'
 import { normalizeCategory } from '../lib/categories'
 
 // ── Semantic status colors ────────────────────────────────────────────────────
-// Color communicates booking state, not arbitrary identity:
-//   upcoming      → sage green
-//   current guest → warm yellow
-//   checkout day  → coral
-//   past          → muted stone
+// Soft storybook tones pulled from the app's palette so the calendar lives in
+// the same world as the house and its flowers. Color communicates booking
+// state, not arbitrary identity:
+//   upcoming      → fresh meadow green   (a stay on the way — growing)
+//   current guest → brand rose           (someone's home right now — the app's
+//                                          signature pink, matching the house)
+//   checkout day  → warm peach-coral     (heading out — gentle, sunny)
+//   past          → faded dusty rose     (a stay that's now a soft memory)
 const STATUS_COLORS = {
-  upcoming: { bar: 'rgba(122, 155, 109, 0.82)', solid: '#7A9B6D', text: '#fff'    },
-  current:  { bar: 'rgba(227, 178, 60, 0.90)',  solid: '#9C7714', text: '#3A2D10' },
-  checkout: { bar: 'rgba(224, 106, 78, 0.85)',  solid: '#E06A4E', text: '#fff'    },
-  past:     { bar: 'rgba(166, 150, 124, 0.42)', solid: '#A6967C', text: '#fff'    },
+  upcoming: { bar: 'rgba(138, 179, 112, 0.82)', solid: '#7FA45F', text: '#fff' },
+  current:  { bar: 'rgba(224, 121, 158, 0.92)', solid: '#D6537C', text: '#fff' },
+  checkout: { bar: 'rgba(233, 132, 98, 0.88)',  solid: '#E8825F', text: '#fff' },
+  past:     { bar: 'rgba(190, 165, 180, 0.48)', solid: '#B49AA6', text: '#fff' },
 }
 
 const MONTH_NAMES = ['January','February','March','April','May','June',
