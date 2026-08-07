@@ -247,6 +247,11 @@ function flowerSlots(count) {
 // ── The scene ─────────────────────────────────────────────────────────────────
 
 export default function HouseScene({ size = 260, mood = 'calm', vitals = null, scene = null, style }) {
+  // Landscape toggle: flip to true to bring back the whole world around the
+  // house — clouds, birds, lawn, trees, garden beds, flowers, mailbox and
+  // butterflies. Off for now so only the house shows.
+  const showLandscape = false
+
   const season   = scene?.season ?? 'summer'
   const activity = scene?.activity ?? 0
   const winter   = season === 'winter'
@@ -285,61 +290,77 @@ export default function HouseScene({ size = 260, mood = 'calm', vitals = null, s
       style={{ display: 'block', flexShrink: 0, overflow: 'visible', ...style }}
       aria-hidden="true"
     >
-      {/* ── Sky: clouds drifting behind the rooftop ──────────────────────────── */}
-      <g stroke="none" fill={CLOUD}>
-        <g style={{ animation: 'cloudDrift 50s linear infinite', transformBox: 'fill-box', transformOrigin: 'center' }} opacity="0.5">
-          <circle cx="20" cy="7" r="2.2" /><circle cx="23" cy="6.2" r="2.7" /><circle cx="26" cy="7.1" r="2" />
-          <rect x="19.5" y="7" width="7.5" height="2.2" rx="1.1" />
-        </g>
-        {established && (
-          <g style={{ animation: 'cloudDrift 70s linear infinite 10s', transformBox: 'fill-box', transformOrigin: 'center' }} opacity="0.36">
-            <circle cx="56" cy="4" r="1.7" /><circle cx="58.5" cy="3.3" r="2.1" /><circle cx="61" cy="4" r="1.6" />
-            <rect x="55.8" y="4" width="5.6" height="1.8" rx="0.9" />
+      {/*
+        The landscape around the house — drifting clouds, birds, the lawn and
+        stones, trees, garden beds, flowers, the mailbox and butterflies — is
+        turned off for now so only the house shows. It's kept here (guarded by
+        `showLandscape` below) rather than deleted, so the whole world can be
+        brought back by flipping that flag to true. All the helper components
+        and their history-driven placement are untouched.
+      */}
+      {showLandscape && (
+        <>
+          {/* ── Sky: clouds drifting behind the rooftop ──────────────────── */}
+          <g stroke="none" fill={CLOUD}>
+            <g style={{ animation: 'cloudDrift 50s linear infinite', transformBox: 'fill-box', transformOrigin: 'center' }} opacity="0.5">
+              <circle cx="20" cy="7" r="2.2" /><circle cx="23" cy="6.2" r="2.7" /><circle cx="26" cy="7.1" r="2" />
+              <rect x="19.5" y="7" width="7.5" height="2.2" rx="1.1" />
+            </g>
+            {established && (
+              <g style={{ animation: 'cloudDrift 70s linear infinite 10s', transformBox: 'fill-box', transformOrigin: 'center' }} opacity="0.36">
+                <circle cx="56" cy="4" r="1.7" /><circle cx="58.5" cy="3.3" r="2.1" /><circle cx="61" cy="4" r="1.6" />
+                <rect x="55.8" y="4" width="5.6" height="1.8" rx="0.9" />
+              </g>
+            )}
           </g>
-        )}
-      </g>
 
-      {/* ── Birds cross the whole sky once the property is established ──────── */}
-      {established && !winter && <BirdFlock dur={birdDur} y={9} />}
-      {longTerm    && !winter && <BirdFlock dur={birdDur + 6} delay={8} y={13} />}
-      {/* an extra pass when a guest is on the way — anticipation in the air */}
-      {arrivingSoon && established && !winter && <BirdFlock dur={birdDur - 2} delay={3} y={6} />}
+          {/* ── Birds cross the whole sky once the property is established ── */}
+          {established && !winter && <BirdFlock dur={birdDur} y={9} />}
+          {longTerm    && !winter && <BirdFlock dur={birdDur + 6} delay={8} y={13} />}
+          {/* an extra pass when a guest is on the way — anticipation in the air */}
+          {arrivingSoon && established && !winter && <BirdFlock dur={birdDur - 2} delay={3} y={6} />}
 
-      {/* ── The land ──────────────────────────────────────────────────────── */}
-      <Ground winter={winter} />
+          {/* ── The land ────────────────────────────────────────────────── */}
+          <Ground winter={winter} />
 
-      {/* ── A tree behind the house adds depth at full maturity ───────────── */}
-      {longTerm && <Tree x={CX} h={17} season={season} delay={0.05} back />}
+          {/* ── A tree behind the house adds depth at full maturity ──────── */}
+          {longTerm && <Tree x={CX} h={17} season={season} delay={0.05} back />}
 
-      {/* ── Flanking trees frame the house ────────────────────────────────── */}
-      {established && <Tree x={11} h={leftTreeH} season={season} delay={0.1} />}
-      {longTerm    && <Tree x={73} h={rightTreeH} season={season} delay={0.2} />}
+          {/* ── Flanking trees frame the house ───────────────────────────── */}
+          {established && <Tree x={11} h={leftTreeH} season={season} delay={0.1} />}
+          {longTerm    && <Tree x={73} h={rightTreeH} season={season} delay={0.2} />}
 
-      {/* ── Garden beds, both sides as the property keeps operating ───────── */}
-      {consistent && !winter && <GardenPatch x={14} w={10} delay={0.25} />}
-      {longTerm   && !winter && <GardenPatch x={70} w={9}  delay={0.3} />}
+          {/* ── Garden beds, both sides as the property keeps operating ──── */}
+          {consistent && !winter && <GardenPatch x={14} w={10} delay={0.25} />}
+          {longTerm   && !winter && <GardenPatch x={70} w={9}  delay={0.3} />}
 
-      {/* ── Side flowers (a record of bookings, framing the house) ────────── */}
-      {flowers.filter(f => !isFront(f.x)).map((f, i) => (
-        <Flower key={`fs${f.x}-${i}`} x={f.x} hue={FLOWER_HUES[f.hue]} h={f.h} delay={0.3 + i * 0.07} />
-      ))}
+          {/* ── Side flowers (a record of bookings, framing the house) ───── */}
+          {flowers.filter(f => !isFront(f.x)).map((f, i) => (
+            <Flower key={`fs${f.x}-${i}`} x={f.x} hue={FLOWER_HUES[f.hue]} h={f.h} delay={0.3 + i * 0.07} />
+          ))}
 
-      {/* ── Mailbox — goes up the moment the property is a real listing ───── */}
-      {listed && <Mailbox x={70} hasMail={hasMail} />}
+          {/* ── Mailbox — goes up the moment the property is a real listing ─ */}
+          {listed && <Mailbox x={70} hasMail={hasMail} />}
+        </>
+      )}
 
-      {/* ── The house — the focal character, sitting in its yard ──────────── */}
+      {/* ── The house — the focal character ───────────────────────────────── */}
       <g transform="translate(22, 9.5)">
         <HouseArt mood={mood} vitals={vitals} windowOpacity={1} arrivingSoon={arrivingSoon} />
       </g>
 
-      {/* ── Front-yard flowers, in front of the house base ────────────────── */}
-      {flowers.filter(f => isFront(f.x)).map((f, i) => (
-        <Flower key={`ff${f.x}-${i}`} x={f.x} hue={FLOWER_HUES[f.hue]} h={f.h} delay={0.5 + i * 0.1} />
-      ))}
+      {showLandscape && (
+        <>
+          {/* ── Front-yard flowers, in front of the house base ──────────── */}
+          {flowers.filter(f => isFront(f.x)).map((f, i) => (
+            <Flower key={`ff${f.x}-${i}`} x={f.x} hue={FLOWER_HUES[f.hue]} h={f.h} delay={0.5 + i * 0.1} />
+          ))}
 
-      {/* ── Butterflies wander the beds at maturity ───────────────────────── */}
-      {consistent && !winter && <Butterfly x={20} y={31} hue="#CE8AA8" dur={6.5} />}
-      {longTerm   && !winter && <Butterfly x={64} y={28} hue="#E8B7C9" dur={7.5} delay={1.2} />}
+          {/* ── Butterflies wander the beds at maturity ─────────────────── */}
+          {consistent && !winter && <Butterfly x={20} y={31} hue="#CE8AA8" dur={6.5} />}
+          {longTerm   && !winter && <Butterfly x={64} y={28} hue="#E8B7C9" dur={7.5} delay={1.2} />}
+        </>
+      )}
     </svg>
   )
 }
