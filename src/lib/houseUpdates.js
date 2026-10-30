@@ -376,6 +376,12 @@ function guestStory(stays, todayMT) {
     return s
   }
 
+  // Nothing in-house and nothing upcoming — every stay on the calendar is past
+  if (!next) return pick([
+    "All quiet here. Nothing else on the books yet.",
+    "My calendar's empty from here on — no stays booked ahead.",
+  ])
+
   // Nothing in-house — look ahead
   const daysAway = Math.round((new Date(next.ci) - new Date(todayMT)) / 86400000)
   if (daysAway <= 2) {
