@@ -227,7 +227,10 @@ export default function App() {
     if (!hasSupabase) return
     setUseDB(true)
     setLoading(true)
-    getExpenses()
+    // Don't let a slow/paused Supabase hold the whole app on "Loading..."
+    const timeout = new Promise((_, reject) =>
+      setTimeout(() => reject(new Error('getExpenses timed out')), 6000))
+    Promise.race([getExpenses(), timeout])
       .then(data => { if (data.length > 0) setExpenses(data) })
       .catch(console.error)
       .finally(() => setLoading(false))
