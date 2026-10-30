@@ -13,6 +13,7 @@ import { useState, useEffect, useRef } from 'react'
 
 const VIDEO_SRC    = '/splash.mp4'
 const FADE_OUT_MS  = 500   // only the exit fade; no fade-in (prevents flash)
+const MAX_SPLASH_MS = 8000 // safety net: never block the app longer than this
 
 export default function IntroSplash({ onComplete }) {
   // fadingOut drives the only opacity transition — we never start at 0
@@ -24,6 +25,10 @@ export default function IntroSplash({ onComplete }) {
     if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
       onComplete()
     }
+    // If the video stalls, fails to load, or autoplay is blocked, `ended`
+    // never fires — don't leave the white overlay covering the app forever.
+    const t = setTimeout(finish, MAX_SPLASH_MS)
+    return () => clearTimeout(t)
   }, []) // eslint-disable-line react-hooks/exhaustive-deps
 
   function finish() {
@@ -61,6 +66,7 @@ export default function IntroSplash({ onComplete }) {
         muted
         playsInline
         onEnded={finish}
+        onError={finish}
         style={{
           // Responsive: fills comfortably on phone, stays contained on desktop.
           // width  — 88% of viewport, never wider than 480 px
